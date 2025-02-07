@@ -2,12 +2,21 @@ import React from "react";
 
 function Loading() {
   return (
-    <div className="d-flex vh-100 justify-content-center align-items-center">
+    <div
+      className="d-flex vh-100 justify-content-center align-items-center"
+      style={{ backgroundColor: "#F5FAFE", overflow: "hidden" }}
+    >
       <div className="text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+        <div className="d-flex justify-content-center">
+          <img src="./image.png" width={180} className="py-4" alt="" />
         </div>
-        <h4 className="mt-3">Signing In...</h4>
+        <div className="progress" style={{ height: "10px", width: "250%" }}>
+          <div
+            className="progress-bar progress-bar-striped progress-bar-animated"
+            role="progressbar"
+            style={{ width: "40%" }}
+          ></div>
+        </div>
       </div>
     </div>
   );
