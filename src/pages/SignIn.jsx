@@ -98,7 +98,7 @@ function SignIn() {
                 </span>
               </div>
 
-              <div className="d-flex justify-content-between align-items-center py-3">
+              <div className="d-flex justify-content-between align-items-center py-4">
                 <div className="form-check">
                   <input type="checkbox" className="form-check-input" id="rememberMe" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                   <label className="form-check-label" htmlFor="rememberMe">Remember Me</label>
@@ -107,7 +107,7 @@ function SignIn() {
               </div>
 
               <div className="text-center">
-                <button type="submit" className="btn btn-primary w-100">Sign In</button>
+                <button type="submit" className="btn btn-primary w-50 my-3">Sign In</button>
               </div>
             </form>
           </div>
