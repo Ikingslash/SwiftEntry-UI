@@ -16,7 +16,7 @@ function ForgotPassword() {
       <a className="navbar-brand mx-4">
         <img src="./image.png" alt="Logo" width="200" />
       </a>
-      <Link to="/signin" className="">Go to Login</Link>
+      <Link to="/" className="">Go to Login</Link>
     </nav>
 
     {/* Main Section */}
@@ -36,7 +36,7 @@ function ForgotPassword() {
           <form onSubmit={handleSubmit}>
             <div className="mb-3 text-start">
               <label className="form-label">Email Address</label>
-              <input type="email" className="form-control" placeholder="Enter email"  value={email}
+              <input type="email" className="form-control" placeholder="Enter Your Company-assigned Email"  value={email}
                 onChange={(e) => setEmail(e.target.value)} required />
             </div>
             
