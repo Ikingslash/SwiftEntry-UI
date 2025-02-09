@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -9,28 +10,49 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="container mt-5 w-50">
-      <h2 className="text-center">Forgot Password</h2>
-      <p className="text-center">Enter your email to receive a reset link</p>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            className="form-control"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+    <div style={{ backgroundColor: "#F5FAFE", height: "100vh", overflow: "hidden" }}>
+    {/* Navbar */}
+    <nav className="navbar p-5 pb-0">
+      <a className="navbar-brand mx-4">
+        <img src="./image.png" alt="Logo" width="200" />
+      </a>
+      <Link to="/signin" className="">Go to Login</Link>
+    </nav>
 
-        <button type="submit" className="btn btn-primary w-100">
-          Send Reset Link
-        </button>
-      </form>
+    {/* Main Section */}
+    <div className="container mt-3 w-50 vh-100 justify-content-center">
+      <div className="text-center">
+        {/* Logo */}
+        <div className="pt-3">
+             <img src="./images/envelop.png" width={50} className="py-4" alt="Logo" />
+          <h2 className="mb-3">Forgot Password</h2>
+          <p className="text-muted">Enter Registered email for Verification</p>
+
+        </div> 
+
+        {/* Forgot Password Form */}
+        <div className="m-5" >
+       
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3 text-start">
+              <label className="form-label">Email Address</label>
+              <input type="email" className="form-control" placeholder="Enter email"  value={email}
+                onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            
+
+            <button type="submit" className="btn btn-primary w-50 my-3">Next</button>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
+
   );
 }
 
 export default ForgotPassword;
+
+
+
+
