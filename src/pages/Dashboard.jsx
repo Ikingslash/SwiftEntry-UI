@@ -141,23 +141,25 @@ function Dashboard() {
             </div>
 
             {/* Notification Cards */}
-            {[...Array(5)].map((_, index) => (
-              <div key={index} className="card mb-3 p-3 shadow-sm">
-                <div className="d-flex align-items-center">
-                  <img
-                    src="./images/clock.png"
-                    alt="Logo"
-                    className="me-3"
-                    width="40"
-                    height="40"
-                  />
-                  <div>
-                    <p className="mb-1 fw-bold">Reminder Title</p>
-                    <small className="text-muted">2 hours ago</small>
+            <div className="row g-3">
+              {[...Array(5)].map((_, index) => (
+                <div key={index} className="col-12">
+                  <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
+                    <img
+                      src="./images/clock.png"
+                      alt="Logo"
+                      className="me-3"
+                      width="40"
+                      height="40"
+                    />
+                    <div>
+                      <p className="mb-1 fw-bold text-dark">Reminder Title</p>
+                      <small className="text-muted">2 hours ago</small>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Right Column - Today's Guests */}
