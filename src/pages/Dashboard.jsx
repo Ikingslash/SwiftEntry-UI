@@ -164,7 +164,7 @@ function Dashboard() {
 
           {/* Right Column - Today's Guests */}
           <div className="col-md-6">
-            <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex justify-content-between align-items-center py-4 p">
               <h5 className="fw-bold">Today's Guests</h5>
               <a href="#" className="text-primary">
                 See more
