@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Home from "./dashboard/Home";
+import Profile from "./dashboard/Profile";
 import NavBar from "./dashboard/include/NavBar";
 import Notifications from "./dashboard/Notifications";
 
@@ -9,64 +9,38 @@ function Dashboard() {
   return (
     <div>
       <NavBar />
-      {/* <h2 className="text-center">Dashboard</h2> */}
-
-      {/* Bootstrap Nav Tabs */}
-      {/* <ul className="nav nav-tabs">
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === "home" ? "active" : ""}`} onClick={() => setActiveTab("home")}>Home</button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === "new-guest" ? "active" : ""}`} onClick={() => setActiveTab("new-guest")}>New Guest</button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === "manage-guests" ? "active" : ""}`} onClick={() => setActiveTab("manage-guests")}>Manage Guests</button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === "notifications" ? "active" : ""}`} onClick={() => setActiveTab("notifications")}>Notifications</button>
-        </li>
-      </ul>
-
-      {/* Content */}
-      {/* <div className="mt-3">
-        {activeTab === "home" && <Home />}
-        {activeTab === "new-guest" && <NewGuest />}
-        {activeTab === "manage-guests" && <ManageGuests />}
-        {activeTab === "notifications" && <Notifications />}
-      </div> */}
 
       {/* Hero Section */}
       <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
+        id="#"
+        className="text-white text-center position-relative d-flex align-items-center justify-content-center px-4"
         style={{
           backgroundColor: "#053561",
-          minHeight: "352px",
+          minHeight: "350px",
           marginTop: "56px",
           textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          // marginTop: "65px ",
           borderBottomLeftRadius: "3%",
           borderBottomRightRadius: "3%",
         }}
       >
         {/* Left Content */}
         <div className="container">
-          {/* Header Section */}
           <div
-            className="text-white p-4 shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
+            className="text-white p-4 shadow-sm text-center text-md-start"
+            style={{
+              backgroundColor: "#053561",
+              minHeight: "180px",
+              borderRadius: "10px",
+            }}
           >
-            {/* Row for Welcome Text & Plus Icon */}
+            {/* Welcome Text & Plus Icon */}
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bold mb-0">Welcome Back, John</h3>
 
               {/* Plus Icon */}
               <i
                 className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{
-                  // border: "1px solid rgba(255, 255, 255, 0.2)", // Correct border styling
-                  cursor: "pointer",
-                }}
+                style={{ cursor: "pointer" }}
               ></i>
             </div>
 
@@ -74,17 +48,15 @@ function Dashboard() {
             <div className="d-flex align-items-center mt-2">
               {/* Badge */}
               <p
-                className="badge mb-0"
+                className="badge text-white"
                 style={{
                   backgroundColor: "rgba(57, 118, 175, 0.8)",
-                  color: "rgba(178, 199, 219, 0.8)",
                 }}
               >
                 Syndani Group{" "}
                 <span
-                  className="badge "
+                  className="badge text-light"
                   style={{
-                    color: "rgba(127, 169, 207, 0.8)",
                     backgroundColor: "rgba(5, 53, 97, 0.8)",
                   }}
                 >
@@ -104,74 +76,54 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Core Values Section */}
+        {/* Core Values Section - Cards on Top of Header */}
         <div
-          className="container  position-absolute start-50 translate-middle-x w-100 px-3"
-          style={{ bottom: "-100px" }}
+          className="container position-absolute start-50 translate-middle-x w-100 px-3"
+          style={{ bottom: "-80px" }}
         >
-          <div className="row g-3 justify-content-md-center">
-            {/* Total Visitors Card */}
-            <div className="col-lg-4 col-md-6">
-              <div
-                className="card p-5 d-flex flex-row align-items-center text-dark shadow-sm rounded-3"
-                style={{ backgroundColor: "rgba(255, 255, 255, 1.0)" }}
-              >
-                <div
-                  className="p-3 rounded-3"
-                  style={{ backgroundColor: "rgba(189, 211, 249, 0.96)" }}
-                >
-                  <i className="bi bi-people fs-3  text-primary"></i>
+          <div className="row row-cols-1 row-cols-md-3 g-3 justify-content-center">
+            {/* Total Visitors */}
+            <div className="col">
+              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
+                <div className="p-3 rounded-circle bg-primary-subtle">
+                  <i className="bi bi-people fs-3 text-primary"></i>
                 </div>
-                <div className="flex-grow-1 text-end">
-                  <h5 className="">Total Visitors Today</h5>
-                  <p className="mb-0 fs-5">12</p>
+                <div className="ms-auto text-end">
+                  <h6 className="mb-1 text-muted">Total Visitors Today</h6>
+                  <p className="mb-0 fs-5 fw-bold">12</p>
                 </div>
               </div>
             </div>
 
-            {/* Active Users Card */}
-            <div className="col-lg-4 col-md-6">
-              <div
-                className="card p-5 d-flex flex-row align-items-center text-dark shadow-sm rounded-3"
-                style={{ backgroundColor: "rgba(255, 255, 255, 1.0)" }}
-              >
-                <div
-                  className="p-3 rounded-4"
-                  style={{ backgroundColor: "rgba(189, 211, 249, 0.96)" }}
-                >
-                  <i
-                    className="bi bi-person-check fs-3 text-primary"
-                    style={{ backgroundColor: "rgba(189, 211, 249, 0.96)" }}
-                  ></i>
+            {/* Upcoming Visits */}
+            <div className="col">
+              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
+                <div className="p-3 rounded-circle bg-primary-subtle">
+                  <i className="bi bi-person-check fs-3 text-primary"></i>
                 </div>
-                <div className="flex-grow-1 text-end">
-                  <h5 className="">Upcoming Visits</h5>
-                  <p className="mb-0 fs-5">20</p>
+                <div className="ms-auto text-end">
+                  <h6 className="mb-1 text-muted">Upcoming Visits</h6>
+                  <p className="mb-0 fs-5 fw-bold">20</p>
                 </div>
               </div>
             </div>
 
-            {/* New Signups Card */}
-            <div className="col-lg-4">
-              <div
-                className="card p-5 d-flex flex-row align-items-center text-dark shadow-sm rounded-3"
-                style={{ backgroundColor: "rgba(255, 255, 255, 1.0)" }}
-              >
-                <div
-                  className="p-3 rounded-4"
-                  style={{ backgroundColor: "rgba(189, 211, 249, 0.96)" }}
-                >
-                  <i className="bi bi-eye fs-3  text-primary"></i>
+            {/* Pending Guest */}
+            <div className="col">
+              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
+                <div className="p-3 rounded-circle bg-primary-subtle">
+                  <i className="bi bi-eye fs-3 text-primary"></i>
                 </div>
-                <div className="flex-grow-1 text-end">
-                  <h5 className="">Pending Guest</h5>
-                  <p className="mb-0 fs-5">12</p>
+                <div className="ms-auto text-end">
+                  <h6 className="mb-1 text-muted">Pending Guest</h6>
+                  <p className="mb-0 fs-5 fw-bold">12</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </header>
+
       {/* Message From The Head Of School */}
       <section
         id="notifications"

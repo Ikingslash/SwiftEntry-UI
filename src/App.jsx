@@ -9,6 +9,7 @@ import SetNewPassword from "./pages/SetNewPassword";
 import Dashboard from "./pages/Dashboard";
 import NewGuest from "./pages/dashboard/NewGuest";
 import Notifications from "./pages/dashboard/Notifications";
+import Profile from "./pages/dashboard/Profile";
 import ManageGuestsIndividual from "./pages/dashboard/ManageGuestsIndividual";
 import SchoolLandingPage from "./pages/SchoolLandingPage";
 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/new-guest" element={<NewGuest />} />
         <Route path="/manage-guest" element={<ManageGuestsIndividual />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/school-landing-page" element={<SchoolLandingPage />} />
       </Routes>
     </Router>

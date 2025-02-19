@@ -13,58 +13,73 @@ function ForgotPassword() {
 
   return (
     <div
+      className="d-flex flex-column justify-content-center align-items-center vh-100"
       style={{
         backgroundColor: "#F5FAFE",
-        height: "100vh",
-        overflow: "hidden",
       }}
     >
       {/* Navbar */}
-      <nav className="navbar p-5 pb-0">
-        <a className="navbar-brand mx-4">
-          <img src="./image.png" alt="Logo" width="200" />
-        </a>
-        <Link to="/" className="">
-          Go to Login
-        </Link>
+      <nav className="navbar w-100 px-4 py-3">
+        <div className="container-fluid d-flex justify-content-between align-items-center">
+          <a href="#" className="navbar-brand">
+            <img src="./image.png" alt="Logo" width="150" />
+          </a>
+          <Link to="/" className="text-primary fw-bold">
+            Go to Login
+          </Link>
+        </div>
       </nav>
 
       {/* Main Section */}
-      <div className="container mt-3 w-50 vh-100 justify-content-center">
-        <div className="text-center">
-          {/* Logo */}
-          <div className="pt-3">
-            <img
-              src="./images/envelop.png"
-              width={50}
-              className="py-4"
-              alt="Logo"
-            />
-            <h2 className="mb-3">Forgot Password</h2>
-            <p className="text-muted">
-              Enter Registered email for Verification
-            </p>
-          </div>
+      <div className="container mt-3 vh-100 ">
+        <div className="row text-center justify-content-center">
+          <div className="col-md-6 col-lg-5 col-12">
+            {/* Logo */}
+            <div className="text-center">
+              {/* Logo */}
+              <img
+                src="./images/envelop.png"
+                width={60}
+                className="my-3"
+                alt="Logo"
+              />
+              <h2 className="fw-bold">Forgot Password</h2>
+              <p className="text-muted">
+                Enter your registered email for verification
+              </p>
+            </div>
 
-          {/* Forgot Password Form */}
-          <div className="m-5">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3 text-start">
-                <label className="form-label">Email Address</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Enter Your Company-assigned Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+            {/* Forgot Password Form */}
+            <div className="my-5">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3 text-start">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="Enter Your Company-assigned Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary w-50 py-2 rounded-3 fw-bold"
+                >
+                  Next
+                </button>
+              </form>
+              <div className="text-center mt-3">
+                <Link
+                  to="/"
+                  className="text-decoration-none text-primary fw-bold"
+                >
+                  Remembered? Login Instead
+                </Link>
               </div>
-
-              <button type="submit" className="btn btn-primary w-50 my-3">
-                Next
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
