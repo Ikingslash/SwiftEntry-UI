@@ -7,7 +7,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import VerifyAccount from "./pages/VerifyAccount";
 import SetNewPassword from "./pages/SetNewPassword";
 import Dashboard from "./pages/Dashboard";
-import SchoolLandingPage from './pages/SchoolLandingPage';
+import NewGuest from "./pages/dashboard/NewGuest";
+import Notifications from "./pages/dashboard/Notifications";
+import ManageGuestsIndividual from "./pages/dashboard/ManageGuestsIndividual";
+import SchoolLandingPage from "./pages/SchoolLandingPage";
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
         <Route path="/verify-account" element={<VerifyAccount />} />
         <Route path="/set-new-password" element={<SetNewPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/new-guest" element={<NewGuest />} />
+        <Route path="/manage-guest" element={<ManageGuestsIndividual />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/school-landing-page" element={<SchoolLandingPage />} />
       </Routes>
     </Router>

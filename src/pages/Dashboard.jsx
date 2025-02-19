@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Home from "./dashboard/Home";
-import NewGuest from "./dashboard/NewGuest";
-import ManageGuests from "./dashboard/ManageGuests";
+import NavBar from "./dashboard/include/NavBar";
 import Notifications from "./dashboard/Notifications";
 
 function Dashboard() {
@@ -9,6 +8,7 @@ function Dashboard() {
 
   return (
     <div>
+      <NavBar />
       {/* <h2 className="text-center">Dashboard</h2> */}
 
       {/* Bootstrap Nav Tabs */}
@@ -35,91 +35,6 @@ function Dashboard() {
         {activeTab === "notifications" && <Notifications />}
       </div> */}
 
-      <nav
-        className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
-        style={{ backgroundColor: "#053561" }}
-      >
-        <div className="container">
-          {/* Logo on the left */}
-          <a className="navbar-brand fw-bold text-white pt-3" href="#">
-            <img src="./image.png" width={150} alt="Logo" />
-          </a>
-
-          {/* Navbar Toggler */}
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          {/* Centered Navigation Links */}
-          <div
-            className="collapse navbar-collapse justify-content-center"
-            id="navbarNav"
-          >
-            <ul className="navbar-nav fs-6">
-              <li className="nav-item">
-                <a className="nav-link text-white active" href="#home">
-                  Home
-                </a>
-              </li>
-              <li className="nav-item me-3">
-                <a
-                  className="nav-link"
-                  style={{ color: "rgba(255, 255, 255, 0.8)" }}
-                  href="#guest"
-                >
-                  Guest
-                </a>
-              </li>
-              <li className="nav-item me-3">
-                <a
-                  className="nav-link"
-                  style={{ color: "rgba(255, 255, 255, 0.8)" }}
-                  href="#manage-guest"
-                >
-                  Manage Guest
-                </a>
-              </li>
-              <li className="nav-item me-3">
-                <a
-                  className="nav-link"
-                  style={{ color: "rgba(255, 255, 255, 0.8)" }}
-                  href="#notifications"
-                >
-                  Notification
-                </a>
-              </li>
-            </ul>
-          </div>
-          {/* User info & notifications on the right */}
-          <div className="d-flex align-items-center">
-            {/* Notification Icon */}
-            <a href="#notifications" className="me-3 position-relative">
-              <i
-                className="bi bi-bell fs-4 text-white rounded-circle p-2"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
-              ></i>
-            </a>
-
-            {/* User Profile */}
-            <div className="d-flex align-items-center">
-              <span className="fw-medium text-white me-2">John Doe</span>
-              <img
-                src="./images/school/school6.jpg"
-                alt="User"
-                className="rounded-circle"
-                width="50"
-                height="50"
-              />
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <header
         id="home"
@@ -129,7 +44,7 @@ function Dashboard() {
           minHeight: "352px",
           marginTop: "56px",
           textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          marginTop: "65px ",
+          // marginTop: "65px ",
           borderBottomLeftRadius: "3%",
           borderBottomRightRadius: "3%",
         }}
@@ -143,7 +58,7 @@ function Dashboard() {
           >
             {/* Row for Welcome Text & Plus Icon */}
             <div className="d-flex align-items-center justify-content-between">
-              <h2 className="fw-bold mb-0">Welcome Back, John</h2>
+              <h3 className="fw-bold mb-0">Welcome Back, John</h3>
 
               {/* Plus Icon */}
               <i
@@ -278,7 +193,7 @@ function Dashboard() {
               <div key={index} className="card mb-3 p-3 shadow-sm">
                 <div className="d-flex align-items-center">
                   <img
-                    src="./images/logo.png"
+                    src="./images/clock.png"
                     alt="Logo"
                     className="me-3"
                     width="40"
@@ -305,32 +220,59 @@ function Dashboard() {
             {/* Guest Cards (3 in a Row) */}
             <div className="d-flex justify-content-between mb-3 ">
               {[...Array(3)].map((_, index) => (
-                <div
-                  key={index}
-                  className="card text-cente p-2 m-2 shadow-sm rounded-3"
-                >
-                  <img src="./images/students.jpeg" alt="Guest" className="" />
+                <div key={index} className="card p-2 m-2 shadow-sm rounded-3">
+                  <img src="./images/user1.png" alt="Guest" className="" />
                   <p className="mt-2 mb-1 fw-bold">Guest Name</p>
-                  <small className="text-muted">10:30 AM</small>
+                  <small className="text-muted">
+                    {" "}
+                    <span
+                      className={`ms-2 ${
+                        index % 2 === 0
+                          ? "text-success me-3"
+                          : "text-danger me-3"
+                      }`}
+                    >
+                      ●
+                    </span>
+                    10:30 AM
+                  </small>
                 </div>
               ))}
             </div>
 
             {/* Notification Cards */}
+
             {[...Array(3)].map((_, index) => (
               <div key={index} className="card mb-3 p-3 shadow-sm">
-                <div className="d-flex align-items-center">
-                  <img
-                    src="./images/students2.jpeg"
-                    alt="User"
-                    className="rounded-circle me-3"
-                    width="40"
-                    height="40"
-                  />
-                  <div>
-                    <p className="mb-1 fw-bold">John Doe</p>
-                    <small className="text-muted">30 minutes ago</small>
+                <div className="d-flex align-items-center justify-content-between">
+                  {/* Left Section: User Image & Info */}
+                  <div className="d-flex align-items-center">
+                    <img
+                      src="./images/user.png"
+                      alt="User"
+                      className="rounded-circle me-3"
+                      width="40"
+                      height="40"
+                    />
+                    <div>
+                      <p className="mb-1 fw-bold">John Doe</p>
+                      <small className="text-muted">
+                        <span
+                          className={`ms-2 ${
+                            index % 2 === 0
+                              ? "text-success me-3"
+                              : "text-danger me-3"
+                          }`}
+                        >
+                          ●
+                        </span>
+                        30 minutes ago
+                      </small>
+                    </div>
                   </div>
+
+                  {/* Right Section: Arrow Icon */}
+                  <i className="bi bi-arrow-up-right text-primary fs-4"></i>
                 </div>
               </div>
             ))}
