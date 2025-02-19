@@ -170,24 +170,29 @@ function Dashboard() {
             </div>
 
             {/* Guest Cards (3 in a Row) */}
-            <div className="d-flex justify-content-between mb-3 ">
+            <div className="row g-3">
               {[...Array(3)].map((_, index) => (
-                <div key={index} className="card p-2 m-2 shadow-sm rounded-3">
-                  <img src="./images/user1.png" alt="Guest" className="" />
-                  <p className="mt-2 mb-1 fw-bold">Guest Name</p>
-                  <small className="text-muted">
-                    {" "}
-                    <span
-                      className={`ms-2 ${
-                        index % 2 === 0
-                          ? "text-success me-3"
-                          : "text-danger me-3"
-                      }`}
-                    >
-                      ●
-                    </span>
-                    10:30 AM
-                  </small>
+                <div
+                  key={index}
+                  className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
+                >
+                  <div className="card p-2 m-2 shadow-sm rounded-3">
+                    <img src="./images/user1.png" alt="Guest" className="" />
+                    <p className="mt-2 mb-1 fw-bold">Guest Name</p>
+                    <small className="text-muted">
+                      {" "}
+                      <span
+                        className={`ms-2 ${
+                          index % 2 === 0
+                            ? "text-success me-3"
+                            : "text-danger me-3"
+                        }`}
+                      >
+                        ●
+                      </span>
+                      10:30 AM
+                    </small>
+                  </div>
                 </div>
               ))}
             </div>
