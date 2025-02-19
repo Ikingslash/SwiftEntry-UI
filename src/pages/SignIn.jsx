@@ -12,7 +12,7 @@ function SignIn() {
     navigate("/loading");
     setTimeout(() => {
       navigate("/dashboard");
-    }, 2000);
+    }, 1000);
   };
 
   return (
@@ -38,10 +38,7 @@ function SignIn() {
             className="w-100 h-100 object-fit-cover p-4 rounded-5"
             style={{ objectFit: "cover" }}
           >
-            <source
-              src="./video1.mp4"
-              type="video/mp4"
-            />
+            <source src="./video1.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           <div
@@ -51,17 +48,13 @@ function SignIn() {
               // fontWeight: "bold",
               textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5)",
             }}
-          
-          > 
-              <div className="d-flex">
-              <img
-                src="./image2.png"
-                width={70} 
-                alt="" 
-              />
+          >
+            <div className="d-flex">
+              <img src="./image2.png" width={70} alt="" />
             </div>
-            <p className="fw-bold fs-5 text-shadow">Ready to Manage Guests with Ease? <br /> Let's Get You Started</p>
-        
+            <p className="fw-bold fs-5 text-shadow">
+              Ready to Manage Guests with Ease? <br /> Let's Get You Started
+            </p>
           </div>
         </div>
 
@@ -75,39 +68,64 @@ function SignIn() {
         >
           <div className="w-100 p-5" style={{ maxWidth: "576px" }}>
             <div className="d-flex p-3  justify-content-center">
-              <img
-                src="./image.png"
-                width={180}
-                className="py-4"
-                alt="" 
-              />
+              <img src="./image.png" width={180} className="py-4" alt="" />
             </div>
 
             <h2 className="text-center mb-4 fw-bold">Sign In</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label fw-semibold">Email</label>
-                <input type="email" className="form-control" placeholder="Enter your company assigned email" required style={{ color: "rgba(133, 124, 124, 0.5)" }} />
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="Enter your company assigned email"
+                  required
+                  style={{ color: "rgba(133, 124, 124, 0.5)" }}
+                />
               </div>
 
               <div className="mb-3 position-relative">
                 <label className="form-label fw-semibold">Password</label>
-                <input type={passwordVisible ? "text" : "password"} className="form-control" placeholder="Enter password" required />
-                <span onClick={() => setPasswordVisible(!passwordVisible)} className="position-absolute top-50 end-0 translate-middle-y m-3" style={{ cursor: "pointer", color: "#007bff" }}>
+                <input
+                  type={passwordVisible ? "text" : "password"}
+                  className="form-control"
+                  placeholder="Enter password"
+                  required
+                />
+                <span
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  className="position-absolute top-50 end-0 translate-middle-y m-3"
+                  style={{ cursor: "pointer", color: "#007bff" }}
+                >
                   {passwordVisible ? "👁️" : "👁️‍🗨️"}
                 </span>
               </div>
 
               <div className="d-flex justify-content-between align-items-center py-4">
                 <div className="form-check">
-                  <input type="checkbox" className="form-check-input" id="rememberMe" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
-                  <label className="form-check-label" htmlFor="rememberMe">Remember Me</label>
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />
+                  <label className="form-check-label" htmlFor="rememberMe">
+                    Remember Me
+                  </label>
                 </div>
-                <Link to="/forgot-password" className="text-primary text-decoration-none">Forgot Password?</Link>
+                <Link
+                  to="/forgot-password"
+                  className="text-primary text-decoration-none"
+                >
+                  Forgot Password?
+                </Link>
               </div>
 
               <div className="text-center">
-                <button type="submit" className="btn btn-primary w-50 my-3">Sign In</button>
+                <button type="submit" className="btn btn-primary w-50 my-3">
+                  Sign In
+                </button>
               </div>
             </form>
           </div>
