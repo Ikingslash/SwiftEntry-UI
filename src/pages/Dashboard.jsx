@@ -13,23 +13,25 @@ function Dashboard() {
       {/* Hero Section */}
       <header
         id="#"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-center px-4"
+        className="text-white text-center position-relative px-4"
         style={{
           backgroundColor: "#053561",
-          minHeight: "350px",
+          minHeight: "auto", // Remove fixed min-height
           marginTop: "56px",
           textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
           borderBottomLeftRadius: "3%",
           borderBottomRightRadius: "3%",
+          paddingTop: "20px", // Add some top padding
+          paddingBottom: "180px", // Adjusted padding to accommodate cards
         }}
       >
         {/* Left Content */}
-        <div className="container">
+        <div className="container mt-3">
           <div
-            className="text-white p-4 shadow-sm text-center text-md-start"
+            className="text-white p-4 shadow-sm text-center"
             style={{
               backgroundColor: "#053561",
-              minHeight: "180px",
+              minHeight: "280px",
               borderRadius: "10px",
             }}
           >
@@ -45,7 +47,7 @@ function Dashboard() {
             </div>
 
             {/* Badge & Line Row */}
-            <div className="d-flex align-items-center mt-2">
+            <div className="d-flex align-items-center  mt-2">
               {/* Badge */}
               <p
                 className="badge text-white"
