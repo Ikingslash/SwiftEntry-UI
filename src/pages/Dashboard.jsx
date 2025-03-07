@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Profile from "./dashboard/Profile";
-import NavBar from "./dashboard/include/NavBar";
-import Notifications from "./dashboard/Notifications";
+import Profile from "./staffDashboard/Profile";
+import NavBar from "./staffDashboard/include/NavBar";
+import Notifications from "./staffDashboard/Notifications";
 
 function Dashboard() {
   // const [activeTab, setActiveTab] = useState("home");
