@@ -1,18 +1,23 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function SignIn() {
   const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted:", { rememberMe });
-    navigate("/loading");
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1000);
+    // console.log("Form submitted:", { rememberMe });
+   
+    // navigate("/loading");
+    // setTimeout(() => {
+      login(email, password);
+    // }, 1000);
   };
 
   return (
@@ -81,6 +86,8 @@ function SignIn() {
                   placeholder="Enter your company assigned email"
                   required
                   style={{ color: "rgba(133, 124, 124, 0.5)" }}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -91,6 +98,8 @@ function SignIn() {
                   className="form-control"
                   placeholder="Enter password"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <span
                   onClick={() => setPasswordVisible(!passwordVisible)}

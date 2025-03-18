@@ -63,14 +63,14 @@ function FrontDeskDashboard() {
               <p
                 className="badge text-white"
                 style={{
-                  backgroundColor: "rgba(57, 118, 175, 0.8)",
+                  backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
                 Syndani Group{" "}
                 <span
-                  className="badge text-light"
+                  className="badge text-light p-1"
                   style={{
-                    backgroundColor: "rgba(5, 53, 97, 0.8)",
+                    backgroundColor: "rgba(13, 46, 78, 0.8)",
                   }}
                 >
                   Company
@@ -79,7 +79,7 @@ function FrontDeskDashboard() {
 
               {/* Extending Line */}
               <div
-                className="flex-grow-1 ms-3"
+                className="flex-grow-1 ms-2 mb-3"
                 style={{
                   height: "2px",
                   backgroundColor: "rgba(168, 172, 176, 0.8)",
@@ -89,18 +89,10 @@ function FrontDeskDashboard() {
           </div>
         </div>
 
-        {/* Core Values Section */}
-        <div className="container position-absolute start-50 translate-middle-x w-100 px-3">
-          <div className="row g-3 justify-content-md-center">
-            <div className="col-lg-4 col-md-6"></div>
-            <div className="col-lg-4 col-md-6"></div>
-          </div>
-        </div>
       </header>
 
-      {/* Tabs Navigation (Positioned Below Header) */}
-      {/* Tabs Navigation (Positioned Below Header) */}
-      <div className=" container mt-4">
+      {/* Tabs Navigation (Positioned Below Header) */} 
+      <div className=" container mt-5">
         <ul
           className="nav nav-tabs container d-flex align-items-center justify-content-between"
           style={{

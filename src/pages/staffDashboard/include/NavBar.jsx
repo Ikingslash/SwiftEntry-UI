@@ -38,11 +38,11 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
-                  location.pathname === "/dashboard"
+                  location.pathname === "/staff-dashboard"
                     ? "text-white fw-bold"
                     : "text-white-50"
                 }`}
-                to="/dashboard"
+                to="/staff-dashboard"
               >
                 Home
               </NavLink>
@@ -50,11 +50,11 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
-                  location.pathname === "/dashboard/new-guest"
+                  location.pathname === "/staff-dashboard/new-guest"
                     ? "text-white fw-bold"
                     : "text-white-50"
                 }`}
-                to="/dashboard/new-guest"
+                to="/staff-dashboard/new-guest"
               >
                 Guest
               </NavLink>
@@ -62,11 +62,11 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
-                  location.pathname === "/dashboard/manage-guest"
+                  location.pathname === "/staff-dashboard/manage-guest"
                     ? "text-white fw-bold"
                     : "text-white-50"
                 }`}
-                to="/dashboard/manage-guest"
+                to="/staff-dashboard/manage-guest"
               >
                 Manage Guest
               </NavLink>
@@ -74,11 +74,11 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
-                  location.pathname === "/dashboard/notifications"
+                  location.pathname === "/staff-dashboard/notifications"
                     ? "text-white fw-bold"
                     : "text-white-50"
                 }`}
-                to="/dashboard/notifications"
+                to="/staff-dashboard/notifications"
               >
                 Notification
               </NavLink>

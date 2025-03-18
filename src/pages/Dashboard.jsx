@@ -52,14 +52,14 @@ function Dashboard() {
               <p
                 className="badge text-white"
                 style={{
-                  backgroundColor: "rgba(57, 118, 175, 0.8)",
+                  backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
                 Syndani Group{" "}
                 <span
-                  className="badge text-light"
+                  className="badge text-light p-1"
                   style={{
-                    backgroundColor: "rgba(5, 53, 97, 0.8)",
+                    backgroundColor: "rgba(13, 46, 78, 0.8)",
                   }}
                 >
                   Company
@@ -68,7 +68,7 @@ function Dashboard() {
 
               {/* Extending Line */}
               <div
-                className="flex-grow-1 ms-3"
+                className="flex-grow-1 ms-3 mb-3"
                 style={{
                   height: "2px",
                   backgroundColor: "rgba(168, 172, 176, 0.8)",

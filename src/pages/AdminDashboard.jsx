@@ -1,7 +1,68 @@
-import NavBar from "./staffDashboard/include/NavBar";
+import React, { useState } from "react";
+import {} from "recharts";
+
+import NavBar from "./admin/include/NavBar";
+import {
+  BarChart,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+const visitorData = [
+  { date: "Mon", visitors: 10 },
+  { date: "Tue", visitors: 15 },
+  { date: "Wed", visitors: 8 },
+  { date: "Thu", visitors: 12 },
+  { date: "Fri", visitors: 18 },
+  { date: "Sat", visitors: 20 },
+  { date: "Sun", visitors: 25 },
+];
+
+const MetricCard = ({ title, value }) => (
+  <div className="col-md-3 mb-3">
+    <div className="card p-3 text-center shadow">
+      <h5 className="card-title">{title}</h5>
+      <p className="display-6 font-weight-bold">{value}</p>
+    </div>
+  </div>
+);
 
 function SecurityFrontDeskDashboard() {
   // const [activeTab, setActiveTab] = useState("home");
+  const [view, setView] = useState("daily");
+
+  // Mock data for Daily, Weekly, and Monthly views
+  const data = {
+    daily: [
+      { date: "8 AM", visitors: 5 },
+      { date: "10 AM", visitors: 10 },
+      { date: "12 PM", visitors: 7 },
+      { date: "2 PM", visitors: 15 },
+      { date: "4 PM", visitors: 12 },
+      { date: "6 PM", visitors: 9 },
+    ],
+    weekly: [
+      { date: "Mon", visitors: 50 },
+      { date: "Tue", visitors: 70 },
+      { date: "Wed", visitors: 40 },
+      { date: "Thu", visitors: 90 },
+      { date: "Fri", visitors: 100 },
+      { date: "Sat", visitors: 65 },
+      { date: "Sun", visitors: 80 },
+    ],
+    monthly: [
+      { date: "Week 1", visitors: 300 },
+      { date: "Week 2", visitors: 500 },
+      { date: "Week 3", visitors: 450 },
+      { date: "Week 4", visitors: 600 },
+    ],
+  };
 
   return (
     <div>
@@ -80,16 +141,16 @@ function SecurityFrontDeskDashboard() {
           className="container position-absolute start-50 translate-middle-x w-100 px-3"
           style={{ bottom: "-80px" }}
         >
-          <div className="row row-cols-1 row-cols-md-3 g-3 justify-content-center">
+          <div className="row row-cols-md-4 g-3 justify-content-center">
             {/* Total Visitors */}
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-3 rounded-circle bg-primary-subtle">
-                  <i className="bi bi-people fs-3 text-primary"></i>
+                <div className="p-2 rounded-3 bg-success-subtle">
+                  <i className="bi bi-people fs-2 text-success"></i>
                 </div>
-                <div className="ms-auto text-end">
-                  <h6 className="mb-1 text-muted">Total Visitors Today</h6>
-                  <p className="mb-0 fs-5 fw-bold">12</p>
+                <div className="ms-auto  text-muted text-start">
+                  <h6 className="mb-1">Visitors Today</h6>
+                  <p className="mb-0 fs-4">12</p>
                 </div>
               </div>
             </div>
@@ -97,12 +158,12 @@ function SecurityFrontDeskDashboard() {
             {/* Upcoming Visits */}
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-3 rounded-circle bg-primary-subtle">
-                  <i className="bi bi-person-check fs-3 text-primary"></i>
+                <div className="p-2 rounded-3 bg-info-subtle">
+                  <i className="bi bi-person-check fs-2 text-info"></i>
                 </div>
-                <div className="ms-auto text-end">
-                  <h6 className="mb-1 text-muted">Upcoming Visits</h6>
-                  <p className="mb-0 fs-5 fw-bold">20</p>
+                <div className="ms-auto text-start">
+                  <h6 className="mb-1 text-muted">Check In</h6>
+                  <p className="mb-0 fs-4">20</p>
                 </div>
               </div>
             </div>
@@ -110,12 +171,24 @@ function SecurityFrontDeskDashboard() {
             {/* Pending Guest */}
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-3 rounded-circle bg-primary-subtle">
-                  <i className="bi bi-eye fs-3 text-primary"></i>
+                <div className="p-2 rounded-3 bg-warning-subtle">
+                  <i className="bi bi-eye fs-2 text-warning"></i>
                 </div>
-                <div className="ms-auto text-end">
-                  <h6 className="mb-1 text-muted">Pending Guest</h6>
-                  <p className="mb-0 fs-5 fw-bold">12</p>
+                <div className="ms-auto text-start">
+                  <h6 className="mb-1 text-muted">Check Out</h6>
+                  <p className="mb-0 fs-4">12</p>
+                </div>
+              </div>
+            </div>
+            {/* Pending Guest */}
+            <div className="col">
+              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
+                <div className="p-2 rounded-3 bg-primary-subtle">
+                  <i className="bi bi-eye fs-2 text-primary"></i>
+                </div>
+                <div className="ms-auto  text-start">
+                  <h6 className="mb-1 text-muted">Pending</h6>
+                  <p className="mb-0 fs-4">12</p>
                 </div>
               </div>
             </div>
@@ -126,48 +199,51 @@ function SecurityFrontDeskDashboard() {
       {/* Message From The Head Of School */}
       <section
         id="notifications"
-        className="container p-5"
+        className="p-5"
         style={{ padding: "100px 0 50px 0" }}
       >
         <div className="row m-3" style={{ padding: "100px 0 20px 0" }}>
           {/* Left Column - Recent */}
-          <div className="col-md-6 pe-5">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-bold">Recent</h5>
-              <a href="#" className="text-primary">
-                See all
-              </a>
-            </div>
+          <div className="col-md-6 pe-3 mt-5">
+            {/* Line Chart */}
+            <div className="card p-2">
+              {/* Dropdown for selecting chart view */}
+              <div className="mb-3 text-center">
+                <select
+                  className="form-select rounded-pill border-secondary bg-light my-2"
+                  style={{ maxWidth: "100px" }}
+                  value={view}
+                  onChange={(e) => setView(e.target.value)}
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
 
-            {/* Notification Cards */}
-            <div className="row g-3">
-              {[...Array(5)].map((_, index) => (
-                <div key={index} className="col-12">
-                  <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
-                    <img
-                      src="./images/clock.png"
-                      alt="Logo"
-                      className="me-3"
-                      width="40"
-                      height="40"
-                    />
-                    <div>
-                      <p className="mb-1 fw-bold text-dark">Reminder Title</p>
-                      <small className="text-muted">2 hours ago</small>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {/* Line Chart */}
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={data[view]}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="visitors"
+                    stroke="#007bff"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           {/* Right Column - Today's Guests */}
           <div className="col-md-6">
-            <div className="d-flex justify-content-between align-items-center py-4 p">
-              <h5 className="fw-bold">Today's Guests</h5>
-              <a href="#" className="text-primary">
-                See more
-              </a>
+            <div className="d-flex justify-content-between align-items-center">
+              <h6 className="lead">Priority Alerts</h6>
             </div>
 
             {/* Guest Cards (3 in a Row) */}
@@ -177,7 +253,7 @@ function SecurityFrontDeskDashboard() {
                   key={index}
                   className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
                 >
-                  <div className="card p-2 m-2 shadow-sm rounded-3">
+                  <div className="card mt-3 p-2 shadow-sm rounded-3">
                     <img src="./images/user1.png" alt="Guest" className="" />
                     <p className="mt-2 mb-1 fw-bold">Guest Name</p>
                     <small className="text-muted">
@@ -199,38 +275,26 @@ function SecurityFrontDeskDashboard() {
             </div>
 
             {/* Notification Cards */}
-
+            <div className="d-flex justify-content-between align-items-center mt-5">
+              <p className="lead">Latest Updates</p>
+              <a href="#" className="text-primary">
+                See all
+              </a>
+            </div>
             {[...Array(3)].map((_, index) => (
-              <div key={index} className="card mb-3 p-3 shadow-sm">
-                <div className="d-flex align-items-center justify-content-between">
-                  {/* Left Section: User Image & Info */}
-                  <div className="d-flex align-items-center">
-                    <img
-                      src="./images/user.png"
-                      alt="User"
-                      className="rounded-circle me-3"
-                      width="40"
-                      height="40"
-                    />
-                    <div>
-                      <p className="mb-1 fw-bold">John Doe</p>
-                      <small className="text-muted">
-                        <span
-                          className={`ms-2 ${
-                            index % 2 === 0
-                              ? "text-success me-3"
-                              : "text-danger me-3"
-                          }`}
-                        >
-                          ●
-                        </span>
-                        30 minutes ago
-                      </small>
-                    </div>
+              <div key={index} className="col-12">
+                <div className="card p-3 shadow-sm d-flex flex-row align-items-center mb-3">
+                  <img
+                    src="./images/clock.png"
+                    alt="Logo"
+                    className="me-3"
+                    width="40"
+                    height="40"
+                  />
+                  <div>
+                    <p className="mb-1 text-dark">Reminder Title: You have 3 Guest arriving today</p>
+                    <small className="text-muted">Today | 2 min ago</small>
                   </div>
-
-                  {/* Right Section: Arrow Icon */}
-                  <i className="bi bi-arrow-up-right text-primary fs-4"></i>
                 </div>
               </div>
             ))}

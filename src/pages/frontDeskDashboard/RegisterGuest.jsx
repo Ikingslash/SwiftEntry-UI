@@ -14,7 +14,7 @@ function RegisterGuest() {
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
         style={{
           backgroundColor: "#053561",
-          minHeight: "352px",
+          minHeight: "270px",
           marginTop: "56px",
           textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
           borderBottomLeftRadius: "3%",

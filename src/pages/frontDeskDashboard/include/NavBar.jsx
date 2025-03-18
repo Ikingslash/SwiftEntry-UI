@@ -10,7 +10,7 @@ function Navbar() {
       <div className="container">
         {/* Logo on the left */}
         <a className="navbar-brand fw-bold text-white pt-2" href="#">
-          <img src="./image.png" width={140} alt="Logo" />
+          <img src="../image.png" width={140} alt="Logo" />
         </a>
 
         {/* Navbar Toggler */}
@@ -42,7 +42,7 @@ function Navbar() {
                     ? "text-white fw-bold "
                     : "text-white-50"
                 }`}
-                to="/dashboard"
+                to="/front-desk-dashboard"
               >
                 Guest Confirmation
               </NavLink>
@@ -62,11 +62,11 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
-                  location.pathname === "/front-desk-dashboard/manage-guest"
+                  location.pathname === "/front-desk-dashboard/history"
                     ? "text-white fw-bold"
                     : "text-white-50"
                 }`}
-                to="/front-desk-dashboard/manage-guest"
+                to="/front-desk-dashboard/history"
               >
                History
               </NavLink>
@@ -80,7 +80,7 @@ function Navbar() {
                 }`}
                 to="/front-desk-dashboard/notifications"
               >
-                Notificatione
+                Notifications
               </NavLink>
             </li>
           </ul>
@@ -113,7 +113,7 @@ function Navbar() {
             >
               <span className="fw-semibold me-2">John Doe</span>
               <img
-                src="./images/user.png"
+                src="../images/user.png"
                 alt="User"
                 className="rounded-circle border"
                 width="40"
