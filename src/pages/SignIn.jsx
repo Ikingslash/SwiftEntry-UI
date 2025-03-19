@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function SignIn() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
@@ -58,7 +58,7 @@ function SignIn() {
               <img src="./image2.png" width={70} alt="" />
             </div>
             <p className="fw-bold fs-5 text-shadow">
-              Ready to Manage Guests with Ease? <br /> Let's Get You Started
+              Ready to Manage Guests with Ease? <br /> Lets Get You Started
             </p>
           </div>
         </div>
