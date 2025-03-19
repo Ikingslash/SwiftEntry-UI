@@ -13,6 +13,9 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
+      await api.get("/sanctum/csrf-cookie", {
+        baseURL: "https://vms-api.194.62.98.28.nip.io",
+      });
       const endpoints = [
         // "/front-desk/login",
         // "/staff/auth/login",
