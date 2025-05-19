@@ -1,7 +1,9 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 function Navbar() {
   const location = useLocation();
+  const { user, logout } = useAuth();
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
@@ -68,7 +70,7 @@ function Navbar() {
                 }`}
                 to="/front-desk-dashboard/history"
               >
-               History
+                History
               </NavLink>
             </li>
             <li className="nav-item">
@@ -111,10 +113,10 @@ function Navbar() {
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              <span className="fw-semibold me-2">John Doe</span>
+              <span className="fw-semibold me-2">{user?.name}</span>
               <img
-                src="../images/user.png"
-                alt="User"
+                src={user?.profile_picture}
+                alt="Profile"
                 className="rounded-circle border"
                 width="40"
                 height="40"
@@ -138,7 +140,7 @@ function Navbar() {
                 <hr className="dropdown-divider" />
               </li>
               <li>
-                <a className="dropdown-item py-2 text-danger" href="/logout">
+                <a className="dropdown-item py-2 text-danger" onClick={logout}>
                   Logout
                 </a>
               </li>

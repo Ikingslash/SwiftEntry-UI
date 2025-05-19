@@ -17,7 +17,7 @@ function SecurityDashboard() {
       async (decodedText) => {
         scanner.clear();
         setScanResult(decodedText);
-        await fetchUserProfile(decodedText); // Treat decodedText as userId
+        await fetchUserProfile(decodedText);
       },
       (error) => {
         console.warn(error);
@@ -29,6 +29,11 @@ function SecurityDashboard() {
     try {
       const response = await api.get(`/api/security/user-profile/${userId}`);
       setUserProfile(response.data);
+      // Show Bootstrap modal
+      const modal = new window.bootstrap.Modal(
+        document.getElementById("printTagModal")
+      );
+      modal.show();
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
@@ -39,63 +44,30 @@ function SecurityDashboard() {
     <div>
       <NavBar />
 
-      {/* Hero Section */}
-      <header
-        className="text-white text-center position-relative px-4"
-        style={{
-          backgroundColor: "#053561",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-          paddingTop: "20px",
-          paddingBottom: "50px",
-        }}
-      >
+      {/* Header */}
+      <header className="text-white text-center position-relative px-4" style={{
+        backgroundColor: "#053561",
+        marginTop: "56px",
+        textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
+        borderBottomLeftRadius: "3%",
+        borderBottomRightRadius: "3%",
+        paddingTop: "20px",
+        paddingBottom: "50px",
+      }}>
         <div className="container">
-          <div
-            className="text-white shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            {/* Row for Welcome Text & Plus Icon */}
+          <div className="text-white shadow-sm" style={{ backgroundColor: "#053561", minHeight: "180px" }}>
             <div className="d-flex align-items-center justify-content-between">
-              <h2 className="fw-bod mb-0">Guest Confirmation</h2>
-
-              {/* Plus Icon */}
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+              <h2 className="fw-bold mb-0">Guest Confirmation</h2>
+              <i className="bi bi-plus-circle fs-1 text-primary p-2" style={{ cursor: "pointer" }}></i>
             </div>
-
-            {/* Badge & Line Row */}
-            <div className="d-flex align-items-center  mt-2">
-              {/* Badge */}
-              <p
-                className="badge text-white"
-                style={{
-                  backgroundColor: "rgba(25, 88, 148, 0.8)",
-                }}
-              >
+            <div className="d-flex align-items-center mt-2">
+              <p className="badge text-white" style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}>
                 Syndani Group{" "}
-                <span
-                  className="badge text-light p-1"
-                  style={{
-                    backgroundColor: "rgba(13, 46, 78, 0.8)",
-                  }}
-                >
+                <span className="badge text-light p-1" style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}>
                   Company
                 </span>
               </p>
-
-              {/* Extending Line */}
-              <div
-                className="flex-grow-1 ms-2 mb-3"
-                style={{
-                  height: "2px",
-                  backgroundColor: "rgba(168, 172, 176, 0.8)",
-                }}
-              ></div>
+              <div className="flex-grow-1 ms-2 mb-3" style={{ height: "2px", backgroundColor: "rgba(168, 172, 176, 0.8)" }}></div>
             </div>
           </div>
         </div>
@@ -117,47 +89,116 @@ function SecurityDashboard() {
         <a href="#" className="mt-4">
           <small>Enter Code Instead</small>
         </a>
-
-        {scanResult && (
-        <div className="text-center mt-10">
-          <h2 className="text-lg">QR Code Result: {scanResult}</h2>
-        </div>
-      )}
-        {/* User Profile Modal */}
-        {userProfile && (
-          <div
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              backgroundColor: "white",
-              padding: "20px",
-              boxShadow: "0px 0px 10px rgba(0,0,0,0.5)",
-              borderRadius: "10px",
-              textAlign: "center",
-              zIndex: 999,
-            }}
-          >
-            <h3>User Profile</h3>
-            <p>
-              <b>Name:</b> {userProfile.name}
-            </p>
-            <p>
-              <b>Email:</b> {userProfile.email}
-            </p>
-            <p>
-              <b>Role:</b> {userProfile.role}
-            </p>
-            <button
-              className="btn btn-danger mt-2"
-              onClick={() => setUserProfile(null)}
-            >
-              Close
-            </button>
-          </div>
-        )}
       </section>
+
+      {/* Modal */}
+      <div
+        className="modal fade"
+        id="printTagModal"
+        tabIndex="-1"
+        aria-hidden="true"
+      >
+        <div
+          className="modal-dialog modal-lg py-4"
+          style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            width: "50%",
+            maxWidth: "40%",
+            height: "100vh",
+            overflowY: "auto",
+          }}
+        >
+          <div className="modal-content">
+            <div className="modal-header">
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              {userProfile && (
+                <div className="row g-3 container px-5">
+                  <div className="col-12">
+                    <img
+                      src="./images/user.png"
+                      alt="User"
+                      className="rounded-circle mb-3"
+                      width="80"
+                      height="80"
+                    />
+                  </div>
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Guest Name</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.name}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Visit Date</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.visit_date}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Visit Time</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.visit_time}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Host Name</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.host_name}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Contact Info</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.contact_info}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Special Request</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.special_request}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6 fw-bold">
+                    <small>Visit Status</small>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{userProfile.status}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-12 text-center">
+                    <button type="button" className="btn btn-primary w-50">
+                      Print Tag
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
