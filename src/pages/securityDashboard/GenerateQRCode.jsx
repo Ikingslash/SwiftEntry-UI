@@ -1,9 +1,31 @@
 import React, { useState } from "react";
 import QRCode from "react-qr-code";
-import NavBar from "../frontDeskDashboard/include/NavBar";
+import NavBar from "../securityDashboard/include/NavBar";
 
 function GenerateQRCode() {
   const [email, setEmail] = useState("");
+  const [qrValue, setQrValue] = useState("");
+
+  const handleGenerateQR = async () => {
+    try {
+      const response = await fetch("/api/security/generate-qr", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (data.qr_code_data) {
+        setQrValue(data.qr_code_data);
+      } else {
+        alert("QR code could not be generated");
+      }
+    } catch (error) {
+      console.error("QR generation error", error);
+    }
+  };
 
   return (
     <div>
@@ -73,25 +95,29 @@ function GenerateQRCode() {
 
       {/* QR Code Scanner and Generator Section */}
       <section className="container p-5 text-center">
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h2>Generate QR Code</h2>
-          <input
-            type="text"
-            placeholder="Enter correct email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ padding: "10px", marginBottom: "20px", width: "300px" }}
-          />
-          <div
-            style={{
-              border: "2px solid black",
-              padding: "10px",
-              display: "inline-block",
-            }}
-          >
-            {email && <QRCode value={email} size={300} />}
-          </div>
+      <div className="flex flex-col items-center mt-10">
+      <h2 className="text-2xl font-bold mb-4">Generate QR Code</h2>
+      <input
+        type="email"
+        placeholder="Enter Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="border border-gray-300 px-4 py-2 rounded mb-4"
+      />
+      <button
+        className="bg-green-500 text-white px-6 py-2 rounded"
+        onClick={handleGenerateQR}
+      >
+        Generate QR Code
+      </button>
+
+      {qrValue && (
+        <div className="mt-6">
+          <QRCode value={qrValue} />
+          <p className="mt-2 text-sm text-gray-600">Encoded ID: {qrValue}</p>
         </div>
+      )}
+    </div>
       </section>
     </div>
   );

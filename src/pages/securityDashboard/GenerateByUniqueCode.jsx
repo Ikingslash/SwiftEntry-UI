@@ -1,5 +1,5 @@
 import { useState } from "react";
-import NavBar from "../frontDeskDashboard/include/NavBar";
+import NavBar from "../securityDashboard/include/NavBar";
 
 function GenerateByUniqueCode() { 
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -32,7 +32,7 @@ function GenerateByUniqueCode() {
   };
 
 //   const handleSubmit = async (e) => {
-//     if (e) e.preventDefault(); // Prevent form submission if triggered manually
+//     if (e) e.preventDefault(); 
   
 //     const enteredOtp = otp.join("");
   

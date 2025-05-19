@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import {} from "recharts";
-
+import { useState, useEffect } from "react"; // Ensure useEffect is imported
+import { useAuth } from "../context/AuthContext";
+import api from "../context/api";
 import NavBar from "./admin/include/NavBar";
 import {
-  BarChart,
   LineChart,
   Line,
   XAxis,
@@ -14,55 +13,37 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const visitorData = [
-  { date: "Mon", visitors: 10 },
-  { date: "Tue", visitors: 15 },
-  { date: "Wed", visitors: 8 },
-  { date: "Thu", visitors: 12 },
-  { date: "Fri", visitors: 18 },
-  { date: "Sat", visitors: 20 },
-  { date: "Sun", visitors: 25 },
-];
-
-const MetricCard = ({ title, value }) => (
-  <div className="col-md-3 mb-3">
-    <div className="card p-3 text-center shadow">
-      <h5 className="card-title">{title}</h5>
-      <p className="display-6 font-weight-bold">{value}</p>
-    </div>
-  </div>
-);
-
 function SecurityFrontDeskDashboard() {
-  // const [activeTab, setActiveTab] = useState("home");
-  const [view, setView] = useState("daily");
+  const { user, token } = useAuth();
+  const [view, setView] = useState("weekly"); // Default view
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock data for Daily, Weekly, and Monthly views
-  const data = {
-    daily: [
-      { date: "8 AM", visitors: 5 },
-      { date: "10 AM", visitors: 10 },
-      { date: "12 PM", visitors: 7 },
-      { date: "2 PM", visitors: 15 },
-      { date: "4 PM", visitors: 12 },
-      { date: "6 PM", visitors: 9 },
-    ],
-    weekly: [
-      { date: "Mon", visitors: 50 },
-      { date: "Tue", visitors: 70 },
-      { date: "Wed", visitors: 40 },
-      { date: "Thu", visitors: 90 },
-      { date: "Fri", visitors: 100 },
-      { date: "Sat", visitors: 65 },
-      { date: "Sun", visitors: 80 },
-    ],
-    monthly: [
-      { date: "Week 1", visitors: 300 },
-      { date: "Week 2", visitors: 500 },
-      { date: "Week 3", visitors: 450 },
-      { date: "Week 4", visitors: 600 },
-    ],
-  };
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      if (!token) return; // Prevent API call if token is missing
+      setLoading(true);
+      try {
+        const response = await api.get(`/admin/analytics?filter=${view}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("API Response:", response.data); // Debugging log
+        setChartData(response.data); // Ensure response structure matches expected format
+      } catch (error) {
+        console.error(
+          "Error fetching analytics:",
+          error.response?.data || error.message
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [view, token]);
 
   return (
     <div>
@@ -95,7 +76,7 @@ function SecurityFrontDeskDashboard() {
           >
             {/* Welcome Text & Plus Icon */}
             <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Welcome Back, Admin</h3>
+              <h3 className="fw-bold mb-0">Welcome Back, {user?.name}</h3>
 
               {/* Plus Icon */}
               <i
@@ -206,9 +187,8 @@ function SecurityFrontDeskDashboard() {
           {/* Left Column - Recent */}
           <div className="col-md-6 pe-3 mt-5">
             {/* Line Chart */}
-            <div className="card p-2">
-              {/* Dropdown for selecting chart view */}
-              <div className="mb-3 text-center">
+            <div className="card p-4">
+              <div className="text-center">
                 <select
                   className="form-select rounded-pill border-secondary bg-light my-2"
                   style={{ maxWidth: "100px" }}
@@ -221,25 +201,27 @@ function SecurityFrontDeskDashboard() {
                 </select>
               </div>
 
-              {/* Line Chart */}
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={data[view]}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="visitors"
-                    stroke="#007bff"
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <p className="text-center">Loading...</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="visitors"
+                      stroke="#007bff"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
-
           {/* Right Column - Today's Guests */}
           <div className="col-md-6">
             <div className="d-flex justify-content-between align-items-center">
@@ -292,7 +274,9 @@ function SecurityFrontDeskDashboard() {
                     height="40"
                   />
                   <div>
-                    <p className="mb-1 text-dark">Reminder Title: You have 3 Guest arriving today</p>
+                    <p className="mb-1 text-dark">
+                      Reminder Title: You have 3 Guest arriving today
+                    </p>
                     <small className="text-muted">Today | 2 min ago</small>
                   </div>
                 </div>

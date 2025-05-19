@@ -1,6 +1,32 @@
-import NavBar from "./include/NavBar";
 
-function FrontDeskNotifications() {
+  import { useEffect, useState } from "react";
+  import api from "../../context/api";
+  import NavBar from "./include/NavBar";
+  
+  function FrontDeskNotifications() {
+    const [notifications, setNotifications] = useState([]);
+    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+      const fetchNotifications = async () => {
+        try {
+          const response = await api.get("/front-desk/notifications");
+          if (Array.isArray(response.data)) {
+            setNotifications(response.data);
+          } else {
+            setMessage(response.data.message || "No Notifications Yet");
+          }
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+          setMessage("Failed to fetch notifications.");
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchNotifications();
+    }, []);
   return (
     <div>
       <NavBar />
@@ -54,17 +80,16 @@ function FrontDeskNotifications() {
 
       {/* FrontDeskNotifications List */}
       <section id="front-desk-notifications" className="container p-5">
-        <div className="row">
-          {/* Notification Cards */}
-          {[...Array(5)].map((_, index) => (
+      {loading ? (
+          <p className="text-center">Loading...</p>
+        ) : notifications.length > 0 ? (
+          <div className="row">
+          {notifications.map((notification, index) => (
             <div key={index} className="col-12 col-md-10 mx-auto mb-3">
               <div
                 className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                style={{
-                  borderRadius: "12px",
-                }}
+                style={{ borderRadius: "12px" }}
               >
-                {/* Left: Image & Details */}
                 <div className="d-flex align-items-center w-100">
                   <img
                     src="../images/clock.png"
@@ -74,22 +99,16 @@ function FrontDeskNotifications() {
                     height="50"
                   />
                   <div className="flex-grow-1">
-                    <p
-                      className="mb-2 fw-semibold text-muted"
-                      style={{
-                        fontSize: "14px",
-                      }}
-                    >
-                      Use border utilities to quickly style the border and
-                      border-radius of an element.
+                    <p className="mb-2 fw-semibold text-muted" style={{ fontSize: "14px" }}>
+                      {notification.message || "No message"}
                     </p>
                     <small className="text-muted">
-                      Yesterday | 30 minutes ago
+                      {notification.created_at
+                        ? new Date(notification.created_at).toLocaleString()
+                        : "Just now"}
                     </small>
                   </div>
                 </div>
-
-                {/* Right: Notification Indicator */}
                 <span
                   className={`ms-md-3 ${
                     index % 2 === 0 ? "text-success" : "text-danger"
@@ -102,6 +121,12 @@ function FrontDeskNotifications() {
             </div>
           ))}
         </div>
+           ) : (
+            <div className="text-center align-items-center p-5 text-muted"> 
+              <img src="../images/notification_bucket.png"  width="400" height="400" alt="Notification" className="" />
+              <h4  className="text-muted">{message}</h4>
+            </div>
+          )}
       </section>
     </div>
   );

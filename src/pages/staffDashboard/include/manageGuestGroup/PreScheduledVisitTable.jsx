@@ -1,49 +1,70 @@
+import { useState, useEffect } from "react";
+import api from "../../../../context/api";
+
 function PreScheduledVisitTable() {
+  const [visits, setVisits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVisits = async () => {
+      try {
+        const response = await api.get("/staff/guests/group");
+        setVisits(response.data.visits || []); // match response structure
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisits();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+
   return (
     <div>
       <div className="table-responsive my-5">
-        <table className="table table-bordered table-hover">
-          <thead className="">
-            <tr>
-              <th>Leader Name</th>
-              <th>Host Name</th>
-              <th>Visit Time</th>
-              <th>Visit Date/Time</th>
-              <th>Contact Information</th>
-              <th>Number of Guest</th>
-              <th>Special Requirement</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>001</td>
-              <td>John Doe</td>
-              <td>Dr. Smith</td>
-              <td>2024-02-17 10:30 AM</td>
-              <td>+1234567890</td>
-              <td>john.doe@email.com</td>
-              <td>Wheelchair Access</td>
-            </tr>
-            <tr>
-              <td>002</td>
-              <td>Jane Smith</td>
-              <td>Mr. Johnson</td>
-              <td>2024-02-18 02:00 PM</td>
-              <td>+9876543210</td>
-              <td>jane.smith@email.com</td>
-              <td>None</td>
-            </tr>
-            <tr>
-              <td>003</td>
-              <td>Mike Brown</td>
-              <td>Dr. Adams</td>
-              <td>2024-02-19 11:45 AM</td>
-              <td>+1029384756</td>
-              <td>mike.brown@email.com</td>
-              <td>Sign Language Interpreter</td>
-            </tr>
-          </tbody>
-        </table>
+        {visits.length > 0 ? (
+          <table className="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>Unique ID</th>
+                <th>Leader Name</th>
+                <th>Host Name</th>
+                {/* <th>Visit Time</th> */}
+                <th>Visit Date/Time</th>
+                <th>Contact Information</th>
+                <th>Email Address</th>
+                {/* <th>Number of Guests</th> */}
+                <th>Special Requirement</th>
+                <th>Visit Status</th> 
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {visits.map((visit) => (
+                <tr key={visit.id}>
+                  <td>{visit.id}</td>
+                  <td>{visit.visitor?.name || "N/A"}</td>
+                  <td>{visit.host_name}</td>
+                  {/* <td>{visit.visit_time}</td> */}
+                  <td>{new Date(visit.created_at).toLocaleString()}</td>
+                  <td>{visit.visitor?.contact_number || "N/A"}</td>
+                  <td>{visit.visitor?.email || "N/A"}</td>
+                  {/* <td>{visit.group_size}</td> */} 
+                  <td>{visit.visitor?.special_requirements || "None"}</td>
+                  <td>{visit.status}</td>
+                  <td>
+                  <a href="#">Reschedule</a>
+                </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <h1>No Data Available</h1>
+        )}
       </div>
     </div>
   );

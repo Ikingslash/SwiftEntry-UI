@@ -7,6 +7,22 @@ import { IoCheckmark } from "react-icons/io5";
 function VisitHistory() {
   const [activeTab, setActiveTab] = useState("pre-registered-visitors");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState("");
+
+  const handleFilterChange = (value) => {
+    setActiveFilter(value);
+    if (value === "all") {
+      setSelectedMonth(""); // Clear month when "All" is selected
+    }
+  };
+
+  const handleMonthChange = (e) => {
+    const month = e.target.value;
+    setSelectedMonth(month);
+    if (month) {
+      setActiveFilter(""); // Optional: Clear visitor type when month is selected
+    }
+  };
 
   return (
     <div>
@@ -148,6 +164,8 @@ function VisitHistory() {
             <select
               className="form-select me-3"
               style={{ minWidth: "150px", flex: "1" }}
+              value={selectedMonth}
+              onChange={handleMonthChange}
             >
               <option value="">Select Month</option>
               {[
@@ -163,41 +181,39 @@ function VisitHistory() {
                 "October",
                 "November",
                 "December",
-              ].map((month) => (
-                <option key={month} value={month.toLowerCase()}>
+              ].map((month, index) => (
+                <option key={month} value={index + 1}>
                   {month}
                 </option>
               ))}
-            </select> 
-           
+            </select>
+
             {/* Visitor Type Filter */}
             {[
               { label: "All", value: "all", width: "60px" },
               {
                 label: "Pre-Registered Visitors",
-                value: "pre-registered",
+                value: "individual",
                 width: "180px",
               },
-              { label: "Walk-in Visitors", value: "walk-in", width: "160px" },
+              { label: "Walk-in Visitors", value: "group", width: "160px" },
             ].map((item) => (
               <a
                 key={item.value}
-                onClick={() => setActiveFilter(item.value)}
+                onClick={() => handleFilterChange(item.value)}
                 className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${
-                  activeFilter === item.value
-                    ? "border-primary"
-                  : "border"
+                  activeFilter === item.value ? "border-primary" : "border"
                 }`}
                 style={{
                   minWidth: item.width,
                   borderRadius: "7px",
-                cursor: "pointer",
-                transition: "all 0.3s ease-in-out",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease-in-out",
                 }}
               >
                 <small>{item.label}</small>
                 {activeFilter === item.value && (
-                 <IoCheckmark className="fs-5 text-primary" />
+                  <IoCheckmark className="fs-5 text-primary" />
                 )}
               </a>
             ))}
@@ -208,9 +224,15 @@ function VisitHistory() {
       {/* Tab Content */}
       <div className="container mt-5">
         {activeTab === "pre-registered-visitors" && (
-          <TabPreRegisteredVisitors />
+          <TabPreRegisteredVisitors
+            month={selectedMonth}
+            visitorType={activeFilter}
+          />
         )}
-        {activeTab === "walk-in-visitors" && <TabWalkInVisitors />}
+
+        {activeTab === "walk-in-visitors" && (
+          <TabWalkInVisitors month={selectedMonth} visitorType={activeFilter} />
+        )}
       </div>
     </div>
   );

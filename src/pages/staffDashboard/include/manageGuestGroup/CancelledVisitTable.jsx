@@ -1,11 +1,39 @@
+
+import { useState, useEffect } from "react";
+import api from "../../../../context/api";
+
+
 function CancelledVisitTable() {
+  const [visits, setVisits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVisits = async () => {
+      try {
+        const response = await api.get("/staff/guests/group");
+        setVisits(response.data.visits || []); // match response structure
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisits();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+
+
+
   return (
     <div>
       <div className="table-responsive my-5">
+      {visits.length > 0 ? (
         <table className="table table-bordered table-hover">
           <thead className="">
             <tr>
-              <th>Leader Name</th>
+              <th>Guest Name</th>
               <th>Visit Date</th>
               <th>Visit Time</th>
               <th>Contact Information</th>
@@ -15,42 +43,26 @@ function CancelledVisitTable() {
             </tr>
           </thead>
 
-          <tbody>
-            <tr>
-              <td>001</td>
-              <td>John Doe</td>
-              <td>Dr. Smith</td>
-              <td>2024-02-17 10:30 AM</td>
-              <td>+1234567890</td>
-              <td>john.doe@email.com</td>
-              <td>
-                <a href="">Reschedule</a>
-              </td>
-            </tr>
-            <tr>
-              <td>002</td>
-              <td>Jane Smith</td>
-              <td>Mr. Johnson</td>
-              <td>2024-02-18 02:00 PM</td>
-              <td>+9876543210</td>
-              <td>jane.smith@email.com</td>
-              <td>
-                <a href="">Reschedule</a>
-              </td>
-            </tr>
-            <tr>
-              <td>003</td>
-              <td>Mike Brown</td>
-              <td>Dr. Adams</td>
-              <td>2024-02-19 11:45 AM</td>
-              <td>+1029384756</td>
-              <td>mike.brown@email.com</td>
-              <td>
-                <a href="">Reschedule</a>
-              </td>
-            </tr>
+          <tbody> 
+            {visits.map((visit) => (
+                <tr key={visit.id}>
+                 
+                  <td>{visit.visitor?.name || "N/A"}</td>
+                  <td>{new Date(visit.created_at).toLocaleString()}</td>
+                  <td>{visit.visit_time}</td> 
+                  <td>{visit.visitor?.contact_number || "N/A"}</td> 
+                  <td>{visit.visitor?.special_requirements || "None"}</td>
+                  <td>{visit.status}</td>
+                  <td>
+                  <a href="#">Reschedule</a>
+                </td>
+                </tr>
+              ))}
           </tbody>
         </table>
+           ) : (
+            <h1>No Data Available</h1>
+          )}
       </div>
     </div>
   );

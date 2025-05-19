@@ -3,22 +3,30 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function SignIn() {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // State to store error message
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log("Form submitted:", { rememberMe });
-   
-    // navigate("/loading");
-    // setTimeout(() => {
-      login(email, password);
-    // }, 1000);
+  
+    navigate("/loading");
+  
+    try {
+      const success = await login(email, password);
+      if (!success) {
+        navigate("/"); // Redirect back if login fails
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      navigate("/"); // Redirect back on error
+    }
   };
+  
 
   return (
     <div
@@ -31,7 +39,6 @@ function SignIn() {
           className="col-lg-5  offset-md-1  d-none d-lg-block position-relative p-0"
           style={{
             height: "100vh",
-            // borderRadius: "30px 300px 0px 0px",
             overflow: "hidden",
           }}
         >
@@ -50,7 +57,6 @@ function SignIn() {
             className="position-absolute bottom-0 start-50 translate-middle-x text-white ms-4 p-4 w-100"
             style={{
               fontSize: "22px",
-              // fontWeight: "bold",
               textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5)",
             }}
           >
@@ -58,12 +64,12 @@ function SignIn() {
               <img src="./image2.png" width={70} alt="" />
             </div>
             <p className="fw-bold fs-5 text-shadow">
-              Ready to Manage Guests with Ease? <br /> Lets Get You Started
+              Ready to Manage Guests with Ease? <br /> Let's Get You Started
             </p>
           </div>
         </div>
 
-        {/* Right Section (Sign-In Form) offset-md-1  */}
+        {/* Right Section (Sign-In Form) */}
         <div
           className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-3"
           style={{
@@ -72,11 +78,16 @@ function SignIn() {
           }}
         >
           <div className="w-100 p-5" style={{ maxWidth: "576px" }}>
-            <div className="d-flex p-3  justify-content-center">
+            <div className="d-flex p-3 justify-content-center">
               <img src="./image.png" width={180} className="py-4" alt="" />
             </div>
 
             <h2 className="text-center mb-4 fw-bold">Sign In</h2>
+
+            {errorMessage && (
+              <div className="alert alert-danger text-center">{errorMessage}</div>
+            )}
+
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label fw-semibold">Email</label>

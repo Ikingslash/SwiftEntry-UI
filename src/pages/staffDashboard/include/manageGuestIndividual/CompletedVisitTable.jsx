@@ -1,49 +1,64 @@
+import { useState, useEffect } from "react";
+import api from "../../../../context/api"; // Adjust the import path as necessary
+
 function CompletedVisitTable() {
+  const [visits, setVisits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVisits = async () => {
+      try {
+        const response = await api.get("staff/guests/individual");
+        setVisits(response.data.visits);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisits();
+  }, []);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
   return (
     <div>
       <div className="table-responsive my-5">
-        <table className="table table-bordered table-hover">
-          <thead className="">
-            <tr>
-              <th>Unique ID</th>
-              <th>Guest Name</th>
-              <th>Host Name</th>
-              <th>Visit Date/Time</th>
-              <th>Contact Information</th>
-              <th>Check In</th>
-              <th>Check Out</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>001</td>
-              <td>John Doe</td>
-              <td>Dr. Smith</td>
-              <td>2024-02-17 10:30 AM</td>
-              <td>+1234567890</td>
-              <td>10:00pm</td>
-              <td>12:00am</td>
-            </tr>
-            <tr>
-              <td>002</td>
-              <td>Jane Smith</td>
-              <td>Mr. Johnson</td>
-              <td>2024-02-18 02:00 PM</td>
-              <td>+9876543210</td>
-              <td>11:30am</td>
-              <td>14:00</td>
-            </tr>
-            <tr>
-              <td>003</td>
-              <td>Mike Brown</td>
-              <td>Dr. Adams</td>
-              <td>2024-02-19 11:45 AM</td>
-              <td>+1029384756</td>
-              <td>20:00</td>
-              <td>12:00</td>
-            </tr>
-          </tbody>
-        </table>
+        {visits.length > 0 ? (
+          <table className="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>Unique ID</th>
+                <th>Guest Name</th>
+                <th>Host Name</th>
+                <th>Visit Date/Time</th>
+                <th>Contact Information</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Special Requirement</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visits.map((visit) => (
+                <tr key={visit.id}>
+                  <td>{visit.id}</td>
+                  <td>{visit.visitor.name}</td>
+                  <td>{visit.host_name}</td>
+                  <td>{new Date(visit.check_in).toLocaleString()}</td>
+                  <td>{visit.visitor.contact_number}</td>
+                  <td>{visit.created_at}</td>
+                  <td>{visit.updated_at}</td>
+                  <td>{visit.visitor.special_requirements || "None"}</td> 
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <h1>No Pre-Scheduled Visit</h1>
+        )}
       </div>
     </div>
   );

@@ -1,80 +1,64 @@
-import React from "react";
-function TabPreRegisteredVisitors() {
-  const visitorsData = [
-    {
-      name: "John Doe",
-      contact: "123-456-7890",
-      email: "john@example.com",
-      address: "123 Street, NY",
-      host: "Mr. Smith",
-      date: "2025-03-07",
-      special: "None",
-    },
-    {
-      name: "Jane Smith",
-      contact: "987-654-3210",
-      email: "jane@example.com",
-      address: "456 Avenue, LA",
-      host: "Ms. Johnson",
-      date: "2025-03-07",
-      special: "Wheelchair Access",
-    },
-    {
-      name: "Alice Brown",
-      contact: "555-555-5555",
-      email: "alice@example.com",
-      address: "789 Blvd, TX",
-      host: "Dr. Adams",
-      date: "2025-03-06",
-      special: "Vegan Meal",
-    },
-    {
-      name: "Bob White",
-      contact: "444-444-4444",
-      email: "bob@example.com",
-      address: "654 Road, FL",
-      host: "Mr. Lee",
-      date: "2025-03-06",
-      special: "None",
-    },
-    {
-      name: "Charlie Green",
-      contact: "333-333-3333",
-      email: "charlie@example.com",
-      address: "321 Circle, WA",
-      host: "Ms. Davis",
-      date: "2025-03-05",
-      special: "Sign Language Interpreter",
-    },
-    {
-      name: "Daniel Blue",
-      contact: "222-222-2222",
-      email: "daniel@example.com",
-      address: "159 Square, CO",
-      host: "Mr. Miller",
-      date: "2025-03-04",
-      special: "None",
-    },
-    {
-      name: "Emma Yellow",
-      contact: "111-111-1111",
-      email: "emma@example.com",
-      address: "753 Lane, NV",
-      host: "Ms. Wilson",
-      date: "2025-03-03",
-      special: "Gluten-Free Meal",
-    },
-  ];
+import React, { useEffect, useState } from "react";
+function TabPreRegisteredVisitors({ month, visitorType }) {
+  const [visitorsData, setVisitorsData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const groupedVisitors = visitorsData.reduce((acc, visitor) => {
-    acc[visitor.date] = acc[visitor.date] || [];
-    acc[visitor.date].push(visitor);
-    return acc;
-  }, {});
+  useEffect(() => {
+    const fetchVisitors = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+        const queryParams = new URLSearchParams();
+        if (month) queryParams.append("month", month);
+        if (visitorType && visitorType !== "all")
+          queryParams.append("visitor_type", visitorType);
+
+        const response = await fetch(
+          `https://vms-api.194.62.98.28.nip.io/api/front-desk/history?${queryParams.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorRes = await response.json();
+          throw new Error(errorRes.message || "Failed to fetch visitor data");
+        }
+
+        const result = await response.json();
+        console.log("API response:", result); // 🔍 Log to inspect
+        setVisitorsData(result.visits || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisitors();
+  }, [month, visitorType]);
+
+  const groupedVisitors = Array.isArray(visitorsData)
+    ? visitorsData.reduce((acc, visitor) => {
+        const visitDate = visitor.date;
+        acc[visitDate] = acc[visitDate] || [];
+        acc[visitDate].push(visitor);
+        return acc;
+      }, {})
+    : {};
 
   const sortedDates = Object.keys(groupedVisitors).sort(
     (a, b) => new Date(b) - new Date(a)
   );
+
+  if (loading) return <p>Loading visitors...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
@@ -102,40 +86,35 @@ function TabPreRegisteredVisitors() {
                         className="py-4 "
                         style={{
                           backgroundColor: "#F5FAFE",
+                          // backgroundColor: "#f0f0f0",
+                          fontWeight: "bold",
+                          fontSize: "16px",
+                          color: "#000",
                         }}
                       >
-                        {date === "2025-03-07" ? "Today" : date}
+                        {new Date(date).toDateString()}
                       </td>
                     </tr>
                     {groupedVisitors[date].map((visitor, idx) => (
                       <tr key={idx}>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.name}
-                        </td>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.contact}
-                        </td>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.email}
-                        </td>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.address}
-                        </td>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.host}
-                        </td>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.date}
-                        </td>
-                        <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visitor.special}
-                        </td>
+                        <td>{visitor.visitor?.name}</td>
+                        <td>{visitor.visitor?.contact_number}</td>
+                        <td>{visitor.visitor?.email}</td>
+                        <td>{visitor.visitor?.address}</td>
+                        <td>{visitor.host_name}</td>
+                        <td>{new Date(visitor.date).toLocaleDateString()}</td>
+                        <td>{visitor.visitor?.special_requirements || "N/A"}</td>
                       </tr>
                     ))}
                   </React.Fragment>
                 ))}
               </tbody>
             </table>
+            {sortedDates.length === 0 && (
+              <div className="text-center mt-4">
+                <p>No visitors found for the selected filters.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -112,6 +112,8 @@ function App() {
           <Route path="notifications" element={<SecurityNotifications />} />
           <Route path="profile" element={<Profile />} />
         </Route>
+
+        {/* john.smith@sydani.com */}
       </Routes>
     </AuthProvider>
   );

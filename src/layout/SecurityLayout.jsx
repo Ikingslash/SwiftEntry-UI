@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
-import FlashMessage from "./FlashMessage";
+// import FlashMessage from "./FlashMessage";
 
 function SecurityLayout() {
   return (
     <div className="">
-       <FlashMessage/>
+       {/* <FlashMessage/> */}
       <Outlet />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import NavBar from "./securityDashboard/include/NavBar";
+import api from "../context/api";
 
 function SecurityDashboard() {
   const [scanResult, setScanResult] = useState(null);
@@ -10,47 +11,29 @@ function SecurityDashboard() {
     const scanner = new Html5QrcodeScanner("reader", {
       fps: 10,
       qrbox: 250,
-      // supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA] // Ensure it's using the camera
-    });
-
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      console.log("Available devices:", devices);
     });
 
     scanner.render(
-      (decodedText) => {
+      async (decodedText) => {
+        scanner.clear();
         setScanResult(decodedText);
-        fetchUserProfile(decodedText); // Fetch user details
+        await fetchUserProfile(decodedText); // Treat decodedText as userId
       },
-      (err) => console.error(err)
+      (error) => {
+        console.warn(error);
+      }
     );
-
-    return () => scanner.clear();
   }, []);
-
-  // Dummy user profile data for testing
-  const dummyProfiles = {
-    12345: { name: "John Doe", email: "johndoe@example.com", role: "Visitor" },
-    67890: {
-      name: "Jane Smith",
-      email: "janesmith@example.com",
-      role: "Employee",
-    },
-  };
 
   const fetchUserProfile = async (userId) => {
     try {
-      // Simulating API request with dummy data
-      const data = dummyProfiles[userId] || {
-        name: "Unknown",
-        email: "N/A",
-        role: "N/A",
-      };
-      setUserProfile(data);
+      const response = await api.get(`/api/security/user-profile/${userId}`);
+      setUserProfile(response.data);
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user profile:", error);
     }
   };
+  
 
   return (
     <div>
@@ -134,6 +117,12 @@ function SecurityDashboard() {
         <a href="#" className="mt-4">
           <small>Enter Code Instead</small>
         </a>
+
+        {scanResult && (
+        <div className="text-center mt-10">
+          <h2 className="text-lg">QR Code Result: {scanResult}</h2>
+        </div>
+      )}
         {/* User Profile Modal */}
         {userProfile && (
           <div
