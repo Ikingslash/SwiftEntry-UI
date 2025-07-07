@@ -1,145 +1,288 @@
-import React from "react";
-function GeneralSettings() { 
+import React, { useState } from "react";
+import PurposeModal from "../include/PurposeModal";
+import CardOption from "../include/CardOption";
+function GeneralSettings() {
+  const [primaryColor, setPrimaryColor] = useState("");
+  const [timezone, setTimezone] = useState("WAT");
+  const [purposes, setPurposes] = useState([
+    "Recruitment",
+    "Business Meeting",
+    "Repairs & Maintenance",
+    "Personal",
+    "Other",
+  ]);
+  const [selectedPurpose, setSelectedPurpose] = useState("");
+  const [modalType, setModalType] = useState(""); // "add" or "edit"
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState("blue");
 
-  const visitorsData = [
-    {
-      name: "Henry Riggs",
-      hostName: "Henry Riggs",
-      visitDateTime: "12/10/24, 3:00pm",
-      visitType: "Individual",
-      checkedIn: "10:00am",
-      checkedOut: "12:00pm",
-    },
-    {
-      name: "Maya Luke",
-      hostName: "Maya Luke",
-      visitDateTime: "12/10/24, 3:00pm",
-      visitType: "Sales Department",
-      checkedIn: "2:00pm",
-      checkedOut: "-----",
-    },
-    {
-      name: "Mary Smith",
-      hostName: "Mary Smith",
-      visitDateTime: "12/10/24, 3:00pm",
-      visitType: "Group",
-      checkedIn: "Expecting",
-      checkedOut: "-----",
-    },
-    {
-      name: "Henry Riggs",
-      hostName: "Henry Riggs",
-      visitDateTime: "13/10/24, 3:00pm",
-      visitType: "Individual",
-      checkedIn: "10:00am",
-      checkedOut: "12:00pm",
-    },
-    {
-      name: "Maya Luke",
-      hostName: "Maya Luke",
-      visitDateTime: "13/10/24, 3:00pm",
-      visitType: "Sales Department",
-      checkedIn: "2:00pm",
-      checkedOut: "-----",
-    },
-    {
-      name: "Mary Smith",
-      hostName: "Mary Smith",
-      visitDateTime: "11/10/24, 3:00pm",
-      visitType: "Group",
-      checkedIn: "Expecting",
-      checkedOut: "-----",
-    },
-  ];
-  const groupedVisitors = visitorsData.reduce((acc, visitor) => {
-    const visitDate = visitor.visitDateTime.split(",")[0];
-    acc[visitDate] = acc[visitDate] || [];
-    acc[visitDate].push(visitor);
-    return acc;
-  }, {});
+  const handleThemeSelect = (theme) => {
+    setSelectedTheme(theme);
+    // You can also save it to backend or context here
+  };
 
-  const sortedDates = Object.keys(groupedVisitors).sort(
-    (a, b) => new Date(b) - new Date(a)
-  );
+  const handleAddPurpose = (newPurpose) => {
+    setPurposes([...purposes, newPurpose]);
+  };
+
+  const handleUpdatePurpose = (updatedPurpose) => {
+    setPurposes(
+      purposes.map((p) => (p === selectedPurpose ? updatedPurpose : p))
+    );
+  };
+
+  const handleDeletePurpose = () => {
+    setPurposes(purposes.filter((p) => p !== selectedPurpose));
+  };
 
   return (
     <div>
-      <div className="container">
-        <div className="table-responsive my-5">
-          <table className="table table-bordered table-hover">
-            <thead className="bg-white">
-              <tr>
-                <th>Name</th>
-                <th>Host Name</th>
-                <th>Visit Date/Time</th>
-                <th>Visit Type</th>
-                <th>Checked In</th>
-                <th>Checked Out</th>
-                <th className="text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedDates.map((date, index) => (
-                <React.Fragment key={index}>
-                  <tr className="table">
-                    <td
-                      colSpan="7"
-                      className="py-3"
-                      style={{ backgroundColor: "#F5FAFE" }}
-                    >
-                      {date === "12/10/24" ? "Today" : date}
-                    </td>
-                  </tr>
-                  {groupedVisitors[date].map((visitor, idx) => (
-                    <tr key={idx}>
-                      <td>{visitor.name}</td>
-                      <td>{visitor.hostName}</td>
-                      <td>{visitor.visitDateTime}</td>
-                      <td>{visitor.visitType}</td>
-                      <td>{visitor.checkedIn}</td>
-                      <td>{visitor.checkedOut}</td>
-                      <td className="text-center">
-                        <div className="dropdown">
-                          <button
-                            className="btn btn-white border-primary"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                          >
-                            <i className="bi bi-three-dots-vertical"></i>
-                          </button>
-                          <ul
-                            className="dropdown-menu bg-light rounded-4"
-                            style={{ fontSize: "13px", width: "250px" }}
-                          >
-                            <li>
-                              <button className="dropdown-item">
-                                Edit Info
-                              </button>
-                            </li>
-                            <li>
-                              <button className="dropdown-item">
-                                Invite Again
-                              </button>
-                            </li>
-                            <li>
-                              <hr className="dropdown-divider" />
-                            </li>
-                            <li>
-                              <button className="dropdown-item text-danger">
-                                Delete Visit
-                              </button>
-                            </li>
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+      <div className="row mb-5">
+        {/* Appearance */}
+        <div className="col-md-4">
+          <div className=" p-3">
+            <h5 className="mb-3">Appearance</h5>
+            <p>
+              {" "}
+              <small>
+                Customize the Interface Colour themes to reflect your
+                organization’s identity. Maintain consistency across all
+                dashboards and Platforms.
+              </small>
+            </p>
+          </div>
+        </div>
+        <div className="col-md-8">
+          <div className="row d-flex my-3">
+            <CardOption
+              title="Default"
+              themeColor="blue"
+              selected={selectedTheme === "blue"}
+              onClick={() => handleThemeSelect("blue")}
+            />
+            <CardOption
+              title="Classic"
+              themeColor="orange"
+              selected={selectedTheme === "orange"}
+              onClick={() => handleThemeSelect("orange")}
+            />
+            <CardOption
+              title="Royal"
+              themeColor="purple"
+              selected={selectedTheme === "purple"}
+              onClick={() => handleThemeSelect("purple")}
+            />
+          </div>
+
+          <div className="card shadow-sm p-4">
+            <h6 className="mb-3 fw-semibold">Customize Primary Color</h6>
+
+            <div className="row align-items-center">
+              <div className="col-md-6 mb-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter Color Code (e.g. #007bff)"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-3 mb-2">
+                <button className="btn btn-primary w-100">Update</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <hr className="text-secondary" />
+
+      {/* Timezone */}
+      <div className="row my-3">
+        <div className="col-md-6">
+          <div className=" p-3">
+            <h5 className="mb-3">Time Zone Management</h5>
+            <p>
+              {" "}
+              <small>
+                Set and manage time zones to ensure accurate timestamps for
+                visitor check-ins, reports, and notifications.
+              </small>
+            </p>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="card shadow-sm p-4">
+            <h6 className="mb-3 fw-semibold">Time Zone</h6>
+
+            <div className="row align-items-center">
+              <div className="col-md-12 mb-2">
+                <select
+                  className="form-select w-100"
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                >
+                  <option value="GMT">Greenwich Mean Time (GMT)</option>
+                  <option value="CAT">Central Africa Time (CAT)</option>
+                  <option value="WAT">West Africa Time (WAT)</option>
+                  <option value="EAT">East Africa Time (EAT)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr className="text-secondary" />
+
+      {/* Purpose of Visit */}
+      <div className="row my-3">
+        <div className="col-md-6">
+          <div className=" p-3">
+            <h5 className="mb-3">Purpose of Visit</h5>
+            <p>
+              {" "}
+              <small>Edit Visit Purpose Details</small>
+            </p>
+          </div>
+        </div>
+        <div className="col-md-5">
+          <div className="card shadow-sm">
+            <div className="d-flex justify-content-between card-header bg-white align-items-center">
+              <strong>Edit Visit Purpose Details</strong>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setModalType("add");
+                  setShowModal(true);
+                }}
+              >
+                Add New
+              </button>
+            </div>
+            <ul className="card-body mt-3">
+              {purposes.map((p, i) => (
+                <li
+                  key={i}
+                  className=" d-flex justify-content-between align-items-center"
+                >
+                  {p}
+                  <button
+                    className="btn btn-link"
+                    onClick={() => {
+                      setSelectedPurpose(p);
+                      setModalType("edit");
+                      setShowModal(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <hr className="text-secondary" />
+
+      {/* Date & Time Format */}
+      <div className="row my-3">
+        <div className="col-md-6">
+          <div className=" p-3">
+            <h5 className="mb-3">Date & Time Format</h5>
+            <p>
+              {" "}
+              <small>
+                Choose preferred formats for dates and times to align with
+                organizational requirements.
+              </small>
+            </p>
+          </div>
+        </div>
+        <div className="col-md-5">
+          <div className="card shadow-sm">
+            <div className="row p-4">
+              <div className="col-md-6">
+                <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="dateFormat"
+                    id="mdy"
+                  />
+                  <label className="form-check-label" htmlFor="mdy">
+                    MM/DD/YYYY
+                  </label>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="dateFormat"
+                    id="dmy"
+                  />
+                  <label className="form-check-label" htmlFor="dmy">
+                    DD/MM/YYYY
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr className="text-secondary" />
+
+      {/* Language Preference Placeholder */}
+   
+      <div className="row my-3">
+        <div className="col-md-6">
+          <div className=" p-3">
+            <h5 className="mb-3">Language Preference</h5>
+            <p>
+              {" "}
+              <small>
+              Choose preferred formats for dates and times to align with organizational requirements.
+              </small>
+            </p>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="card shadow-sm p-4">
+            <h6 className="mb-3 fw-semibold">Choose Language</h6>
+
+            <div className="row align-items-center">
+              <div className="col-md-12 mb-2">
+                <select
+                  className="form-select w-100"
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                >
+                  <option value="GMT">English</option>
+                  <option value="CAT">French</option>
+                  <option value="WAT">Hindu</option>
+                  <option value="EAT">Arabic</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> 
+
+      {/* Modal */}
+      <PurposeModal
+        type={modalType}
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        selectedPurpose={selectedPurpose}
+        onAdd={handleAddPurpose}
+        onUpdate={handleUpdatePurpose}
+        onDelete={handleDeletePurpose}
+      />
     </div>
   );
 }

@@ -1,32 +1,23 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 function SignIn() {
-  const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // State to store error message
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-  
-    navigate("/loading");
-  
-    try {
-      const success = await login(email, password);
-      if (!success) {
-        navigate("/"); // Redirect back if login fails
-      }
-    } catch (error) {
-      console.error("Error logging in:", error);
-      navigate("/"); // Redirect back on error
+
+    // Dummy logic
+    if (email === "test@example.com" && password === "password123") {
+      alert("Login successful (dummy data)");
+    } else {
+      setErrorMessage("Invalid email or password (dummy error)");
     }
   };
-  
 
   return (
     <div
@@ -36,11 +27,8 @@ function SignIn() {
       <div className="row w-100 h-100 d-flex align-items-center justify-content-center g-0">
         {/* Left Section (Video Background) */}
         <div
-          className="col-lg-5  offset-md-1  d-none d-lg-block position-relative p-0"
-          style={{
-            height: "100vh",
-            overflow: "hidden",
-          }}
+          className="col-lg-5 offset-md-1 d-none d-lg-block position-relative p-0"
+          style={{ height: "100vh", overflow: "hidden" }}
         >
           <video
             autoPlay
@@ -61,7 +49,7 @@ function SignIn() {
             }}
           >
             <div className="d-flex">
-              <img src="./image2.png" width={70} alt="" />
+              <img src="./image2.png" width={70} alt="Logo" />
             </div>
             <p className="fw-bold fs-5 text-shadow">
               Ready to Manage Guests with Ease? <br /> Let's Get You Started
@@ -72,14 +60,11 @@ function SignIn() {
         {/* Right Section (Sign-In Form) */}
         <div
           className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-3"
-          style={{
-            height: "100vh",
-            paddingRight: "80px",
-          }}
+          style={{ height: "100vh", paddingRight: "80px" }}
         >
           <div className="w-100 p-5" style={{ maxWidth: "576px" }}>
             <div className="d-flex p-3 justify-content-center">
-              <img src="./image.png" width={180} className="py-4" alt="" />
+              <img src="./image.png" width={180} className="py-4" alt="Logo" />
             </div>
 
             <h2 className="text-center mb-4 fw-bold">Sign In</h2>
@@ -134,10 +119,7 @@ function SignIn() {
                     Remember Me
                   </label>
                 </div>
-                <Link
-                  to="/forgot-password"
-                  className="text-primary text-decoration-none"
-                >
+                <Link to="/forgot-password" className="text-primary text-decoration-none">
                   Forgot Password?
                 </Link>
               </div>

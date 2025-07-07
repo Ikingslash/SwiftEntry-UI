@@ -1,47 +1,43 @@
-import { useState, useEffect } from "react"; 
+import { useState } from "react";
 import NavBar from "./staffDashboard/include/NavBar";
-import { useAuth } from "../context/AuthContext";
-import api from "../context/api";
-// import Notifications from "./staffDashboard/Notifications";
 
-function Dashboard() { 
-    const { user, token } = useAuth();
-  
-    const [recents, setRecents] = useState([]);
-    const [todaysGuests, setTodaysGuests] = useState([]);
-    const [notifications, setNotifications] = useState([]);
-  
-    // Fetch all data on mount
-    useEffect(() => {
-      if (!token) return;
-  
-      const fetchDashboardData = async () => {
-        try {
-          const [recentsRes, guestsRes, notifRes] = await Promise.all([
-            api.get("/staff/dashboard/recents", {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            api.get("/staff/dashboard/todays-guests", {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            api.get("/staff/notifications", {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-          ]);
-  
-          setRecents(recentsRes.data.recents || []);
-          setTodaysGuests(guestsRes.data.todays_guests || []);
-          setNotifications(
-            notifRes.data.notifications || [{ message: notifRes.data.message }]
-          );
-        } catch (error) {
-          console.error("Dashboard fetch error:", error);
-        }
-      };
-  
-      fetchDashboardData();
-    }, [token]);
-  
+function Dashboard() {
+  // Dummy data replacing backend API
+  const user = { name: "John Doe" };
+
+  const [recents] = useState([
+    {
+      id: 1,
+      visitor: { name: "Alice Johnson" },
+      purpose: "Business Meeting",
+      check_in: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      visitor: { name: "Bob Smith" },
+      purpose: "Interview",
+      check_in: new Date().toISOString(),
+    },
+    {
+      id: 3,
+      visitor: { name: "John Doe" },
+      purpose: "Visiting",
+      check_in: new Date().toISOString(),
+    },
+  ]);
+
+  const [todaysGuests] = useState([
+    { id: 1, name: "Emily Clark", check_in: "10:30 AM" },
+    { id: 2, name: "Michael Scott", check_in: "11:15 AM" },
+    { id: 3, name: "Sarah Connor", check_in: "01:00 PM" },
+  ]);
+
+  const [notifications] = useState([
+    { title: "Reminder", message: "Meeting at 3PM with the HR team." },
+    { title: "Alert", message: "Visitor ID check failed at the gate." },
+    { title: "Visit", message: "VA Friend will be Visiting" },
+    { title: "Alert", message: "Visitor ID check failed at the gate." },
+  ]);
 
   return (
     <div>
@@ -179,7 +175,7 @@ function Dashboard() {
               {recents.length > 0 ? (
                 recents.slice(0, 7).map((item) => (
                   <div key={item.id} className="col-12">
-                    <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
+                    <div className="card p-3 shadow d-flex flex-row align-items-center">
                       <img
                         src="./images/clock.png"
                         alt="Logo"
@@ -192,7 +188,14 @@ function Dashboard() {
                           {item.visitor.name} - {item.purpose}
                         </p>
                         <small className="text-muted">
-                          Scheduled at {new Date(item.check_in).toLocaleString()}
+                          {new Date(item.check_in).toLocaleDateString("en-US", {
+                            weekday: "long",
+                          })}
+                          {" "}|{" "}
+                          {new Date(item.check_in).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </small>
                       </div>
                     </div>
@@ -207,41 +210,42 @@ function Dashboard() {
           {/* Right Column - Today's Guests */}
           <div className="col-md-6">
             <div className="d-flex justify-content-between align-items-center py-4">
-              <h5 className="fw-bold">Today's Guests</h5>
+              <h5 className="fw-bold">Todays Guests</h5>
               <a href="#" className="text-primary">
                 See more
               </a>
             </div>
 
-          {/* Guest Cards (3 in a Row) */}
-<div className="row g-3">
-  {todaysGuests.length === 0 ? (
-    <p className="text-muted">No guests for today.</p>
-  ) : (
-    todaysGuests.slice(0, 3).map((guest, index) => (
-      <div
-        key={guest.id}
-        className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
-      >
-        <div className="card p-2 m-2 shadow-sm rounded-3 text-center">
-          <img src="./images/user1.png" alt="Guest" />
-          <p className="mt-2 mb-1 fw-bold">{guest.name}</p>
-          <small className="text-muted">
-            <span
-              className={`ms-2 ${
-                index % 2 === 0 ? "text-success me-3" : "text-danger me-3"
-              }`}
-            >
-              ●
-            </span>
-            {guest.check_in || "No time"}
-          </small>
-        </div>
-      </div>
-    ))
-  )}
-</div>
-
+            {/* Guest Cards (3 in a Row) */}
+            <div className="row g-3">
+              {todaysGuests.length === 0 ? (
+                <p className="text-muted">No guests for today.</p>
+              ) : (
+                todaysGuests.slice(0, 3).map((guest, index) => (
+                  <div
+                    key={guest.id}
+                    className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
+                  >
+                    <div className="card p-2 m-2 shadow-sm rounded-3 text-center">
+                      <img src="./images/user1.png" alt="Guest" />
+                      <p className="mt-2 mb-1 fw-bold">{guest.name}</p>
+                      <small className="text-muted">
+                        <span
+                          className={`ms-2 ${
+                            index % 2 === 0
+                              ? "text-success me-3"
+                              : "text-danger me-3"
+                          }`}
+                        >
+                          ●
+                        </span>
+                        {guest.check_in || "No time"}
+                      </small>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
             {/* Notifications */}
             {notifications.length > 0 ? (

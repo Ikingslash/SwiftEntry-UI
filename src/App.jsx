@@ -52,11 +52,19 @@ function App() {
         <Route
           path="/staff-dashboard"
           element={
+           
+              <StaffLayout />
+            
+          }
+        >
+        {/* <Route
+          path="/staff-dashboard"
+          element={
             <PrivateRoute>
               <StaffLayout />
             </PrivateRoute>
           }
-        >
+        > */}
           <Route index element={<Dashboard />} />
           <Route path="new-guest" element={<NewGuest />} />
           <Route path="manage-guest" element={<ManageGuestsIndividual />} />
@@ -81,11 +89,19 @@ function App() {
         <Route
           path="/admin-dashboard"
           element={
+           
+              <AdminLayout />
+           
+          }
+        >
+        {/* <Route
+          path="/admin-dashboard"
+          element={
             <PrivateRoute>
               <AdminLayout />
             </PrivateRoute>
           }
-        >
+        > */}
           <Route index element={<AdminDashboard />} />
           <Route path="visitors" element={<AdminVisitors />} />
           <Route path="staffs" element={<AdminStaff />} />
