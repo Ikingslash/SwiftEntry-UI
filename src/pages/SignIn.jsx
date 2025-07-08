@@ -1,21 +1,42 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+// import { useAuth } from "../context/AuthContext"; 
 
 function SignIn() {
+  const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  // const { login } = useAuth(); // Backend login method commented out
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // State to store error message
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Dummy logic
-    if (email === "test@example.com" && password === "password123") {
-      alert("Login successful (dummy data)");
-    } else {
-      setErrorMessage("Invalid email or password (dummy error)");
+    navigate("/loading");
+
+    try {
+      // Simulating login with dummy data instead of backend call
+      const dummyEmail = "test@example.com";
+      const dummyPassword = "password123";
+
+      const success = email === dummyEmail && password === dummyPassword;
+
+      if (!success) {
+        setErrorMessage("Invalid email or password"); // Show error
+        navigate("/"); // Redirect back if login fails
+      } else {
+        // Dummy login success
+        setErrorMessage(""); // Clear error if any
+        // Proceed as if logged in
+        setTimeout(() => {
+          navigate("/dashboard"); // Simulate redirection after login
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      navigate("/"); // Redirect back on error
     }
   };
 
@@ -27,8 +48,11 @@ function SignIn() {
       <div className="row w-100 h-100 d-flex align-items-center justify-content-center g-0">
         {/* Left Section (Video Background) */}
         <div
-          className="col-lg-5 offset-md-1 d-none d-lg-block position-relative p-0"
-          style={{ height: "100vh", overflow: "hidden" }}
+          className="col-lg-5  offset-md-1  d-none d-lg-block position-relative p-0"
+          style={{
+            height: "100vh",
+            overflow: "hidden",
+          }}
         >
           <video
             autoPlay
@@ -49,10 +73,10 @@ function SignIn() {
             }}
           >
             <div className="d-flex">
-              <img src="./image2.png" width={70} alt="Logo" />
+              <img src="./image2.png" width={70} alt="" />
             </div>
             <p className="fw-bold fs-5 text-shadow">
-              Ready to Manage Guests with Ease? <br /> Let's Get You Started
+              Ready to Manage Guests with Ease? <br /> Lets Get You Started
             </p>
           </div>
         </div>
@@ -60,17 +84,22 @@ function SignIn() {
         {/* Right Section (Sign-In Form) */}
         <div
           className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-3"
-          style={{ height: "100vh", paddingRight: "80px" }}
+          style={{
+            height: "100vh",
+            paddingRight: "80px",
+          }}
         >
           <div className="w-100 p-5" style={{ maxWidth: "576px" }}>
             <div className="d-flex p-3 justify-content-center">
-              <img src="./image.png" width={180} className="py-4" alt="Logo" />
+              <img src="./image.png" width={180} className="py-4" alt="" />
             </div>
 
             <h2 className="text-center mb-4 fw-bold">Sign In</h2>
 
             {errorMessage && (
-              <div className="alert alert-danger text-center">{errorMessage}</div>
+              <div className="alert alert-danger text-center">
+                {errorMessage}
+              </div>
             )}
 
             <form onSubmit={handleSubmit}>
@@ -80,8 +109,7 @@ function SignIn() {
                   type="email"
                   className="form-control"
                   placeholder="Enter your company assigned email"
-                  required
-                  style={{ color: "rgba(133, 124, 124, 0.5)" }}
+                  required 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -119,7 +147,10 @@ function SignIn() {
                     Remember Me
                   </label>
                 </div>
-                <Link to="/forgot-password" className="text-primary text-decoration-none">
+                <Link
+                  to="/forgot-password"
+                  className="text-primary text-decoration-none"
+                >
                   Forgot Password?
                 </Link>
               </div>

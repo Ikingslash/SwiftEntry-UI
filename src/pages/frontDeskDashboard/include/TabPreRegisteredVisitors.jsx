@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 function TabPreRegisteredVisitors({ month, visitorType }) {
   const [visitorsData, setVisitorsData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -9,6 +10,8 @@ function TabPreRegisteredVisitors({ month, visitorType }) {
       setLoading(true);
       setError(null);
       try {
+        // === BACKEND CODE COMMENTED OUT ===
+        /*
         const token = localStorage.getItem("token");
         const queryParams = new URLSearchParams();
         if (month) queryParams.append("month", month);
@@ -32,8 +35,48 @@ function TabPreRegisteredVisitors({ month, visitorType }) {
         }
 
         const result = await response.json();
-        console.log("API response:", result); // 🔍 Log to inspect
+        console.log("API response:", result);
         setVisitorsData(result.visits || []);
+        */
+
+        // === DUMMY DATA USED INSTEAD ===
+        const dummyData = [
+          {
+            date: "2025-07-06",
+            host_name: "Mr. James",
+            visitor: {
+              name: "John Doe",
+              contact_number: "08012345678",
+              email: "john@example.com",
+              address: "123 Street, Lagos",
+              special_requirements: "Wheelchair access",
+            },
+          },
+          {
+            date: "2025-07-06",
+            host_name: "Mrs. Linda",
+            visitor: {
+              name: "Jane Smith",
+              contact_number: "08098765432",
+              email: "jane@example.com",
+              address: "456 Avenue, Abuja",
+              special_requirements: "",
+            },
+          },
+          {
+            date: "2025-07-05",
+            host_name: "Dr. Mike",
+            visitor: {
+              name: "Peter Obi",
+              contact_number: "08011223344",
+              email: "peter@example.com",
+              address: "789 Road, Port Harcourt",
+              special_requirements: "Interpreter needed",
+            },
+          },
+        ];
+
+        setVisitorsData(dummyData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -86,7 +129,6 @@ function TabPreRegisteredVisitors({ month, visitorType }) {
                         className="py-4 "
                         style={{
                           backgroundColor: "#F5FAFE",
-                          // backgroundColor: "#f0f0f0",
                           fontWeight: "bold",
                           fontSize: "16px",
                           color: "#000",

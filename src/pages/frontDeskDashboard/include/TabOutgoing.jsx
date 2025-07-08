@@ -14,7 +14,7 @@ function TabOutgoing() {
                 height="40"
               />
               <div>
-                <p className="mb-0">Femi Biodun</p>
+                <p className="mb-0">John Doe</p>
                 <small className="text-muted">fem123@gmail.com</small>
               </div>
               <span
@@ -107,7 +107,7 @@ function TabOutgoing() {
                 height="40"
               />
               <div>
-                <p className="mb-0">Femi Biodun</p>
+                <p className="mb-0">Usman Musa</p>
                 <small className="text-muted">fem123@gmail.com</small>
               </div>
               <span

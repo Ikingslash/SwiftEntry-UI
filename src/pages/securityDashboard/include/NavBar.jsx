@@ -95,18 +95,7 @@ function Navbar() {
                 Generate
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/security-dashboard/generate-by-unique-code"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
-                to="/security-dashboard/generate-by-unique-code"
-              >
-                Generate2
-              </NavLink>
-            </li>
+        
           </ul>
         </div>
 

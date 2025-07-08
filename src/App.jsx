@@ -49,15 +49,8 @@ function App() {
         <Route path="/set-new-password" element={<SetNewPassword />} />
 
         {/* Protected Routes - Wrapped with PrivateRoute */}
-        <Route
-          path="/staff-dashboard"
-          element={
-           
-              <StaffLayout />
-            
-          }
-        >
-        {/* <Route
+        <Route path="/staff-dashboard" element={<StaffLayout />}>
+          {/* <Route
           path="/staff-dashboard"
           element={
             <PrivateRoute>
@@ -72,29 +65,23 @@ function App() {
           <Route path="profile" element={<Profile />} />
         </Route>
 
-        <Route
+        <Route path="/front-desk-dashboard" element={<FrontDeskLayout />}>
+          {/* <Route
           path="/front-desk-dashboard"
           element={
             <PrivateRoute>
               <FrontDeskLayout />
             </PrivateRoute>
           }
-        >
+        > */}
           <Route index element={<FrontDeskDashboard />} />
           <Route path="register-guest" element={<RegisterGuest />} />
           <Route path="history" element={<VisitHistory />} />
           <Route path="notifications" element={<FrontDeskNotifications />} />
         </Route>
 
-        <Route
-          path="/admin-dashboard"
-          element={
-           
-              <AdminLayout />
-           
-          }
-        >
-        {/* <Route
+        <Route path="/admin-dashboard" element={<AdminLayout />}>
+          {/* <Route
           path="/admin-dashboard"
           element={
             <PrivateRoute>
@@ -109,14 +96,15 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 
-        <Route
+        {/* <Route
           path="/security-dashboard"
           element={
             <PrivateRoute>
               <SecurityLayout />
             </PrivateRoute>
           }
-        >
+        > */}
+           <Route path="/security-dashboard" element={<SecurityLayout />}>
           <Route index element={<SecurityDashboard />} />
           <Route path="generate-qr-code" element={<GenerateQRCode />} />
           <Route

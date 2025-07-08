@@ -10,6 +10,8 @@ function TabWalkInVisitors({ month, visitorType }) {
       setLoading(true);
       setError(null);
       try {
+        // Commenting out actual API fetch for demo/testing purposes
+        /*
         const token = localStorage.getItem("token");
         const queryParams = new URLSearchParams();
 
@@ -37,6 +39,59 @@ function TabWalkInVisitors({ month, visitorType }) {
         const result = await response.json();
         console.log("Walk-in visitors API response:", result);
         setVisitorsData(result.visits || []);
+        */
+
+        // Dummy static data simulating API response
+        const dummyData = [
+          {
+            full_name: "Jane Doe",
+            phone_number: "1234567890",
+            email_address: "jane@example.com",
+            residential_address: "123 ABC Street",
+            host_name: "Mr. Smith",
+            date_of_visit: "2024-07-02",
+            special_request: "Wheelchair assistance",
+          },
+          {
+            full_name: "John Smith",
+            phone_number: "0987654321",
+            email_address: "john@example.com",
+            residential_address: "456 XYZ Avenue",
+            host_name: "Ms. Johnson",
+            date_of_visit: "2024-07-02",
+            special_request: "None",
+          },
+          {
+            full_name: "Alice Brown",
+            phone_number: "1112223333",
+            email_address: "alice@example.com",
+            residential_address: "789 QWE Road",
+            host_name: "Dr. Lee",
+            date_of_visit: "2024-07-05",
+            special_request: "Interpreter",
+          },
+          {
+            full_name: "Bob Green",
+            phone_number: "4445556666",
+            email_address: "bob@example.com",
+            residential_address: "321 RTY Blvd",
+            host_name: "Prof. Alan",
+            date_of_visit: "2024-06-28",
+            special_request: "N/A",
+          },
+        ];
+
+        // Simulate filtering by month
+        const filteredData = month
+          ? dummyData.filter((item) =>
+              new Date(item.date_of_visit).toLocaleString("default", { month: "long" }) === month
+            )
+          : dummyData;
+
+        // Simulate filtering by visitorType if needed (optional)
+        // Add a visitor_type field in dummy data if needed
+
+        setVisitorsData(filteredData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -49,7 +104,7 @@ function TabWalkInVisitors({ month, visitorType }) {
 
   const groupedVisitors = Array.isArray(visitorsData)
     ? visitorsData.reduce((acc, visitor) => {
-        const visitDate = visitor.date_of_visit; // use correct field name
+        const visitDate = visitor.date_of_visit;
         acc[visitDate] = acc[visitDate] || [];
         acc[visitDate].push(visitor);
         return acc;
