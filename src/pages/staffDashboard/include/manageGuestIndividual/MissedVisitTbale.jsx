@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../../../context/api";
+// import api from "../../../../context/api"; // Commented out backend API import
 
 function MissedVisitTable() {
   const [visits, setVisits] = useState([]);
@@ -8,8 +8,36 @@ function MissedVisitTable() {
   useEffect(() => {
     const fetchVisits = async () => {
       try {
-        const response = await api.get("staff/guests/individual");
-        setVisits(response.data.visits);
+        // const response = await api.get("staff/guests/individual");
+        // setVisits(response.data.visits);
+
+        // Dummy data used to simulate response
+        const dummyData = [
+          {
+            id: "VST001",
+            visitor: {
+              name: "John Doe",
+              contact_number: "08012345678",
+              email: "johndoe@example.com",
+              special_requirements: "Wheelchair access"
+            },
+            host_name: "Jane Smith",
+            check_in: new Date().toISOString(),
+          },
+          {
+            id: "VST002",
+            visitor: {
+              name: "Mary Johnson",
+              contact_number: "08098765432",
+              email: "maryj@example.com",
+              special_requirements: "",
+            },
+            host_name: "Michael Brown",
+            check_in: new Date().toISOString(),
+          }
+        ];
+
+        setVisits(dummyData); // Use dummy data
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -23,6 +51,7 @@ function MissedVisitTable() {
   if (loading) {
     return <p>Loading...</p>;
   }
+
   return (
     <div>
       <div className="table-responsive my-5">

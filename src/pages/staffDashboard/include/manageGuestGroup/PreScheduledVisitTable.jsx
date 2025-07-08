@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../../../context/api";
+// import api from "../../../../context/api"; // Commented out backend API
 
 function PreScheduledVisitTable() {
   const [visits, setVisits] = useState([]);
@@ -8,8 +8,44 @@ function PreScheduledVisitTable() {
   useEffect(() => {
     const fetchVisits = async () => {
       try {
-        const response = await api.get("/staff/guests/group");
-        setVisits(response.data.visits || []); // match response structure
+        // Dummy data to replace backend response
+        const dummyData = {
+          visits: [
+            {
+              id: "001",
+              visitor: {
+                name: "John Doe",
+                contact_number: "08012345678",
+                email: "john@example.com",
+                special_requirements: "Wheelchair access",
+              },
+              host_name: "Jane Smith",
+              created_at: new Date().toISOString(),
+              status: "Scheduled",
+              // group_size: 5,
+            },
+            {
+              id: "002",
+              visitor: {
+                name: "Mary Johnson",
+                contact_number: "09087654321",
+                email: "mary@example.com",
+                special_requirements: "",
+              },
+              host_name: "Michael Brown",
+              created_at: new Date().toISOString(),
+              status: "Pending",
+              // group_size: 3,
+            },
+          ],
+        };
+
+        // Simulate delay like an API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // const response = await api.get("/staff/guests/group");
+        // setVisits(response.data.visits || []);
+        setVisits(dummyData.visits); // Use dummy data instead of API response
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -21,6 +57,7 @@ function PreScheduledVisitTable() {
   }, []);
 
   if (loading) return <p>Loading...</p>;
+
 
   return (
     <div>

@@ -1,5 +1,5 @@
-import { useState , useEffect} from "react";
-import api from '../../../../context/api'; // Adjust the import path as necessary
+import { useState, useEffect } from "react";
+// import api from '../../../../context/api'; // Commented out backend import
 
 function PreScheduledVisitTable() {
   const [visits, setVisits] = useState([]);
@@ -8,10 +8,43 @@ function PreScheduledVisitTable() {
   useEffect(() => {
     const fetchVisits = async () => {
       try {
-        const response = await api.get('staff/guests/individual');
-        setVisits(response.data.visits);
+        // Simulate API response with dummy data
+        const dummyData = {
+          visits: [
+            {
+              id: "VIS123",
+              visitor: {
+                name: "John Doe",
+                contact_number: "08012345678",
+                email: "johndoe@example.com",
+                special_requirements: "Wheelchair access",
+              },
+              host_name: "Mr. Smith",
+              check_in: "2025-07-07T10:30:00Z",
+            },
+            {
+              id: "VIS124",
+              visitor: {
+                name: "Jane Roe",
+                contact_number: "08087654321",
+                email: "janeroe@example.com",
+                special_requirements: null,
+              },
+              host_name: "Ms. Johnson",
+              check_in: "2025-07-08T14:00:00Z",
+            },
+          ],
+        };
+
+        // Simulate delay like a real API
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Replace actual API call with dummy data
+        // const response = await api.get('staff/guests/individual');
+        // setVisits(response.data.visits);
+        setVisits(dummyData.visits);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -23,7 +56,7 @@ function PreScheduledVisitTable() {
   if (loading) {
     return <p>Loading...</p>;
   }
-
+  
   return (
     <div>
       <div className="table-responsive my-5">

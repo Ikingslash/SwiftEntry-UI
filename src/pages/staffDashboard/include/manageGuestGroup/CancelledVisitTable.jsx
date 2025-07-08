@@ -1,17 +1,45 @@
 
 import { useState, useEffect } from "react";
-import api from "../../../../context/api";
-
+// import api from "../../../../context/api"; // Commented out backend API
 
 function CancelledVisitTable() {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Simulated fetch from backend with dummy data
     const fetchVisits = async () => {
       try {
-        const response = await api.get("/staff/guests/group");
-        setVisits(response.data.visits || []); // match response structure
+        // const response = await api.get("/staff/guests/group");
+        // setVisits(response.data.visits || []); // match response structure
+
+        // Dummy data to replace backend response
+        const dummyData = [
+          {
+            id: 1,
+            created_at: "2025-07-05T10:00:00Z",
+            visit_time: "2:00 PM",
+            status: "Cancelled",
+            visitor: {
+              name: "John Doe",
+              contact_number: "08012345678",
+              special_requirements: "Wheelchair access"
+            }
+          },
+          {
+            id: 2,
+            created_at: "2025-07-06T14:30:00Z",
+            visit_time: "4:00 PM",
+            status: "Cancelled",
+            visitor: {
+              name: "Jane Smith",
+              contact_number: "08087654321",
+              special_requirements: "Interpreter needed"
+            }
+          }
+        ];
+
+        setVisits(dummyData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -23,8 +51,6 @@ function CancelledVisitTable() {
   }, []);
 
   if (loading) return <p>Loading...</p>;
-
-
 
   return (
     <div>

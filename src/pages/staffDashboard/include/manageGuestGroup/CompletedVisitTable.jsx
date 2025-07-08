@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../../../context/api";
+// import api from "../../../../context/api"; // backend import commented out
 
 function CompletedVisitTable() {
   const [visits, setVisits] = useState([]);
@@ -8,8 +8,37 @@ function CompletedVisitTable() {
   useEffect(() => {
     const fetchVisits = async () => {
       try {
-        const response = await api.get("/staff/guests/group");
-        setVisits(response.data.visits || []); // match response structure
+        // Backend call is commented out
+        // const response = await api.get("/staff/guests/group");
+        // setVisits(response.data.visits || []);
+
+        // Dummy data to simulate API response
+        const dummyData = [
+          {
+            id: "VIS123456",
+            visitor: {
+              name: "John Doe",
+              contact_number: "08123456789",
+              special_requirements: "Wheelchair access"
+            },
+            host_name: "Jane Smith",
+            created_at: "2025-07-06T09:30:00Z",
+            updated_at: "2025-07-06T12:00:00Z"
+          },
+          {
+            id: "VIS654321",
+            visitor: {
+              name: "Alice Johnson",
+              contact_number: "08099887766",
+              special_requirements: ""
+            },
+            host_name: "Dr. Albert",
+            created_at: "2025-07-05T10:00:00Z",
+            updated_at: "2025-07-05T11:30:00Z"
+          }
+        ];
+
+        setVisits(dummyData); // use dummy data instead
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -21,6 +50,7 @@ function CompletedVisitTable() {
   }, []);
 
   if (loading) return <p>Loading...</p>;
+
 
   return (
     <div>

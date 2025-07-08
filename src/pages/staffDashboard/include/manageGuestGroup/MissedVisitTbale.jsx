@@ -67,8 +67,6 @@ function MissedVisitTbale() {
           <h1>No Data Available</h1>
         )}
       </div>
-
-      <h1>No Miss Visit</h1>
     </div>
   );
 }
