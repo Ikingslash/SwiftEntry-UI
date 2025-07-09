@@ -84,7 +84,7 @@ export default function RegisterNewGuestIndividual() {
                 <h5 className="fw-bold">Visit Information</h5>
                 <div className="mb-3">
                   <label className="form-label">Visit Time</label>
-                  <input type="time" className="form-control" />
+                  <input type="datetime-local" className="form-control" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Host Name</label>
