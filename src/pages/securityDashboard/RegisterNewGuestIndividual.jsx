@@ -16,7 +16,7 @@ export default function RegisterNewGuestIndividual() {
     time: "4PM",
     Contact_info: "femi.biodun@gmail.com",
     purpose: "Business Discussion",
-    address: "Main office no 15 Aja Off Mainland Bridge, Lagos, Nigeria",
+    address: "Building 1, Floor 2.",
   };
 
   const handleImageChange = (event) => {
@@ -151,7 +151,7 @@ export default function RegisterNewGuestIndividual() {
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
               <div className="modal-body">
-                <div className="card mx-auto" style={{ maxWidth: "600px", height: "400px", border: "2px solid #cfd9e1" , backgroundColor: "#F5FAFE"}}>
+                <div className="card mx-auto" style={{ maxWidth: "650px", height: "380px", border: "2px solid #cfd9e1" , backgroundColor: "#F5FAFE"}}>
                   <div className="card-header d-flex justify-content-between align-items-center" style={{ background: "#007bff", color: "white" }}>
                     <span className="badge bg-light text-dark">Syndani Group</span>
                     <strong className="text-white">VISIT CONFIRMATION</strong>
