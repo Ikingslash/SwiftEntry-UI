@@ -63,8 +63,8 @@ function AnalyticalAndReport() {
   const staffVisitsData = [
     { name: "Joshua Harry", visits: 100 },
     { name: "Akinbaye Bo.", visits: 65 },
-    { name: "Akinbaye Bo.", visits: 50 },
-    { name: "Akinbaye Bo.", visits: 50 },
+    { name: "John Adamu .", visits: 50 },
+    { name: "Amaka Agu .", visits: 50 },
   ];
 
   const peakHoursData = [
@@ -115,7 +115,7 @@ function AnalyticalAndReport() {
                   backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
-                Syndani Group{" "}
+                Sydani Group{" "}
                 <span
                   className="badge text-light p-1"
                   style={{

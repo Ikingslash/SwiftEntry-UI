@@ -110,7 +110,7 @@ function SecurityDashboard() {
             </div>
             <div className="d-flex align-items-center mt-2">
               <p className="badge text-white" style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}>
-                Syndani Group {" "}
+                Sydani Group {" "}
                 <span className="badge text-light p-1" style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}>
                   Company
                 </span>

@@ -94,7 +94,7 @@ function SecurityFrontDeskDashboard() {
                   backgroundColor: "rgba(57, 118, 175, 0.8)",
                 }}
               >
-                Syndani Group{" "}
+                Sydani Group{" "}
                 <span
                   className="badge text-light"
                   style={{
@@ -230,14 +230,18 @@ function SecurityFrontDeskDashboard() {
 
             {/* Guest Cards (3 in a Row) */}
             <div className="row g-3">
-              {[...Array(3)].map((_, index) => (
+              {[
+                { name: "Adamu Johnson", time: "10:30 AM", status: "online" },
+                { name: "Joy Chukwudinma", time: "2:05 AM", status: "offline" },
+                { name: "Oluwaseun Isaya", time: "3:45 PM", status: "online" },
+              ].map((guest, index) => (
                 <div
                   key={index}
                   className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
                 >
                   <div className="card mt-3 p-2 shadow-sm rounded-3">
                     <img src="./images/user1.png" alt="Guest" className="" />
-                    <p className="mt-2 mb-1 fw-bold">Guest Name</p>
+                    <p className="mt-2 mb-1 fw-bold">{guest.name}</p>
                     <small className="text-muted">
                       {" "}
                       <span
@@ -249,7 +253,7 @@ function SecurityFrontDeskDashboard() {
                       >
                         ●
                       </span>
-                      10:30 AM
+                       {guest.time}
                     </small>
                   </div>
                 </div>

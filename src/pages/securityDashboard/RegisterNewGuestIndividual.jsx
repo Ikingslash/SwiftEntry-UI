@@ -182,9 +182,9 @@ export default function RegisterNewGuestIndividual() {
                 </label>
               <select className="form-select">
                   <option>Enter special requirements</option>
-                  <option>Business Meeting</option>
-                  <option>Interview</option>
-                  <option>Personal Visit</option>
+                  <option>Parking Space</option>
+                  <option>Professional Photography</option>
+                  <option>Wheelchair</option>
                 </select>
               </div>
               <div className="mt-3">
@@ -237,9 +237,9 @@ export default function RegisterNewGuestIndividual() {
                     style={{ background: "#007bff", color: "white" }}
                   >
                     <span className="badge bg-light text-dark">
-                      Syndani Group
+                      Sydani Group
                     </span>
-                    <strong className="text-white">VISIT CONFIRMATION</strong>
+                    <strong className="text-white">VISITOR'S BADGE</strong>
                   </div>
                   <div className="card-body d-flex">
                     <div className="me-3">
