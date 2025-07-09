@@ -90,7 +90,7 @@ function Navbar() {
                 }`}
                 to="/admin-dashboard/analytical-report"
               >
-                Report & Analytical
+                Reports & Analytics
               </NavLink>
             </li>
             <li className="nav-item">
