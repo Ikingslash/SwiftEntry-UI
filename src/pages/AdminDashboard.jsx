@@ -131,7 +131,7 @@ function SecurityFrontDeskDashboard() {
                 </div>
                 <div className="ms-auto  text-muted text-start">
                   <h6 className="mb-1">Visitors Today</h6>
-                  <p className="mb-0 fs-4">12</p>
+                  <p className="mb-0 fs-4">25</p>
                 </div>
               </div>
             </div>
@@ -143,7 +143,7 @@ function SecurityFrontDeskDashboard() {
                   <i className="bi bi-person-check fs-2 text-info"></i>
                 </div>
                 <div className="ms-auto text-start">
-                  <h6 className="mb-1 text-muted">Check In</h6>
+                  <h6 className="mb-1 text-muted">Checked In</h6>
                   <p className="mb-0 fs-4">20</p>
                 </div>
               </div>
@@ -156,7 +156,7 @@ function SecurityFrontDeskDashboard() {
                   <i className="bi bi-eye fs-2 text-warning"></i>
                 </div>
                 <div className="ms-auto text-start">
-                  <h6 className="mb-1 text-muted">Check Out</h6>
+                  <h6 className="mb-1 text-muted">Checked Out</h6>
                   <p className="mb-0 fs-4">12</p>
                 </div>
               </div>
@@ -169,7 +169,7 @@ function SecurityFrontDeskDashboard() {
                 </div>
                 <div className="ms-auto  text-start">
                   <h6 className="mb-1 text-muted">Pending</h6>
-                  <p className="mb-0 fs-4">12</p>
+                  <p className="mb-0 fs-4">8</p>
                 </div>
               </div>
             </div>

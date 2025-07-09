@@ -4,7 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 function Navbar() {
   const location = useLocation();
   // const { user, logout } = useAuth();
-   const user = { name: "John Doe" };
+   const user = { name: "John Aliyu" };
   const logout = () => {
     console.log("Logging out...");
     // perform logout logic here

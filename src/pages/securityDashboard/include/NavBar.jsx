@@ -124,7 +124,7 @@ function Navbar() {
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              <span className="fw-semibold me-2">John Doe</span>
+              <span className="fw-semibold me-2">John Aliyu</span>
               <img
                 src="../images/user.png"
                 alt="User"

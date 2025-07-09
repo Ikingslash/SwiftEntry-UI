@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import NavBar from "./securityDashboard/include/NavBar";
 import api from "../context/api";
+import { IDLE_NAVIGATION } from "react-router-dom";
 
 function SecurityDashboard() {
   const [scanResult, setScanResult] = useState(null);
@@ -28,7 +29,6 @@ function SecurityDashboard() {
 
   const fetchUserProfile = async (userId) => {
     try {
-      // ✅ DUMMY PROFILE DATA
       const dummyProfiles = {
         "dummy-user-id-john@example.com": {
           name: "John Doe",
@@ -51,32 +51,23 @@ function SecurityDashboard() {
       };
 
       const profile = dummyProfiles[userId] || {
-        name: "Unknown Guest",
-        visit_date: "N/A",
-        visit_time: "N/A",
-        host_name: "N/A",
-        contact_info: "N/A",
-        special_request: "N/A",
-        status: "Not Found",
+        name: "Femi Biodun",
+        visit_date: "08-07-2025",
+        visit_time: "4:00 PM ",
+        ID_No: "101256",
+        host_name: "Adekunle Adeniyi",
+        contact_info: "femi.biodun@gmail.com",
+        purpose: "Business Meeting",
+        special_request: "Wheelchair",
+        status: "Pending",
       };
 
       setUserProfile(profile);
 
-      // ✅ SHOW MODAL
       const modal = new window.bootstrap.Modal(
         document.getElementById("printTagModal")
       );
       modal.show();
-
-      // ❌ COMMENTED BACKEND CALL
-      /*
-      const response = await api.get(`/api/security/user-profile/${userId}`);
-      setUserProfile(response.data);
-      const modal = new window.bootstrap.Modal(
-        document.getElementById("printTagModal")
-      );
-      modal.show();
-      */
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
@@ -89,14 +80,13 @@ function SecurityDashboard() {
     document.body.innerHTML = printContents;
     window.print();
     document.body.innerHTML = originalContents;
-    window.location.reload(); // optional: reload after print
+    window.location.reload();
   };
 
   return (
     <div>
       <NavBar />
 
-      {/* Header */}
       <header
         className="text-white text-center position-relative px-4"
         style={{
@@ -116,37 +106,21 @@ function SecurityDashboard() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bold mb-0">Guest Confirmation</h2>
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+              <i className="bi bi-plus-circle fs-1 text-primary p-2" style={{ cursor: "pointer" }}></i>
             </div>
             <div className="d-flex align-items-center mt-2">
-              <p
-                className="badge text-white"
-                style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}
-              >
-                Syndani Group{" "}
-                <span
-                  className="badge text-light p-1"
-                  style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}
-                >
+              <p className="badge text-white" style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}>
+                Syndani Group {" "}
+                <span className="badge text-light p-1" style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}>
                   Company
                 </span>
               </p>
-              <div
-                className="flex-grow-1 ms-2 mb-3"
-                style={{
-                  height: "2px",
-                  backgroundColor: "rgba(168, 172, 176, 0.8)",
-                }}
-              ></div>
+              <div className="flex-grow-1 ms-2 mb-3" style={{ height: "2px", backgroundColor: "rgba(168, 172, 176, 0.8)" }}></div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* QR Scanner */}
       <section className="container d-flex flex-column align-items-center justify-content-center text-center p-5">
         <h2 className="mb-4">Scan QR Code</h2>
         <div
@@ -165,93 +139,79 @@ function SecurityDashboard() {
       </section>
 
       {/* MODAL */}
-      <div
-        className="modal fade"
-        id="printTagModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div
-          className="modal-dialog modal-lg py-4"
-          style={{
-            position: "fixed",
-            top: 0,
-            right: 0,
-            width: "50%",
-            maxWidth: "40%",
-            height: "100vh",
-            overflowY: "auto",
-          }}
-        >
-          <div className="modal-content">
-            <div className="modal-header d-print-none">
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+      <div className="modal fade" id="printTagModal" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-sm-down" style={{ maxWidth: "450px", marginLeft: "auto", marginRight: 0, height: "100vh" }}>
+          <div className="modal-content rounded-4 shadow-lg" style={{ border: "none" }}>
+            <div className="modal-header border-0 d-print-none">
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
-            <div className="modal-body">
               {userProfile && (
-                <div className="row g-3 container px-5" ref={printRef}>
-                  <div className="col-12 text-center mb-3">
-                    <h4 style={{ fontWeight: "bold" }}>Visitor Badge</h4>
-                    <hr />
-                  </div>
-
-                  <div className="col-12 text-center">
-                    <img
-                      src="./images/user.png"
-                      alt="User"
-                      className="rounded-circle mb-3"
-                      width="80"
-                      height="80"
-                    />
-                  </div>
-
-                  <div className="col-md-6 fw-bold"><small>Guest Name</small></div>
-                  <div className="col-md-6"><small>{userProfile.name}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6 fw-bold"><small>Visit Date</small></div>
-                  <div className="col-md-6"><small>{userProfile.visit_date}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6 fw-bold"><small>Visit Time</small></div>
-                  <div className="col-md-6"><small>{userProfile.visit_time}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6 fw-bold"><small>Host Name</small></div>
-                  <div className="col-md-6"><small>{userProfile.host_name}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6 fw-bold"><small>Contact Info</small></div>
-                  <div className="col-md-6"><small>{userProfile.contact_info}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6 fw-bold"><small>Special Request</small></div>
-                  <div className="col-md-6"><small>{userProfile.special_request}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6 fw-bold"><small>Status</small></div>
-                  <div className="col-md-6"><small>{userProfile.status}</small></div>
-                  <hr className="w-100" />
-
-                  <div className="col-12 text-center mt-3 d-print-none">
-                    <button type="button" className="btn btn-primary w-50" onClick={handlePrint}>
-                      Print Tag
-                    </button>
-                  </div>
+              <div className="modal-body px-4" ref={printRef}>
+                <div className="text-center mb-4">
+                  <img
+                    src="./images/user.png"
+                    alt="User"
+                    className="rounded-circle shadow"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      objectFit: "cover",
+                    }}
+                  />
                 </div>
-              )}
-            </div>
+
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Guest Name</span>
+                  <span>{userProfile.name}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Visit Date</span>
+                  <span>{userProfile.visit_date}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Visit Time</span>
+                  <span>{userProfile.visit_time}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">ID No.</span>
+                  <span>{userProfile.ID_No}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Host Name</span>
+                  <span>{userProfile.host_name}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small text-wrap">
+                  <span className="text-muted">Purpose</span>
+                  <span>{userProfile.purpose}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small text-wrap">
+                  <span className="text-muted">Contact Info</span>
+                  <span>{userProfile.contact_info}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Special Requi.</span>
+                  <span>{userProfile.special_request}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Visit Status</span>
+                  <span>{userProfile.status}</span>
+                </div>
+
+                <div className="text-center mt-4 d-print-none">
+                  <button
+                    type="button"
+                    className="btn btn-primary w-100 rounded-3 py-2"
+                    onClick={handlePrint}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Print-Only Styles */}
       <style>{`
         @media print {
           body * {

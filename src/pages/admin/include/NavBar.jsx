@@ -1,9 +1,16 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+// import { useAuth } from "../../../context/AuthContext";
 
 function Navbar() {
-  const location = useLocation();
-  const { user, logout } = useAuth();
+  // const location = useLocation();
+  // const { user, logout } = useAuth();
+    const location = useLocation();
+  // const { user, logout } = useAuth();
+   const user = { name: "John Aliyu" };
+  const logout = () => {
+    console.log("Logging out...");
+    // perform logout logic here
+  };
   
   return (
     <nav
@@ -83,7 +90,7 @@ function Navbar() {
                 }`}
                 to="/admin-dashboard/analytical-report"
               >
-                Analytical & Report
+                Report & Analytical
               </NavLink>
             </li>
             <li className="nav-item">
@@ -128,7 +135,7 @@ function Navbar() {
             >
               <span className="fw-semibold me-2">{user?.name}</span>
               <img
-                src={user?.profile_picture}
+                src="../images/user.png"
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"

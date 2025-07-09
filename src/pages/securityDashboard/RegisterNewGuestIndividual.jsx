@@ -10,10 +10,11 @@ export default function RegisterNewGuestIndividual() {
 
   const guestDetails = {
     name: "FEMI BIODUN",
-    id: "101123556",
+    id: "101256",
     host: "Adekunle Adeniyi",
-    date: "12/11/24",
-    time: "2pm",
+    date: "08-07-2025",
+    time: "4PM",
+    Contact_info: "femi.biodun@gmail.com",
     purpose: "Business Discussion",
     address: "Main office no 15 Aja Off Mainland Bridge, Lagos, Nigeria",
   };
@@ -142,15 +143,15 @@ export default function RegisterNewGuestIndividual() {
 
       {/* Modal */}
       {showModal && (
-        <div className="modal fade show d-block" tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
+        <div className="modal fade show d-block " tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div className="modal-content rounded-4 shadow">
               <div className="modal-header">
                 <h5 className="modal-title">Share Visit Details</h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
               <div className="modal-body">
-                <div className="card mx-auto" style={{ maxWidth: "600px", height: "350px", border: "2px solid #cfd9e1" , backgroundColor: "#F5FAFE"}}>
+                <div className="card mx-auto" style={{ maxWidth: "600px", height: "400px", border: "2px solid #cfd9e1" , backgroundColor: "#F5FAFE"}}>
                   <div className="card-header d-flex justify-content-between align-items-center" style={{ background: "#007bff", color: "white" }}>
                     <span className="badge bg-light text-dark">Syndani Group</span>
                     <strong className="text-white">VISIT CONFIRMATION</strong>
@@ -166,12 +167,13 @@ export default function RegisterNewGuestIndividual() {
                         style={{ border: "4px solid #007bff" }}
                       />
                     </div>
-                    <div className="flex-grow-1 ms-4">
+                    <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
-                      <p className="my-2 lead">ID No: <span className="ms-4">{guestDetails.id}</span></p>
-                      <p className="my-2 lead">Host:  <span className="ms-4">{guestDetails.host}</span> </p>
-                      <p className="my-2 lead">Visit Date: <span className="ms-4">{guestDetails.date} by {guestDetails.time}</span></p>
-                      <p className="my-2 lead">Purpose: <span className="ms-4">{guestDetails.purpose}</span> </p>
+                      <p className="my-2 lead">ID No: <small className="ms-4">{guestDetails.id}</small></p>
+                      <p className="my-2 lead">Host:  <small className="ms-4">{guestDetails.host}</small> </p>
+                      <p className="my-2 lead">Visit Date: <small className="ms-4">{guestDetails.date} by {guestDetails.time}</small></p>
+                      <p className="my-2 lead">Purpose: <small className="ms-4">{guestDetails.purpose}</small> </p>
+                      <p className="my-2 lead">Contact Info: <small className="ms-2">{guestDetails.Contact_info}</small> </p>
                      
                     </div>
                     <div>
@@ -211,3 +213,5 @@ export default function RegisterNewGuestIndividual() {
     </div>
   );
 }
+
+
