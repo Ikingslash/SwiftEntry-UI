@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
               case "admin":
                 navigate("/admin-dashboard");
                 break;
-              case "manager":
+              case "staff":
                 navigate("/staff-dashboard");
                 break;
               case "security":
@@ -86,3 +86,5 @@ AuthProvider.propTypes = {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+
