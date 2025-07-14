@@ -11,29 +11,31 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   // Login function
+
   const login = async (email, password) => {
     try {
-      await api.get("/sanctum/csrf-cookie", {
-        baseURL: "https://vms-api.194.62.98.28.nip.io",
-      });
-  
+      // Get CSRF token for Sanctum
+      await api.get("/sanctum/csrf-cookie");
+
       const endpoints = [
-        "/front-desk/auth/login",
+        "/front-desk/login",
         "/staff/auth/login",
         "/security/auth/login",
         "/admin/login",
       ];
-  
+
       for (const endpoint of endpoints) {
         try {
           const response = await api.post(endpoint, { email, password });
-  
+
           if (response.data.token) {
             setUser(response.data.user);
             setToken(response.data.token);
             localStorage.setItem("token", response.data.token);
-            api.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
-  
+            api.defaults.headers.common[
+              "Authorization"
+            ] = `Bearer ${response.data.token}`;
+
             switch (response.data.user.role) {
               case "admin":
                 navigate("/admin-dashboard");
@@ -53,10 +55,13 @@ export const AuthProvider = ({ children }) => {
             return true; // Indicate successful login
           }
         } catch (error) {
-          console.error(`Failed login attempt at ${endpoint}`, error.response?.data || error.message);
+          console.error(
+            `Failed login attempt at ${endpoint}`,
+            error.response?.data || error.message
+          );
         }
       }
-  
+
       alert("Invalid credentials or user not found.");
       return false; // Indicate failed login
     } catch (error) {
@@ -65,7 +70,7 @@ export const AuthProvider = ({ children }) => {
       return false; // Indicate error in login
     }
   };
-  
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -86,5 +91,3 @@ AuthProvider.propTypes = {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-
