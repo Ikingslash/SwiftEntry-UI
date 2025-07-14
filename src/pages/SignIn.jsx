@@ -1,44 +1,36 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import { useAuth } from "../context/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 
 function SignIn() {
   const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  // const { login } = useAuth(); // Backend login method commented out
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState(""); // State to store error message
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
 
-    navigate("/loading");
-
     try {
-      // Simulating login with dummy data instead of backend call
-      const dummyEmail = "test@example.com";
-      const dummyPassword = "password123";
+      navigate("/loading"); // show loading page (optional)
 
-      const success = email === dummyEmail && password === dummyPassword;
-
+      const success = await login(email, password);
       if (!success) {
-        setErrorMessage("Invalid email or password"); // Show error
-        navigate("/"); // Redirect back if login fails
+        setErrorMessage("Invalid email or password");
+        navigate("/"); // go back to login
       } else {
-        // Dummy login success
-        setErrorMessage(""); // Clear error if any
-        // Proceed as if logged in
-        setTimeout(() => {
-          navigate("/dashboard"); // Simulate redirection after login
-        }, 1000);
+        setErrorMessage(""); // clear previous error
       }
     } catch (error) {
       console.error("Error logging in:", error);
-      navigate("/"); // Redirect back on error
+      setErrorMessage("Something went wrong. Please try again.");
+      navigate("/");
     }
   };
+  
 
   return (
     <div
@@ -97,9 +89,7 @@ function SignIn() {
             <h2 className="text-center mb-4 fw-bold">Sign In</h2>
 
             {errorMessage && (
-              <div className="alert alert-danger text-center">
-                {errorMessage}
-              </div>
+              <div className="alert alert-danger text-center">{errorMessage}</div>
             )}
 
             <form onSubmit={handleSubmit}>
@@ -109,7 +99,8 @@ function SignIn() {
                   type="email"
                   className="form-control"
                   placeholder="Enter your company assigned email"
-                  required 
+                  required
+                  style={{ color: "rgba(133, 124, 124, 0.5)" }}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />

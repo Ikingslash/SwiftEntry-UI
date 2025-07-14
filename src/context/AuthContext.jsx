@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       });
   
       const endpoints = [
-        "/front-desk/login",
+        "/front-desk/auth/login",
         "/staff/auth/login",
         "/security/auth/login",
         "/admin/login",
