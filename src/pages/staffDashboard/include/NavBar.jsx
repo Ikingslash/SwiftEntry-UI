@@ -3,13 +3,7 @@ import { useAuth } from "../../../context/AuthContext";
 
 function Navbar() {
   const location = useLocation();
-
-  // Dummy user and logout handler
-  const user = { name: "John Doe" };
-  const logout = () => {
-    console.log("Logging out...");
-    // perform logout logic here
-  };
+  const { user, logout } = useAuth();
 
   return (
     <nav
@@ -124,7 +118,7 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                src="../images/user.png"
+                src={`https://vms-api.85.9.202.212.nip.io/storage/${user?.profile_picture}`}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"
