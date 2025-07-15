@@ -41,39 +41,30 @@ export default function NewGuestIndividual() {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    alert(JSON.stringify(formData, null, 2));
-    console.log("Form Data before submission:", formData);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    const formDataToSend = new FormData();
+  const formDataToSend = new FormData();
 
-    // Append all fields except the photo
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "photo") {
-        formDataToSend.append(key, value);
-      }
+  Object.entries(formData).forEach(([key, value]) => {
+    if (key !== "photo") {
+      formDataToSend.append(key, value);
+    }
+  });
+
+  if (formData.photo) {
+    formDataToSend.append("photo", formData.photo);
+  }
+
+  try {
+    const response = await api.post("/staff/guests/register", formDataToSend, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
 
-    // Append the photo separately if it exists
-    if (formData.photo) {
-      formDataToSend.append("photo", formData.photo);
-    } else {
-      console.warn("No photo selected.");
-    }
-
-    try {
-      // Simulate API
-      await new Promise((res) => setTimeout(res, 1500));
-      setLoading(false);
-      setShowSuccessModal(true);
-
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        setShowVisitCardModal(true);
-      }, 2500);
-
+    if (response.status === 200 || response.status === 201) {
       setFormData({
         name: "",
         contact_number: "",
@@ -90,53 +81,24 @@ export default function NewGuestIndividual() {
         photo: null,
       });
       setSelectedImage(null);
-      // const response = await api.post(
-      //   "/staff/guests/register",
-      //   formDataToSend,
-      //   {
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   }
-      // );
 
-      // if (response.status === 200 || response.status === 201) {
-      //   setTimeout(() => {
-      //     setLoading(false);
-      //     setSuccessPopup(true);
-
-      //     // Show card after 2.5s
-      //     setTimeout(() => {
-      //       setSuccessPopup(false);
-      //       setShowVisitCard(true);
-      //     }, 2500);
-      //   }, 1000);
-      //   setFormData({
-      //     name: "",
-      //     contact_number: "",
-      //     email: "",
-      //     address: "",
-      //     visit_time: "",
-      //     host_name: "",
-      //     building: "",
-      //     floor: "",
-      //     purpose: "",
-      //     special_requirements: "",
-      //     emergency_contact: "",
-      //     details: "",
-      //     photo: null, // Reset the file
-      //   });
-      //   setSelectedImage(null);
-      // } else {
-      //   alert("Error: " + (response.data.message || "Something went wrong"));
-      // }
-    } catch (error) {
-      console.error("Error:", error);
-      alert(
-        "Failed to register guest. " + (error.response?.data?.message || "")
-      );
-    } finally {
-      setLoading(false);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        setShowVisitCardModal(true);
+      }, 2500);
+    } else {
+      alert("Error: " + (response.data.message || "Something went wrong"));
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    alert(
+      "Failed to register guest. " + (error.response?.data?.message || "")
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
