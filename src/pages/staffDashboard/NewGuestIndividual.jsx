@@ -343,10 +343,14 @@ export default function NewGuestIndividual() {
                     onChange={handleChange}
                   >
                     <option> Select special requirements</option>
-                    <option value="parking space">parking space</option>
-                    <option value="Recruitment">Business Meeting</option>
-                    <option value="Recruitment">Interview</option>
-                    <option value="Recruitment">Personal Visit</option>
+                    <option value="parking space">Parking Space</option>
+                    <option value="wheelchair/accessibility">
+                      Wheelchair/Accessibility
+                    </option>
+                    <option value="language interpretation">
+                      Language Interpretation
+                    </option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div className="my-3">
