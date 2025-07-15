@@ -15,7 +15,7 @@ export default function NewGuestIndividual() {
     special_requirements: "",
     emergency_contact: "",
     details: "", // Missing field added
-    photo: null,
+    photo: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -41,64 +41,78 @@ export default function NewGuestIndividual() {
   };
 
   // Handle form submission
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const formDataToSend = new FormData();
+    const formDataToSend = new FormData();
 
-  Object.entries(formData).forEach(([key, value]) => {
-    if (key !== "photo") {
-      formDataToSend.append(key, value);
-    }
-  });
-
-  if (formData.photo) {
-    formDataToSend.append("photo", formData.photo);
-  }
-
-  try {
-    const response = await api.post("/staff/guests/register", formDataToSend, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    // Append all fields except 'photo' and 'visit_time'
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key !== "photo" && key !== "visit_time") {
+        formDataToSend.append(key, value);
+      }
     });
 
-    if (response.status === 200 || response.status === 201) {
-      setFormData({
-        name: "",
-        contact_number: "",
-        email: "",
-        address: "",
-        visit_time: "",
-        host_name: "",
-        building: "",
-        floor: "",
-        purpose: "",
-        special_requirements: "",
-        emergency_contact: "",
-        details: "",
-        photo: null,
-      });
-      setSelectedImage(null);
-
-      setShowSuccessModal(true);
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        setShowVisitCardModal(true);
-      }, 2500);
-    } else {
-      alert("Error: " + (response.data.message || "Something went wrong"));
+    // Fix visit_time format
+    if (formData.visit_time) {
+      const formattedVisitTime = new Date(formData.visit_time)
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+      formDataToSend.append("visit_time", formattedVisitTime);
     }
-  } catch (error) {
-    console.error("Error:", error);
-    alert(
-      "Failed to register guest. " + (error.response?.data?.message || "")
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+
+    if (formData.photo) {
+      formDataToSend.append("photo", formData.photo);
+    }
+
+    try {
+      const response = await api.post(
+        "/staff/guests/register",
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setFormData({
+          name: "",
+          contact_number: "",
+          email: "",
+          address: "",
+          visit_time: "",
+          host_name: "",
+          building: "",
+          floor: "",
+          purpose: "",
+          special_requirements: "",
+          emergency_contact: "",
+          details: "",
+          photo: null,
+        });
+        setSelectedImage(null);
+
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setShowVisitCardModal(true);
+        }, 2500);
+      } else {
+        alert("Error: " + (response.data.message || "Something went wrong"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert(
+        "Failed to register guest. " + (error.response?.data?.message || "")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
