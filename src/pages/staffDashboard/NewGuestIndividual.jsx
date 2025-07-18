@@ -431,39 +431,7 @@ export default function NewGuestIndividual() {
             </div>
           </div>
         </form>
-        {/* Visitor Card Preview (Optional) */}
-        {/* {showVisitCardModal && (
-          <div className="card mt-5 shadow-lg p-4 w-75 mx-auto">
-            <div className="row align-items-center">
-              <div className="col-md-3 text-center">
-                <img
-                  src={selectedImage || "https://dummyimage.com/100x100/cccccc/000000&text=Visitor"}
-                  alt="Visitor"
-                  className="rounded-circle bd-secondary"
-                  style={{ width: 100, height: 100, objectFit: "cover" }}
-                />
-              </div>
-              <div className="col-md-6">
-                <h5 className="fw-bold mb-1">{formData.name}</h5>
-                <p className="mb-0">
-                  <strong>Phone:</strong> {formData.contact_number}
-                </p>
-                <p className="mb-0">
-                  <strong>Visit Time:</strong>{" "}
-                  {new Date(formData.visit_time).toLocaleString()}
-                </p>
-              </div>
-              <div className="col-md-3 text-center">
-                {qrValue ? (
-                  <QRCode value={qrValue} size={100} />
-                ) : (
-                  <div className="text-muted">QR not ready</div>
-                )}
-                <button className="btn btn-outline-primary btn-sm w-100 mt-2">Share</button>
-              </div>
-            </div>
-          </div>
-        )} */}
+      
       </div>
 
       {/* Success Modal */}
