@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import api from "../../context/api";
+import QRCode from "react-qr-code";
+import html2pdf from "html2pdf.js";
 
 export default function NewGuestIndividual() {
   const [formData, setFormData] = useState({
@@ -14,7 +16,7 @@ export default function NewGuestIndividual() {
     purpose: "",
     special_requirements: "",
     emergency_contact: "",
-    details: "", // Missing field added
+    details: "",
     photo: "",
   });
 
@@ -22,45 +24,47 @@ export default function NewGuestIndividual() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+  const [guestDetails, setGuestDetails] = useState({});
+  const [qrValue, setQrValue] = useState("");
+  const printRef = useRef();
 
-  // Handle form input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle file input and convert to Base64
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        photo: file, // Make sure the file is stored properly
-      }));
-      setSelectedImage(URL.createObjectURL(file)); // Show preview
+      setFormData((prev) => ({ ...prev, photo: file }));
+      setSelectedImage(URL.createObjectURL(file));
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     const formDataToSend = new FormData();
 
-    // Append all fields except 'photo' and 'visit_time'
     Object.entries(formData).forEach(([key, value]) => {
       if (key !== "photo" && key !== "visit_time") {
         formDataToSend.append(key, value);
       }
     });
 
-    // Fix visit_time format
     if (formData.visit_time) {
-      const formattedVisitTime = new Date(formData.visit_time)
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
-      formDataToSend.append("visit_time", formattedVisitTime);
+      const visitTime = new Date(formData.visit_time);
+      if (!isNaN(visitTime)) {
+        const formattedVisitTime = visitTime
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+        formDataToSend.append("visit_time", formattedVisitTime);
+      } else {
+        alert("Invalid visit time format.");
+        setLoading(false);
+        return;
+      }
     }
 
     if (formData.photo) {
@@ -79,6 +83,30 @@ export default function NewGuestIndividual() {
       );
 
       if (response.status === 200 || response.status === 201) {
+        const visit = response.data.visit;
+        const visitor = response.data.visitor;
+
+        const visitTimeParts = visit?.check_in?.split(" ") || [];
+
+        const date = visitTimeParts?.[0] || "";
+        const time = visitTimeParts?.[1] || "";
+
+        setGuestDetails({
+          name: visitor.name,
+          id: visit.code || "",
+          host: visit.host_name,
+          date,
+          time,
+          purpose: visit.purpose,
+          Contact_info: visitor.contact_number,
+          address: visitor.address,
+          photo: visitor.photo,
+        });
+
+        if (visit.code) {
+          setQrValue(visit.code);
+        }
+
         setFormData({
           name: "",
           contact_number: "",
@@ -107,11 +135,36 @@ export default function NewGuestIndividual() {
     } catch (error) {
       console.error("Error:", error);
       alert(
-        "Failed to register guest. " + (error.response?.data?.message || "")
+        "Failed to register guest. " +
+          (error.response?.data?.message || "Server error.")
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePrint = () => {
+    const original = document.body.innerHTML;
+    document.body.innerHTML = printRef.current.innerHTML;
+    window.print();
+    document.body.innerHTML = original;
+    window.location.reload();
+  };
+
+  const downloadBadgeAsPDF = () => {
+    const element = printRef.current;
+    setTimeout(() => {
+      html2pdf()
+        .set({
+          margin: 0.3,
+          filename: "Visitor_Badge.pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        })
+        .from(element)
+        .save();
+    }, 100);
   };
 
   return (
@@ -378,12 +431,13 @@ export default function NewGuestIndividual() {
             </div>
           </div>
         </form>
-        {showVisitCardModal && (
+        {/* Visitor Card Preview (Optional) */}
+        {/* {showVisitCardModal && (
           <div className="card mt-5 shadow-lg p-4 w-75 mx-auto">
             <div className="row align-items-center">
               <div className="col-md-3 text-center">
                 <img
-                  src={selectedImage || "https://via.placeholder.com/100"}
+                  src={selectedImage || "https://dummyimage.com/100x100/cccccc/000000&text=Visitor"}
                   alt="Visitor"
                   className="rounded-circle bd-secondary"
                   style={{ width: 100, height: 100, objectFit: "cover" }}
@@ -400,20 +454,18 @@ export default function NewGuestIndividual() {
                 </p>
               </div>
               <div className="col-md-3 text-center">
-                {/* Placeholder QR code - use a package or backend-generated in production */}
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?data=${formData.name}-${formData.contact_number}&size=100x100`}
-                  alt="QR Code"
-                  className="mb-2"
-                />
-                <button className="btn btn-outline-primary btn-sm w-100">
-                  Share
-                </button>
+                {qrValue ? (
+                  <QRCode value={qrValue} size={100} />
+                ) : (
+                  <div className="text-muted">QR not ready</div>
+                )}
+                <button className="btn btn-outline-primary btn-sm w-100 mt-2">Share</button>
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
+
       {/* Success Modal */}
       <div
         className={`modal fade ${showSuccessModal ? "show d-block" : ""}`}
@@ -430,43 +482,152 @@ export default function NewGuestIndividual() {
       </div>
 
       {/* Visit Card Modal */}
-      <div
-        className={`modal fade ${showVisitCardModal ? "show d-block" : ""}`}
-        tabIndex="-1"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content text-center">
-            <div className="modal-header">
-              <h5 className="modal-title">Visit Card</h5>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setShowVisitCardModal(false)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              <p>
-                <strong>Name:</strong> {formData.name || "Sample Name"}
-              </p>
-              <p>
-                <strong>Email:</strong> {formData.email || "sample@email.com"}
-              </p>
-              <p>
-                <strong>Visit Time:</strong> {formData.visit_time || "N/A"}
-              </p>
-              {selectedImage && (
-                <img
-                  src={selectedImage}
-                  alt="visitor"
-                  className="img-thumbnail mt-2 bg-secondary"
-                  style={{ width: "120px", height: "120px" }}
-                />
-              )}
+      {showVisitCardModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div className="modal-content rounded-4 shadow">
+              <div className="modal-header">
+                <h5 className="modal-title">Share Visit Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowVisitCardModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div
+                  ref={printRef}
+                  className="card mx-auto"
+                  style={{
+                    maxWidth: "650px",
+                    height: "380px",
+                    border: "2px solid #cfd9e1",
+                    backgroundColor: "#F5FAFE",
+                  }}
+                >
+                  <div
+                    className="card-header d-flex justify-content-between align-items-center"
+                    style={{ background: "#007bff", color: "white" }}
+                  >
+                    <span className="badge bg-light text-dark">
+                      Sydani Group
+                    </span>
+                    <strong className="text-white">VISITORS BADGE</strong>
+                  </div>
+                  <div className="card-body d-flex">
+                    <div className="me-3">
+                      <img
+                        src="http://127.0.0.1:8000/storage/images/user2.png"
+                        alt="Guest"
+                        className="rounded-circle shadow"
+                        width="100"
+                        height="100"
+                        style={{ border: "4px solid #007bff" }}
+                      />
+                    </div>
+                    <div className="flex-grow-1 ms-2">
+                      <h5 className="fw-bold my-3">{guestDetails.name}</h5>
+                      <p className="my-2 lead">
+                        ID No: <small className="ms-4">{guestDetails.id}</small>
+                      </p>
+                      <p className="my-2 lead">
+                        Host:{" "}
+                        <small className="ms-4">{guestDetails.host}</small>
+                      </p>
+                      <p className="my-2 lead">
+                        Visit Date:{" "}
+                        <small className="ms-4">
+                          {guestDetails.date} by {guestDetails.time}
+                        </small>
+                      </p>
+                      <p className="my-2 lead">
+                        Purpose:{" "}
+                        <small className="ms-4">{guestDetails.purpose}</small>
+                      </p>
+                      <p className="my-2 lead">
+                        Contact Info:{" "}
+                        <small className="ms-2">
+                          {guestDetails.Contact_info}
+                        </small>
+                      </p>
+                    </div>
+                    <div>
+                      {typeof guestDetails.id === "string" && guestDetails.id.length > 0 ? (
+                        <QRCode value={guestDetails.id} size={130} />
+                      ) : (
+                        <div className="text-muted">QR not ready</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="card-footer">
+                    <p className="mb-1">
+                      <i className="bi bi-geo-alt"></i> {guestDetails.address}
+                    </p>
+                  </div>
+                </div>
+                {/* Share Buttons */}
+                <div className="mt-4 text-center">
+                  <p className="fw-bold">Share Via</p>
+                  <div className="d-flex justify-content-center gap-4">
+                    <a
+                      href={`https://wa.me/?text=Visit%20Details%3A%20${qrValue}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-whatsapp fs-3 text-success"></i>
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-linkedin fs-3 text-primary"></i>
+                    </a>
+                    <a
+                      href="https://twitter.com/intent/tweet?text=Visit%20Confirmation%20Details"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-twitter-x fs-3"></i>
+                    </a>
+                    <a
+                      href="https://facebook.com/sharer/sharer.php?u=https://example.com"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-facebook fs-3 text-primary"></i>
+                    </a>
+                    <button
+                      className="btn btn-outline-dark"
+                      onClick={handlePrint}
+                    >
+                      🖨️ Print
+                    </button>
+                    <button
+                      className="btn btn-outline-success"
+                      onClick={downloadBadgeAsPDF}
+                    >
+                      📄 Download PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #badgeCard, #badgeCard * { visibility: visible; }
+          #badgeCard { position: absolute; top: 0; left: 0; width: 100%; }
+        }
+      `}</style>
     </>
   );
 }

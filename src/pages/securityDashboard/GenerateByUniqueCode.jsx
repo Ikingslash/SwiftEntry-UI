@@ -1,76 +1,58 @@
-
-
-
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import NavBar from "../securityDashboard/include/NavBar";
+import api from "../../context/api"; // your Axios instance
+import { NavLink } from "react-router-dom";
 
-function GenerateByUniqueCode() { 
-    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+function GenerateByUniqueCode() {
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [userProfile, setUserProfile] = useState(null);
+  const printRef = useRef();
 
-  // Handles OTP input change
   const handleChange = (index, value) => {
-    if (isNaN(value)) return; // Only allow numbers
+    if (isNaN(value)) return;
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); // Ensure single digit per box
+    newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value && index < 5) {
       document.getElementById(`otp-${index + 1}`).focus();
     }
 
-    // Auto-submit when all 6 digits are entered
     if (newOtp.every((digit) => digit !== "")) {
       handleSubmit(newOtp.join(""));
     }
   };
 
-    // Handles OTP submission
-  // Handles OTP submission
-  const handleSubmit = (enteredOtp) => {
-    
-    // const enteredOtp = otp.join("");
-    alert("Entered OTP: " + enteredOtp);
-    // Perform API request or validation here
+  const handleSubmit = async (enteredOtp) => {
+    try {
+      const response = await api.get(`/security/visit/scan/${enteredOtp}`);
+      setUserProfile(response.data);
+
+      const modal = new window.bootstrap.Modal(
+        document.getElementById("printTagModal")
+      );
+      modal.show();
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      alert("No visitor record found for this code.");
+    }
   };
 
-//   const handleSubmit = async (e) => {
-//     if (e) e.preventDefault(); 
-  
-//     const enteredOtp = otp.join("");
-  
-//     try {
-//       const response = await fetch("https://dummyapi.com/verify-otp", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           otp: enteredOtp,
-//           userId: "12345", // Dummy user ID
-//         }),
-//       });
-  
-//       const data = await response.json();
-  
-//       if (response.ok) {
-//         alert("OTP Verified Successfully: " + JSON.stringify(data));
-//       } else {
-//         alert("OTP Verification Failed: " + data.message);
-//       }
-//     } catch (error) {
-//       console.error("Error verifying OTP:", error);
-//       alert("Something went wrong! Please try again.");
-//     }
-//   };
-  
+  const handlePrint = () => {
+    const printContents = printRef.current.innerHTML;
+    const originalContents = document.body.innerHTML;
+
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    window.location.reload();
+  };
 
   return (
     <div>
       <NavBar />
 
-      {/* Hero Section */}
+      {/* Hero */}
       <header
         className="text-white text-center position-relative px-4"
         style={{
@@ -84,42 +66,27 @@ function GenerateByUniqueCode() {
         }}
       >
         <div className="container">
-          <div
-            className="text-white shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            {/* Row for Welcome Text & Plus Icon */}
+          <div className="text-white shadow-sm" style={{ minHeight: "180px" }}>
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bod mb-0">Guest Confirmation</h2>
-
-              {/* Plus Icon */}
               <i
                 className="bi bi-plus-circle fs-1 text-primary p-2"
                 style={{ cursor: "pointer" }}
               ></i>
             </div>
-
-            {/* Badge & Line Row */}
-            <div className="d-flex align-items-center  mt-2">
-              {/* Badge */}
+            <div className="d-flex align-items-center mt-2">
               <p
                 className="badge text-white"
-                style={{
-                  backgroundColor: "rgba(25, 88, 148, 0.8)",
-                }}
+                style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}
               >
                 Syndani Group{" "}
                 <span
                   className="badge text-light p-1"
-                  style={{
-                    backgroundColor: "rgba(13, 46, 78, 0.8)",
-                  }}
+                  style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}
                 >
                   Company
                 </span>
               </p>
-
-              {/* Extending Line */}
               <div
                 className="flex-grow-1 ms-2 mb-3"
                 style={{
@@ -132,18 +99,15 @@ function GenerateByUniqueCode() {
         </div>
       </header>
 
-      {/* QR Code Scanner and Generator Section */}
+      {/* OTP Entry Section */}
       <section className="container p-5 text-center">
-      <div className="row text-center justify-content-center">
+        <div className="row text-center justify-content-center">
           <div className="col-md-6 col-lg-5 col-12">
-            {/* Logo */}
-            <div className="text-center pt-3"> 
+            <div className="text-center pt-3">
               <p className="text-muted">Enter Guest Unique Code</p>
             </div>
-
-            {/* OTP Input Boxes */}
             <div className="my-5">
-              <form onSubmit={handleSubmit}>
+              <form>
                 <div className="d-flex justify-content-center gap-2">
                   {otp.map((digit, index) => (
                     <input
@@ -161,15 +125,117 @@ function GenerateByUniqueCode() {
                       onChange={(e) => handleChange(index, e.target.value)}
                     />
                   ))}
-                </div> 
+                </div>
               </form>
             </div>
-            <a href="#" className="mt-4">
-          <small>Scan QRL Instead</small>
-        </a>
+          
+
+            <NavLink className="mt-4 d-block" to="/security-dashboard">
+              <small>Scan QR Instead</small>
+            </NavLink>
           </div>
         </div>
       </section>
+
+      {/* MODAL: Guest Profile */}
+      <div
+        className="modal fade"
+        id="printTagModal"
+        tabIndex="-1"
+        aria-hidden="true"
+      >
+        <div
+          className="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-sm-down"
+          style={{ maxWidth: "450px", marginLeft: "auto", marginRight: 0 }}
+        >
+          <div
+            className="modal-content rounded-4 shadow-lg"
+            style={{ border: "none" }}
+          >
+            <div className="modal-header border-0 d-print-none">
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+
+            {userProfile && (
+              <div className="modal-body px-4" ref={printRef}>
+                <div className="text-center mb-4">
+                  <img
+                    src="../images/user.png"
+                    alt="User"
+                    className="rounded-circle shadow"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Guest Name</span>
+                  <span>{userProfile.name}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Visit Date</span>
+                  <span>{userProfile.visit_date}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Visit Time</span>
+                  <span>{userProfile.visit_time}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">ID No.</span>
+                  <span>{userProfile.ID_No}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Host Name</span>
+                  <span>{userProfile.host_name}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Purpose</span>
+                  <span>{userProfile.purpose}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Contact Info</span>
+                  <span>{userProfile.contact_info}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Special Requi.</span>
+                  <span>{userProfile.special_request}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Visit Status</span>
+                  <span>{userProfile.status}</span>
+                </div>
+
+                <div className="text-center mt-4 d-print-none">
+                  <button
+                    type="button"
+                    className="btn btn-primary w-100 rounded-3 py-2"
+                    onClick={handlePrint}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .modal-content, .modal-content * { visibility: visible; }
+          .modal-content { position: absolute; top: 0; left: 0; width: 100%; }
+          .btn, .btn-close, .modal-header, .d-print-none { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

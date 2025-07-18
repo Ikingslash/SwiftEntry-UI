@@ -1,95 +1,108 @@
 import { useState, useEffect } from "react";
-// import api from '../../../../context/api'; // Commented out backend import
+import api from '../../../../context/api';
 
 function PreScheduledVisitTable() {
   const [visits, setVisits] = useState([]);
+  const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   useEffect(() => {
     const fetchVisits = async () => {
+      setLoading(true);
       try {
-        // Simulate API response with dummy data
-        const dummyData = {
-          visits: [
-            {
-              id: "VIS123",
-              visitor: {
-                name: "John Doe",
-                contact_number: "08012345678",
-                email: "johndoe@example.com",
-                special_requirements: "Wheelchair access",
-              },
-              host_name: "Mr. Smith",
-              check_in: "2025-07-07T10:30:00Z",
-            },
-            {
-              id: "VIS124",
-              visitor: {
-                name: "Jane Roe",
-                contact_number: "08087654321",
-                email: "janeroe@example.com",
-                special_requirements: null,
-              },
-              host_name: "Ms. Johnson",
-              check_in: "2025-07-08T14:00:00Z",
-            },
-          ],
-        };
+        const response = await api.get('staff/guests/individual-rescheduled-visit', {
+          params: {
+            per_page: perPage,
+            page: page,
+          },
+        });
 
-        // Simulate delay like a real API
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Replace actual API call with dummy data
-        // const response = await api.get('staff/guests/individual');
-        // setVisits(response.data.visits);
-        setVisits(dummyData.visits);
+        setVisits(response.data.visits);
+        setPagination(response.data.pagination);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching visits:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchVisits();
-  }, []);
+  }, [page]);
+
+  const handlePrevious = () => {
+    if (pagination.current_page > 1) {
+      setPage(prev => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (pagination.current_page < pagination.last_page) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   if (loading) {
     return <p>Loading...</p>;
   }
-  
+
   return (
-    <div>
-      <div className="table-responsive my-5">
-      {visits.length > 0 ? (
-        <table className="table table-bordered table-hover">
-          <thead>
-            <tr>
-              <th>Unique ID</th>
-              <th>Guest Name</th>
-              <th>Host Name</th>
-              <th>Visit Date/Time</th>
-              <th>Contact Information</th>
-              <th>Email Address</th>
-              <th>Special Requirement</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visits.map((visit) => (
-              <tr key={visit.id}>
-                <td>{visit.id}</td>
-                <td>{visit.visitor.name}</td>
-                <td>{visit.host_name}</td>
-                <td>{new Date(visit.check_in).toLocaleString()}</td>
-                <td>{visit.visitor.contact_number}</td>
-                <td>{visit.visitor.email}</td>
-                <td>{visit.visitor.special_requirements || 'None'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-          ) : (
-            <h1>No Pre-Scheduled Visit</h1>
-          )}
+    <div className="my-5">
+      <div className="table-responsive">
+        {visits.length > 0 ? (
+          <>
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Unique ID</th>
+                  <th>Guest Name</th>
+                  <th>Host Name</th>
+                  <th>Visit Date/Time</th>
+                  <th>Contact Information</th>
+                  <th>Email Address</th>
+                  <th>Special Requirement</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visits.map((visit) => (
+                  <tr key={visit.id}>
+                    <td>{visit.id}</td>
+                    <td>{visit.visitor?.name || 'N/A'}</td>
+                    <td>{visit.host_name || 'N/A'}</td>
+                    <td>{new Date(visit.check_in).toLocaleString()}</td>
+                    <td>{visit.visitor?.contact_number || 'N/A'}</td>
+                    <td>{visit.visitor?.email || 'N/A'}</td>
+                    <td>{visit.visitor?.special_requirements || 'None'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination Controls */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <button
+                className="btn btn-primary"
+                onClick={handlePrevious}
+                disabled={pagination.current_page === 1}
+              >
+                Previous
+              </button>
+              <span>
+                Page {pagination.current_page} of {pagination.last_page}
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={handleNext}
+                disabled={pagination.current_page === pagination.last_page}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        ) : (
+          <h4>No Pre-Scheduled Visit</h4>
+        )}
       </div>
     </div>
   );

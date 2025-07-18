@@ -95,6 +95,7 @@ function Navbar() {
                 Generate
               </NavLink>
             </li>
+           
         
           </ul>
         </div>

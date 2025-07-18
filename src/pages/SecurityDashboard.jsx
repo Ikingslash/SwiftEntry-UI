@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import NavBar from "./securityDashboard/include/NavBar";
 import api from "../context/api";
-import { IDLE_NAVIGATION } from "react-router-dom";
+// import { IDLE_NAVIGATION } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 function SecurityDashboard() {
   const [scanResult, setScanResult] = useState(null);
@@ -25,53 +26,23 @@ function SecurityDashboard() {
         console.warn(error);
       }
     );
-  }, []);
+  }, []); 
 
-  const fetchUserProfile = async (userId) => {
-    try {
-      const dummyProfiles = {
-        "dummy-user-id-john@example.com": {
-          name: "John Doe",
-          visit_date: "2025-07-07",
-          visit_time: "10:00 AM",
-          host_name: "Mr. Smith",
-          contact_info: "john@example.com | 08012345678",
-          special_request: "None",
-          status: "Checked In",
-        },
-        "dummy-user-id-jane@example.com": {
-          name: "Jane Smith",
-          visit_date: "2025-07-08",
-          visit_time: "11:30 AM",
-          host_name: "Ms. Johnson",
-          contact_info: "jane@example.com | 08198765432",
-          special_request: "Wheelchair",
-          status: "Pending",
-        },
-      };
+  const fetchUserProfile = async (code) => {
+  try {
+    const response = await api.get(`/security/visit/scan/${code}`);
+    setUserProfile(response.data);
 
-      const profile = dummyProfiles[userId] || {
-        name: "Femi Biodun",
-        visit_date: "08-07-2025",
-        visit_time: "4:00 PM ",
-        ID_No: "101256",
-        host_name: "Adekunle Adeniyi",
-        contact_info: "femi.biodun@gmail.com",
-        purpose: "Business Meeting",
-        special_request: "Wheelchair",
-        status: "Pending",
-      };
+    const modal = new window.bootstrap.Modal(
+      document.getElementById("printTagModal")
+    );
+    modal.show();
+  } catch (error) {
+    console.error("Scan Error:", error);
+    alert("No visitor record found for this code.");
+  }
+};
 
-      setUserProfile(profile);
-
-      const modal = new window.bootstrap.Modal(
-        document.getElementById("printTagModal")
-      );
-      modal.show();
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-    }
-  };
 
   const handlePrint = () => {
     const printContents = printRef.current.innerHTML;
@@ -132,10 +103,14 @@ function SecurityDashboard() {
             borderRadius: "10px",
             backgroundColor: "grey",
           }}
-        ></div>
-        <a href="#" className="mt-4">
-          <small>Enter Code Instead</small>
-        </a>
+        ></div> 
+         
+              <NavLink  className="mt-4"
+                to="/security-dashboard/generate-by-unique-code"
+              >
+                 <small>Enter Code Instead</small>
+              </NavLink>
+             
       </section>
 
       {/* MODAL */}

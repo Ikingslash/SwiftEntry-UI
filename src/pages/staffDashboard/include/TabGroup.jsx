@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../../context/api";
 import PreScheduledVisitTable from "./manageGuestGroup/PreScheduledVisitTable";
 import CompletedVisitTable from "./manageGuestGroup/CompletedVisitTable";
 import CancelledVisitTable from "./manageGuestGroup/CancelledVisitTable";
@@ -6,6 +7,25 @@ import MissedVisitTbale from "./manageGuestGroup/MissedVisitTbale";
 
 function TabGroup() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
+   const [counts, setCounts] = useState({
+      scheduled: 0,
+      completed: 0,
+      cancelled: 0,
+      missed: 0,
+    });
+  
+    useEffect(() => {
+      const fetchCounts = async () => {
+        try {
+          const res = await api.get("staff/guests/group-counts");
+          setCounts(res.data);
+        } catch (error) {
+          console.error("Error fetching counts:", error);
+        }
+      };
+  
+      fetchCounts();
+    }, []);
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center">
@@ -20,7 +40,7 @@ function TabGroup() {
               }`}
               onClick={() => setActiveTab("pre-scheduled-visit-table")}
             >
-              Pre-Scheduled Visit(5)
+              Pre-Scheduled Visit ({counts.scheduled})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -30,7 +50,7 @@ function TabGroup() {
               }`}
               onClick={() => setActiveTab("completed-visit")}
             >
-              Completed Visit(5)
+              Completed Visit ({counts.completed})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -40,7 +60,7 @@ function TabGroup() {
               }`}
               onClick={() => setActiveTab("cancelled-visit")}
             >
-              Cancelled Visit(5)
+              Cancelled Visit ({counts.cancelled})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -50,7 +70,7 @@ function TabGroup() {
               }`}
               onClick={() => setActiveTab("missed-visit")}
             >
-              Missed Visit(5)
+              Missed Visit ({counts.missed})
             </button>
           </li>
         </ul>

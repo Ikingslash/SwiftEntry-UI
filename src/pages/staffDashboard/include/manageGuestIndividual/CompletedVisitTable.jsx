@@ -1,55 +1,50 @@
 import { useState, useEffect } from "react";
-// import api from "../../../../context/api"; // Backend API import (commented out)
+import api from "../../../../context/api"; // Backend API import (commented out)
 
 function CompletedVisitTable() {
   const [visits, setVisits] = useState([]);
+  const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   useEffect(() => {
     const fetchVisits = async () => {
+      setLoading(true);
       try {
-        // Dummy data replacing backend API call
-        const dummyData = [
+        const response = await api.get(
+          "staff/guests/individual-completed-visit",
           {
-            id: "12345",
-            visitor: {
-              name: "John Doe",
-              contact_number: "08012345678",
-              special_requirements: "Wheelchair Access",
+            params: {
+              per_page: perPage,
+              page: page,
             },
-            host_name: "Jane Smith",
-            check_in: new Date().toISOString(),
-            created_at: "2025-07-06T09:30:00Z",
-            updated_at: "2025-07-06T12:00:00Z",
-          },
-          {
-            id: "67890",
-            visitor: {
-              name: "Alice Johnson",
-              contact_number: "09098765432",
-              special_requirements: "",
-            },
-            host_name: "Robert Brown",
-            check_in: new Date().toISOString(),
-            created_at: "2025-07-06T10:00:00Z",
-            updated_at: "2025-07-06T11:45:00Z",
-          },
-        ];
+          }
+        );
 
-        // Simulating setting data from a backend response
-        // const response = await api.get("staff/guests/individual");
-        // setVisits(response.data.visits);
-        setVisits(dummyData); // Replacing with dummy data
+        setVisits(response.data.visits);
+        setPagination(response.data.pagination);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching visits:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchVisits();
-  }, []);
+  }, [page]);
 
+  const handlePrevious = () => {
+    if (pagination.current_page > 1) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (pagination.current_page < pagination.last_page) {
+      setPage((prev) => prev + 1);
+    }
+  };
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -58,34 +53,56 @@ function CompletedVisitTable() {
     <div>
       <div className="table-responsive my-5">
         {visits.length > 0 ? (
-          <table className="table table-bordered table-hover">
-            <thead>
-              <tr>
-                <th>Unique ID</th>
-                <th>Guest Name</th>
-                <th>Host Name</th>
-                <th>Visit Date/Time</th>
-                <th>Contact Information</th>
-                <th>Check In</th>
-                <th>Check Out</th>
-                <th>Special Requirement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visits.map((visit) => (
-                <tr key={visit.id}>
-                  <td>{visit.id}</td>
-                  <td>{visit.visitor.name}</td>
-                  <td>{visit.host_name}</td>
-                  <td>{new Date(visit.check_in).toLocaleString()}</td>
-                  <td>{visit.visitor.contact_number}</td>
-                  <td>{visit.created_at}</td>
-                  <td>{visit.updated_at}</td>
-                  <td>{visit.visitor.special_requirements || "None"}</td> 
+          <>
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Unique ID</th>
+                  <th>Guest Name</th>
+                  <th>Host Name</th>
+                  <th>Visit Date/Time</th>
+                  <th>Contact Information</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Special Requirement</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visits.map((visit) => (
+                  <tr key={visit.id}>
+                    <td>{visit.id}</td>
+                    <td>{visit.visitor?.name || "N/A"}</td>
+                    <td>{visit.host_name}</td>
+                    <td>{new Date(visit.check_in).toLocaleString()}</td>
+                    <td>{visit.visitor?.contact_number || "N/A"}</td>
+                    <td>{visit.created_at}</td>
+                    <td>{visit.updated_at}</td>
+                    <td>{visit.visitor?.special_requirements || "None"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* Pagination Controls */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <button
+                className="btn btn-primary"
+                onClick={handlePrevious}
+                disabled={pagination.current_page === 1}
+              >
+                Previous
+              </button>
+              <span>
+                Page {pagination.current_page} of {pagination.last_page}
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={handleNext}
+                disabled={pagination.current_page === pagination.last_page}
+              >
+                Next
+              </button>
+            </div>
+          </>
         ) : (
           <h1>No Pre-Scheduled Visit</h1>
         )}

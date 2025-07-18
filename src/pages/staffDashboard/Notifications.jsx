@@ -5,22 +5,21 @@ import NavBar from "./include/NavBar";
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await api.get("/staff/notifications");
-        if (Array.isArray(response.data)) {
-          setNotifications(response.data);
+
+        if (Array.isArray(response.data.notifications)) {
+          setNotifications(response.data.notifications);
         } else {
           setMessage(response.data.message || "No Notifications Yet");
         }
       } catch (error) {
         console.error("Error fetching notifications:", error);
-        setMessage("Failed to fetch notifications.");
-      } finally {
-        setLoading(false);
+        setMessage("An error occurred while loading notifications.");
       }
     };
 
@@ -71,9 +70,11 @@ function Notifications() {
       </header>
 
       <section id="notifications" className="container p-4">
+        {message && <p>{message}</p>}
         {loading ? (
           <p className="text-center">Loading...</p>
         ) : notifications.length > 0 ? (
+          
           <div className="row">
             {notifications.map((notification, index) => (
               <div key={index} className="col-12 col-md-10 mx-auto mb-3">

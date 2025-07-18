@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../../context/api";
 import PreScheduledVisitTable from "./manageGuestIndividual/PreScheduledVisitTable";
 import CompletedVisitTable from "./manageGuestIndividual/CompletedVisitTable";
 import CancelledVisitTable from "./manageGuestIndividual/CancelledVisitTable";
@@ -6,10 +7,29 @@ import MissedVisitTbale from "./manageGuestIndividual/MissedVisitTbale";
 
 function TabIndividual() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
+  const [counts, setCounts] = useState({
+    scheduled: 0,
+    completed: 0,
+    cancelled: 0,
+    missed: 0,
+  });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await api.get("staff/guests/individual-counts");
+        setCounts(res.data);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center">
-        {/* Bootstrap Nav Tabs */}
         <ul className="nav nav-tabs">
           <li className="nav-item pe-4">
             <button
@@ -20,7 +40,7 @@ function TabIndividual() {
               }`}
               onClick={() => setActiveTab("pre-scheduled-visit-table")}
             >
-              Pre-Scheduled Visit(5)
+              Pre-Scheduled Visit ({counts.scheduled})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -30,7 +50,7 @@ function TabIndividual() {
               }`}
               onClick={() => setActiveTab("completed-visit")}
             >
-              Completed Visit(5)
+              Completed Visit ({counts.completed})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -40,7 +60,7 @@ function TabIndividual() {
               }`}
               onClick={() => setActiveTab("cancelled-visit")}
             >
-              Cancelled Visit(5)
+              Cancelled Visit ({counts.cancelled})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -50,28 +70,21 @@ function TabIndividual() {
               }`}
               onClick={() => setActiveTab("missed-visit")}
             >
-              Missed Visit(5)
+              Missed Visit ({counts.missed})
             </button>
           </li>
         </ul>
-        <a href="#" className=" ms-3">
+        <a href="#" className="ms-3">
           See More
         </a>
       </div>
-      {/* Content */}
+
       <div className="mt-5">
-        {activeTab === "pre-scheduled-visit-table" && (
-          <PreScheduledVisitTable />
-        )}
+        {activeTab === "pre-scheduled-visit-table" && <PreScheduledVisitTable />}
         {activeTab === "completed-visit" && <CompletedVisitTable />}
         {activeTab === "cancelled-visit" && <CancelledVisitTable />}
         {activeTab === "missed-visit" && <MissedVisitTbale />}
-        {/* {activeTab === "home" && <Home />}
-        {activeTab === "new-guest" && <NewGuest />}
-        {activeTab === "manage-guests" && <ManageGuests />}
-        {activeTab === "notifications" && <Notifications />} */}
-      </div>{" "}
-      {/* Hero Section */}
+      </div>
     </div>
   );
 }
