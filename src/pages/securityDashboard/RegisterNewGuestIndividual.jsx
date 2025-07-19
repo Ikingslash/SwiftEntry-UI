@@ -3,7 +3,7 @@ import api from "../../context/api";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
 
-export default function NewGuestIndividual() {
+export default function RegisterNewGuestIndividual() {
   const [formData, setFormData] = useState({
     name: "",
     contact_number: "",
@@ -73,7 +73,7 @@ export default function NewGuestIndividual() {
 
     try {
       const response = await api.post(
-        "/security/guests/register-guest",
+        "/security/guest/register-guest",
         formDataToSend,
         {
           headers: {
@@ -268,16 +268,18 @@ export default function NewGuestIndividual() {
                     <div className="col-md-6">
                       <div className="my-3">
                         <label className="form-label">Building</label>
+                        {/* Building */}
                         <select
-                          className="form-select"
                           name="building"
                           value={formData.building}
                           onChange={handleChange}
+                          required
                         >
-                          <option value="">Select Building</option>
+                          <option value="">Select building</option>
                           <option value="building 1">Building 1</option>
                           <option value="building 2">Building 2</option>
                           <option value="building 3">Building 3</option>
+                          <option value="building 4">Building 4</option>
                         </select>
                       </div>
                     </div>
@@ -286,15 +288,16 @@ export default function NewGuestIndividual() {
                       <div className="my-3">
                         <label className="form-label">Floor</label>
                         <select
-                          className="form-select"
                           name="floor"
                           value={formData.floor}
                           onChange={handleChange}
+                          required
                         >
-                          <option value="">Select Floor</option>
+                          <option value="">Select floor</option>
                           <option value="1st floor">1st Floor</option>
                           <option value="2nd floor">2nd Floor</option>
                           <option value="3rd floor">3rd Floor</option>
+                          <option value="4th floor">4th Floor</option>
                         </select>
                       </div>
                     </div>
@@ -389,21 +392,24 @@ export default function NewGuestIndividual() {
                   <label className="form-label">
                     Special Requirements (Optional)
                   </label>
+                  
                   <select
                     className="form-select"
                     name="special_requirements"
                     value={formData.special_requirements}
                     onChange={handleChange}
                   >
-                    <option> Select special requirements</option>
-                    <option value="parking space">Parking Space</option>
-                    <option value="wheelchair/accessibility">
-                      Wheelchair/Accessibility
+                    <option value="">Select special requirements</option>
+                    <option value="wheelchair/accessibility">Wheelchair Access</option>
+                    <option value="sign_language_interpreter">
+                      Sign Language Interpreter
+                    </option>
+                    <option value="parking space">
+                      Parking Space
                     </option>
                     <option value="language interpretation">
-                      Language Interpretation
+                      Language Translation
                     </option>
-                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div className="my-3">
@@ -431,7 +437,6 @@ export default function NewGuestIndividual() {
             </div>
           </div>
         </form>
-      
       </div>
 
       {/* Success Modal */}
@@ -524,7 +529,8 @@ export default function NewGuestIndividual() {
                       </p>
                     </div>
                     <div>
-                      {typeof guestDetails.id === "string" && guestDetails.id.length > 0 ? (
+                      {typeof guestDetails.id === "string" &&
+                      guestDetails.id.length > 0 ? (
                         <QRCode value={guestDetails.id} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>
