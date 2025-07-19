@@ -1,217 +1,461 @@
-// Required packages: react, react-qr-code, bootstrap (icons + modal)
-import { useState } from "react";
+import { useRef, useState } from "react";
+import api from "../../context/api";
 import QRCode from "react-qr-code";
+import html2pdf from "html2pdf.js";
 
-export default function RegisterNewGuestIndividual() {
+export default function NewGuestIndividual() {
+  const [formData, setFormData] = useState({
+    name: "",
+    contact_number: "",
+    email: "",
+    address: "",
+    visit_time: "",
+    host_name: "",
+    building: "",
+    floor: "",
+    purpose: "",
+    special_requirements: "",
+    emergency_contact: "",
+    details: "",
+    photo: "",
+  });
+
+  const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [qrValue, setQrValue] = useState(
-    "https://example.com/visitor/101123556"
-  ); // Dummy QR value
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+  const [guestDetails, setGuestDetails] = useState({});
+  const [qrValue, setQrValue] = useState("");
+  const printRef = useRef();
 
-  const guestDetails = {
-    name: "FEMI BIODUN",
-    id: "101256",
-    host: "Adekunle Adeniyi",
-    date: "08-07-2025",
-    time: "4PM",
-    Contact_info: "femi.biodun@gmail.com",
-    purpose: "Business Meeting",
-    address: "Building 1, Floor 2.",
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setSelectedImage(imageUrl);
+      setFormData((prev) => ({ ...prev, photo: file }));
+      setSelectedImage(URL.createObjectURL(file));
     }
   };
 
-  const handleRegister = () => {
-    setShowModal(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formDataToSend = new FormData();
+
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key !== "photo" && key !== "visit_time") {
+        formDataToSend.append(key, value);
+      }
+    });
+
+    if (formData.visit_time) {
+      const visitTime = new Date(formData.visit_time);
+      if (!isNaN(visitTime)) {
+        const formattedVisitTime = visitTime
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+        formDataToSend.append("visit_time", formattedVisitTime);
+      } else {
+        alert("Invalid visit time format.");
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (formData.photo) {
+      formDataToSend.append("photo", formData.photo);
+    }
+
+    try {
+      const response = await api.post(
+        "/security/guests/register-guest",
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        const visit = response.data.visit;
+        const visitor = response.data.visitor;
+
+        const visitTimeParts = visit?.check_in?.split(" ") || [];
+
+        const date = visitTimeParts?.[0] || "";
+        const time = visitTimeParts?.[1] || "";
+
+        setGuestDetails({
+          name: visitor.name,
+          id: visit.code || "",
+          host: visit.host_name,
+          date,
+          time,
+          purpose: visit.purpose,
+          Contact_info: visitor.contact_number,
+          address: visitor.address,
+          photo: visitor.photo,
+        });
+
+        if (visit.code) {
+          setQrValue(visit.code);
+        }
+
+        setFormData({
+          name: "",
+          contact_number: "",
+          email: "",
+          address: "",
+          visit_time: "",
+          host_name: "",
+          building: "",
+          floor: "",
+          purpose: "",
+          special_requirements: "",
+          emergency_contact: "",
+          details: "",
+          photo: null,
+        });
+        setSelectedImage(null);
+
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setShowVisitCardModal(true);
+        }, 2500);
+      } else {
+        alert("Error: " + (response.data.message || "Something went wrong"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert(
+        "Failed to register guest. " +
+          (error.response?.data?.message || "Server error.")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const original = document.body.innerHTML;
+    document.body.innerHTML = printRef.current.innerHTML;
+    window.print();
+    document.body.innerHTML = original;
+    window.location.reload();
+  };
+
+  const downloadBadgeAsPDF = () => {
+    const element = printRef.current;
+    setTimeout(() => {
+      html2pdf()
+        .set({
+          margin: 0.3,
+          filename: "Visitor_Badge.pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        })
+        .from(element)
+        .save();
+    }, 100);
   };
 
   return (
-    <div className="container mt-4">
-      <form>
-        <div className="row">
-          {/* Left Column */}
-          <div className="col-md-6">
-            <div className="d-flex flex-column gap-3">
-              <div className="p-4">
-                <h5 className="fw-bold">Guest Information</h5>
-                <div className="mb-3">
-                  <label className="form-label">Visitors Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter visitor's name"
-                  />
-                </div>
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label">Contact Number</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="Enter contact number"
-                      />
+    <>
+      <div
+        className={`container mt-4 ${
+          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+        }`}
+      >
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
+          <div className="row">
+            {/* Left Column */}
+            <div className="col-md-6">
+              <div className="d-flex flex-column gap-3">
+                {/* Guest Information */}
+                <div className=" p-4">
+                  <h5 className="fw-bold">Guest Information</h5>
+                  <div className="mb-3">
+                    <label className="form-label">Visitors Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter visitor's name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Contact Number</label>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          placeholder="Enter contact number"
+                          name="contact_number"
+                          value={formData.contact_number}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          placeholder="Enter email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        placeholder="Enter email"
-                      />
-                    </div>
+                  <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Address</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter address"
-                  />
-                </div>
-              </div>
-              <div className="p-4 mb-5">
-                <h5 className="fw-bold">Visit Information</h5>
-                <div className="mb-3">
-                  <label className="form-label">Visit Time</label>
-                  <input type="datetime-local" className="form-control" />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Host Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter host name"
-                  />
-                </div>
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="my-3">
-                      <label className="form-label">Building</label>
-                      <select className="form-select">
-                        <option>Select Building</option>
-                        <option>Building A</option>
-                        <option>Building B</option>
-                        <option>Building C</option>
-                      </select>
+
+                {/* Visit Information */}
+                <div className=" p-4 mb-5">
+                  <h5 className="fw-bold">Visit Information</h5>
+                  <div className="mb-3">
+                    <label className="form-label">Visit Time</label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      name="visit_time"
+                      value={formData.visit_time}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Host Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter host name"
+                      name="host_name"
+                      value={formData.host_name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="my-3">
+                        <label className="form-label">Building</label>
+                        <select
+                          className="form-select"
+                          name="building"
+                          value={formData.building}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Building</option>
+                          <option value="building 1">Building 1</option>
+                          <option value="building 2">Building 2</option>
+                          <option value="building 3">Building 3</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="my-3">
+                        <label className="form-label">Floor</label>
+                        <select
+                          className="form-select"
+                          name="floor"
+                          value={formData.floor}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Floor</option>
+                          <option value="1st floor">1st Floor</option>
+                          <option value="2nd floor">2nd Floor</option>
+                          <option value="3rd floor">3rd Floor</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="my-3">
-                      <label className="form-label">Floor</label>
-                      <select className="form-select">
-                        <option>Select Floor</option>
-                        <option>1st Floor</option>
-                        <option>2nd Floor</option>
-                        <option>3rd Floor</option>
-                      </select>
-                    </div>
+
+                  <div className="my-3">
+                    <label className="form-label">Purpose of Visit</label>
+                    <select
+                      className="form-select"
+                      name="purpose"
+                      value={formData.purpose}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Purpose</option>
+                      <option value="recruitment">Recruitment</option>
+                      <option value="business meeting">Business Meeting</option>
+                      <option value="repairs/maintenance">
+                        Repair/Maintenance
+                      </option>
+                      <option value="personal/official">
+                        personal/official
+                      </option>
+                      <option value="other">others</option>
+                    </select>
                   </div>
-                </div>
-                <div className="my-3">
-                  <label className="form-label">Purpose of Visit</label>
-                  <select className="form-select">
-                    <option>Select Purpose</option>
-                    <option>Recruitment</option>
-                    <option>Business Meeting</option>
-                    <option>Repair/Maintenance</option>
-                    <option>Interview</option>
-                    <option>Personal Visit</option>
-                  </select>
+
+                  <div className="my-3">
+                    <label className="form-label">Details (Optional)</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="Enter visit details"
+                      name="details"
+                      value={formData.details}
+                      onChange={handleChange}
+                    ></textarea>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column */}
-          <div className="col-md-6">
-            <div className="p-4">
-              <h5 className="fw-bold">Additional Information</h5>
-              <label className="form-label d-block mt-3">
-                Add Photo (Optional)
-              </label>
-              <input
-                type="file"
-                className="d-none"
-                id="fileUpload"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-              <label htmlFor="fileUpload" className="d-inline-block">
-                <div
-                  className="rounded-circle border d-flex justify-content-center align-items-center"
-                  style={{
-                    width: "100px",
-                    height: "100px",
-                    backgroundColor: "#f8f9fa",
-                    cursor: "pointer",
-                  }}
-                >
-                  {selectedImage ? (
-                    <img
-                      src={selectedImage}
-                      alt="Uploaded"
-                      className="rounded-circle"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+            {/* Right Column */}
+            <div className="col-md-6">
+              <div className="d-flex flex-column gap-3">
+                {/* Additional Information */}
+                <div className="p-4">
+                  <h5 className="fw-bold">Additional Information</h5>
+                  <div className=" mt-4">
+                    <label className="form-label d-block">
+                      Add Photo (Optional)
+                    </label>
+                    <input
+                      type="file"
+                      className="d-none"
+                      id="fileUpload"
+                      accept="image/*"
+                      name="photo"
+                      onChange={handleImageChange}
                     />
-                  ) : (
-                    <i
-                      className="bi bi-camera"
-                      style={{ fontSize: "24px" }}
-                    ></i>
-                  )}
+                    <label htmlFor="fileUpload" className="d-inline-block">
+                      <div
+                        className="rounded-circle border d-flex justify-content-center align-items-center"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          backgroundColor: "#f8f9fa",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {selectedImage ? (
+                          <img
+                            src={selectedImage}
+                            alt="Uploaded"
+                            className="rounded-circle"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <i
+                            className="bi bi-camera"
+                            style={{ fontSize: "24px" }}
+                          ></i>
+                        )}
+                      </div>
+                    </label>
+                  </div>
                 </div>
-              </label>
-              <div className="mt-3">
-                <label className="form-label">
-                  Special Requirements (Optional)
-                </label>
-              <select className="form-select">
-                  <option>Enter special requirements</option>
-                  <option>Parking Space</option>
-                  <option>Professional Photography</option>
-                  <option>Wheelchair</option>
-                </select>
+                <div className="mb-4">
+                  <label className="form-label">
+                    Special Requirements (Optional)
+                  </label>
+                  <select
+                    className="form-select"
+                    name="special_requirements"
+                    value={formData.special_requirements}
+                    onChange={handleChange}
+                  >
+                    <option> Select special requirements</option>
+                    <option value="parking space">Parking Space</option>
+                    <option value="wheelchair/accessibility">
+                      Wheelchair/Accessibility
+                    </option>
+                    <option value="language interpretation">
+                      Language Interpretation
+                    </option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="my-3">
+                  <label className="form-label">
+                    Emergency Contact (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    placeholder="Enter emergency contact"
+                    name="emergency_contact"
+                    value={formData.emergency_contact}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
-              <div className="mt-3">
-                <label className="form-label">
-                  Emergency Contact (Optional)
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter emergency contact number"
-                />
-              </div>
+
               <button
-                type="button"
-                className="btn btn-primary mt-4 w-50"
-                onClick={handleRegister}
+                type="submit"
+                className="btn btn-primary mt-3 w-50 "
+                disabled={loading}
               >
-                Register Guest
+                {loading ? "Registering..." : "Register"}
               </button>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
+      
+      </div>
 
-      {/* Modal */}
-      {showModal && (
-        <div className="modal fade show d-block " tabIndex="-1">
+      {/* Success Modal */}
+      <div
+        className={`modal fade ${showSuccessModal ? "show d-block" : ""}`}
+        tabIndex="-1"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content bg-success text-white text-center">
+            <div className="modal-body">
+              <h5 className="modal-title">Visitor Registered Successfully!</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Visit Card Modal */}
+      {showVisitCardModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
             <div className="modal-content rounded-4 shadow">
               <div className="modal-header">
@@ -219,11 +463,12 @@ export default function RegisterNewGuestIndividual() {
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => setShowVisitCardModal(false)}
                 ></button>
               </div>
               <div className="modal-body">
                 <div
+                  ref={printRef}
                   className="card mx-auto"
                   style={{
                     maxWidth: "650px",
@@ -239,12 +484,12 @@ export default function RegisterNewGuestIndividual() {
                     <span className="badge bg-light text-dark">
                       Sydani Group
                     </span>
-                    <strong className="text-white">VISITOR'S BADGE</strong>
+                    <strong className="text-white">VISITORS BADGE</strong>
                   </div>
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src="../images/user1.png"
+                        src="http://127.0.0.1:8000/storage/images/user2.png"
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"
@@ -259,7 +504,7 @@ export default function RegisterNewGuestIndividual() {
                       </p>
                       <p className="my-2 lead">
                         Host:{" "}
-                        <small className="ms-4">{guestDetails.host}</small>{" "}
+                        <small className="ms-4">{guestDetails.host}</small>
                       </p>
                       <p className="my-2 lead">
                         Visit Date:{" "}
@@ -269,17 +514,21 @@ export default function RegisterNewGuestIndividual() {
                       </p>
                       <p className="my-2 lead">
                         Purpose:{" "}
-                        <small className="ms-4">{guestDetails.purpose}</small>{" "}
+                        <small className="ms-4">{guestDetails.purpose}</small>
                       </p>
                       <p className="my-2 lead">
                         Contact Info:{" "}
                         <small className="ms-2">
                           {guestDetails.Contact_info}
-                        </small>{" "}
+                        </small>
                       </p>
                     </div>
                     <div>
-                      <QRCode value={qrValue} size={130} />
+                      {typeof guestDetails.id === "string" && guestDetails.id.length > 0 ? (
+                        <QRCode value={guestDetails.id} size={130} />
+                      ) : (
+                        <div className="text-muted">QR not ready</div>
+                      )}
                     </div>
                   </div>
                   <div className="card-footer">
@@ -288,7 +537,6 @@ export default function RegisterNewGuestIndividual() {
                     </p>
                   </div>
                 </div>
-
                 {/* Share Buttons */}
                 <div className="mt-4 text-center">
                   <p className="fw-bold">Share Via</p>
@@ -321,6 +569,18 @@ export default function RegisterNewGuestIndividual() {
                     >
                       <i className="bi bi-facebook fs-3 text-primary"></i>
                     </a>
+                    <button
+                      className="btn btn-outline-dark"
+                      onClick={handlePrint}
+                    >
+                      🖨️ Print
+                    </button>
+                    <button
+                      className="btn btn-outline-success"
+                      onClick={downloadBadgeAsPDF}
+                    >
+                      📄 Download PDF
+                    </button>
                   </div>
                 </div>
               </div>
@@ -328,6 +588,14 @@ export default function RegisterNewGuestIndividual() {
           </div>
         </div>
       )}
-    </div>
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #badgeCard, #badgeCard * { visibility: visible; }
+          #badgeCard { position: absolute; top: 0; left: 0; width: 100%; }
+        }
+      `}</style>
+    </>
   );
 }
