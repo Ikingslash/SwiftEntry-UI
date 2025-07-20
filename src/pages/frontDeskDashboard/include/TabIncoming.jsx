@@ -22,8 +22,7 @@ function TabIncoming({ filters, searchQuery }) { // Accept filters and searchQue
         visitorTypeParam = 'individual';
       }
 
-      // Determine status_filter based on filters
-      // 'pending' filter maps to 'pre_registered_visit' status for incoming
+    
       let statusFilterParam = 'scheduled_visit'; // Default for incoming
       if (filters.pending) {
         statusFilterParam = 'pre_registered_visit';
