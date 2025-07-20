@@ -9,6 +9,7 @@ function RegisterNewGuestGroup() {
     group_leader_contact: "",
     group_leader_email: "",
     organization_name: "",
+    address: "",
     group_size: "",
     visit_time: "",
     host_name: "",
@@ -128,6 +129,7 @@ function RegisterNewGuestGroup() {
           group_leader_contact: "",
           group_leader_email: "",
           organization_name: "",
+          address: "",
           group_size: "",
           visit_time: "",
           host_name: "",
@@ -241,17 +243,29 @@ function RegisterNewGuestGroup() {
                   <div className="mb-3">
                     <label className="form-label">Group Size</label>
                     <select
-                      className="form-select"
-                      name="group_size"
-                      value={formData.group_size}
-                      onChange={handleChange}
-                    >
+                        className="form-select"
+                        name="group_size"
+                        value={formData.group_size}
+                        onChange={handleChange}
+                      >
                       <option>Select Group Size</option>
                       <option value="5">2 - 10</option>
                       <option value="10">10 - 20</option>
                       <option value="20">20 - 30</option>
                       <option value="30">30 Above</option>
                     </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
 

@@ -271,6 +271,7 @@ export default function RegisterNewGuestIndividual() {
                         {/* Building */}
                         <select
                           name="building"
+                          className="form-select mb-3"
                           value={formData.building}
                           onChange={handleChange}
                           required
@@ -290,6 +291,7 @@ export default function RegisterNewGuestIndividual() {
                         <select
                           name="floor"
                           value={formData.floor}
+                          className="form-select mb-3"
                           onChange={handleChange}
                           required
                         >

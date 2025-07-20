@@ -1,28 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NavBar from "./include/NavBar";
 import TabPreRegisteredVisitors from "./include/TabPreRegisteredVisitors";
 import TabWalkInVisitors from "./include/TabWalkInVisitors";
 import { IoCheckmark } from "react-icons/io5";
+import api from "../../context/api";
 
-function VisitHistory() {
+function VisitSecurityHistory() {
   const [activeTab, setActiveTab] = useState("pre-registered-visitors");
   const [activeFilter, setActiveFilter] = useState("all");
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [groupedVisits, setGroupedVisits] = useState({});
+  const [pagination, setPagination] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [month, setMonth] = useState("");
+  const [category, setCategory] = useState("all"); // Optional: add more filters
+  const perPage = 10; // or allow user to change
+  const page = 1;
 
-  const handleFilterChange = (value) => {
-    setActiveFilter(value);
-    if (value === "all") {
-      setSelectedMonth(""); // Clear month when "All" is selected
+  useEffect(() => {
+    fetchHistory();
+  }, [activeFilter, month, category, activeTab]);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const monthParam = month
+        ? new Date(`${month} 1, 2025`).getMonth() + 1
+        : null;
+
+      // Determine the status based on the activeTab
+      let statusParam = null;
+      if (activeTab === "pre-registered-visitors") {
+        statusParam = "pre_registered_visit";
+      } else if (activeTab === "walk-in-visitors") {
+        statusParam = "Walk_In";
+      }
+
+      const response = await api.get("/guest-history", {
+        params: {
+          visitor_type: activeFilter,
+          month: monthParam,
+          purpose: category,
+          status: statusParam,
+          per_page: perPage,
+          page,
+        },
+      });
+      setGroupedVisits(response.data.grouped_visits || {});
+      setPagination(response.data.pagination || {});
+    } catch (err) {
+      console.error("Error fetching history:", err);
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleMonthChange = (e) => {
-    const month = e.target.value;
-    setSelectedMonth(month);
-    if (month) {
-      setActiveFilter(""); // Optional: Clear visitor type when month is selected
-    }
-  };
+  console.log("Grouped Visits: ", groupedVisits);
 
   return (
     <div>
@@ -164,8 +195,7 @@ function VisitHistory() {
             <select
               className="form-select me-3"
               style={{ minWidth: "150px", flex: "1" }}
-              value={selectedMonth}
-              onChange={handleMonthChange}
+              onChange={(e) => setMonth(e.target.value)}
             >
               <option value="">Select Month</option>
               {[
@@ -181,26 +211,40 @@ function VisitHistory() {
                 "October",
                 "November",
                 "December",
-              ].map((month, index) => (
-                <option key={month} value={index + 1}>
+              ].map((month) => (
+                <option key={month} value={month}>
                   {month}
                 </option>
               ))}
+            </select>
+
+            <select
+              className="form-select me-3"
+              style={{ minWidth: "150px", flex: "1" }}
+              onChange={(e) => setCategory(e.target.value)}
+              value={category}
+            >
+              <option value="all">All Categories</option>
+              <option value="recruitment">Recruitment</option>
+              <option value="business meeting">Business Meeting</option>
+              <option value="repairs/maintenance">Repairs/Maintenance</option>
+              <option value="personal/official">Personal/Official</option>
+              <option value="other">Other</option>
             </select>
 
             {/* Visitor Type Filter */}
             {[
               { label: "All", value: "all", width: "60px" },
               {
-                label: "Pre-Registered Visitors",
+                label: "Individual",
                 value: "individual",
                 width: "180px",
               },
-              { label: "Walk-in Visitors", value: "group", width: "160px" },
+              { label: "Group", value: "group", width: "160px" },
             ].map((item) => (
               <a
                 key={item.value}
-                onClick={() => handleFilterChange(item.value)}
+                onClick={() => setActiveFilter(item.value)}
                 className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${
                   activeFilter === item.value ? "border-primary" : "border"
                 }`}
@@ -225,17 +269,21 @@ function VisitHistory() {
       <div className="container mt-5">
         {activeTab === "pre-registered-visitors" && (
           <TabPreRegisteredVisitors
-            month={selectedMonth}
-            visitorType={activeFilter}
+            groupedVisits={groupedVisits}
+            pagination={pagination}
+            loading={loading}
           />
         )}
-
         {activeTab === "walk-in-visitors" && (
-          <TabWalkInVisitors month={selectedMonth} visitorType={activeFilter} />
+          <TabWalkInVisitors
+            groupedVisits={groupedVisits}
+            pagination={pagination}
+            loading={loading}
+          />
         )}
       </div>
     </div>
   );
 }
 
-export default VisitHistory;
+export default VisitSecurityHistory;

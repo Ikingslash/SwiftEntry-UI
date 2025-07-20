@@ -1,7 +1,13 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+
+ 
+ 
 
 function Navbar() {
   const location = useLocation();
+   const { user, logout } = useAuth();
+   
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
@@ -117,23 +123,38 @@ function Navbar() {
           </a>
 
           {/* User Profile Dropdown */}
-          <div className="dropdown">
+           <div className="dropdown">
             <button
-              className="btn text-white dropdown-toggle d-flex align-items-center"
+              className="btn text-white d-flex align-items-center dropdown-toggle"
               type="button"
               id="profileDropdown"
               data-bs-toggle="dropdown"
               aria-expanded="false"
+              style={{
+                gap: "0.5rem",
+                background: "transparent",
+                border: "none",
+              }}
             >
-              <span className="fw-semibold me-2">John Aliyu</span>
+              <span className="fw-semibold">{user?.name}</span>
               <img
-                src="../images/user.png"
-                alt="User"
+                src={`http://127.0.0.1:8000/storage/${user.profile_picture}`}
+                alt="Profile"
                 className="rounded-circle border"
                 width="40"
                 height="40"
               />
             </button>
+
+            {/* Remove the default arrow using inline style or override */}
+            <style>
+              {`
+                #profileDropdown::after {
+                  display: none !important;
+                }
+              `}
+            </style>
+
             <ul
               className="dropdown-menu dropdown-menu-end"
               aria-labelledby="profileDropdown"
@@ -152,9 +173,12 @@ function Navbar() {
                 <hr className="dropdown-divider" />
               </li>
               <li>
-                <a className="dropdown-item py-2 text-danger" href="/logout">
+                <button
+                  className="dropdown-item py-2 text-danger"
+                  onClick={logout}
+                >
                   Logout
-                </a>
+                </button>
               </li>
             </ul>
           </div>
