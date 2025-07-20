@@ -83,7 +83,7 @@ function Navbar() {
                 Notifications
               </NavLink>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
                   location.pathname === "/security-dashboard/generate-qr-code"
@@ -94,7 +94,7 @@ function Navbar() {
               >
                 Generate
               </NavLink>
-            </li>
+            </li> */}
            
         
           </ul>
