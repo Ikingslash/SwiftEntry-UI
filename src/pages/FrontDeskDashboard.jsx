@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "./frontDeskDashboard/include/NavBar";
 import TabIncoming from "./frontDeskDashboard/include/TabIncoming";
 import TabOutgoing from "./frontDeskDashboard/include/TabOutgoing";
 
 function FrontDeskDashboard() {
-  // const [activeTab, setActiveTab] = useState("home");
   const [activeTab, setActiveTab] = useState("incoming");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -12,7 +11,9 @@ function FrontDeskDashboard() {
     individual: false,
     pending: false,
   });
+  const [searchQuery, setSearchQuery] = useState(''); // State for the search input
 
+  // Function to handle filter checkbox changes
   const handleFilterChange = (filterType) => {
     setFilters((prev) => ({
       ...prev,
@@ -20,11 +21,18 @@ function FrontDeskDashboard() {
     }));
   };
 
-  const applyFilters = () => {
-    // Apply the filters logic here
-    console.log("Applied filters:", filters);
-    setShowFilters(false);
+  // Function to handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
+
+  // Function to apply filters (just closes the dropdown, actual filtering happens in child components' useEffect)
+  const applyFilters = () => {
+    setShowFilters(false);
+    // The change in `filters` or `searchQuery` state will trigger
+    // the `useEffect` in `TabIncoming` or `TabOutgoing` automatically.
+  };
+
   return (
     <div>
       <NavBar />
@@ -88,15 +96,14 @@ function FrontDeskDashboard() {
             </div>
           </div>
         </div>
-
       </header>
 
-      {/* Tabs Navigation (Positioned Below Header) */} 
+      {/* Tabs Navigation (Positioned Below Header) */}
       <div className=" container mt-5">
         <ul
           className="nav nav-tabs container d-flex align-items-center justify-content-between"
           style={{
-            overflow: "hidden",
+            // Removed overflow: "hidden" to allow dropdown to show
             border: "none",
           }}
         >
@@ -160,6 +167,8 @@ function FrontDeskDashboard() {
                   width: "400px",
                   border: "1px solid #ced4da",
                 }}
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
               <i
                 className="bi bi-sliders position-absolute"
@@ -248,8 +257,12 @@ function FrontDeskDashboard() {
       </div>
       {/* Tab Content */}
       <div className="container mt-5">
-        {activeTab === "incoming" && <TabIncoming />}
-        {activeTab === "outgoing" && <TabOutgoing />}
+        {activeTab === "incoming" && (
+          <TabIncoming filters={filters} searchQuery={searchQuery} />
+        )}
+        {activeTab === "outgoing" && (
+          <TabOutgoing filters={filters} searchQuery={searchQuery} />
+        )}
       </div>
     </div>
   );
