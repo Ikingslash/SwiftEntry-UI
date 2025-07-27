@@ -5,7 +5,14 @@ import UpcomingVisit from "../include/visit/UpcomingVisit";
 import MissedVisitTbale from "../include/visit/MissedVisitTbale";
 
 function AdminVisit() {
-  const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
+  const [activeTab, setActiveTab] = useState("scheduled-visit-table"); // Renamed for consistency
+  const [refreshVisitsKey, setRefreshVisitsKey] = useState(0); // Key to force re-render/re-fetch in child tabs
+
+  // Function to trigger refresh in child components
+  const triggerRefresh = () => {
+    setRefreshVisitsKey((prevKey) => prevKey + 1);
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center">
@@ -14,11 +21,11 @@ function AdminVisit() {
           <li className="nav-item pe-4">
             <button
               className={`nav-link ${
-                activeTab === "pre-scheduled-visit-table"
+                activeTab === "scheduled-visit-table"
                   ? "active"
                   : "text-dark"
               }`}
-              onClick={() => setActiveTab("pre-scheduled-visit-table")}
+              onClick={() => setActiveTab("scheduled-visit-table")}
             >
               Scheduled Visits
             </button>
@@ -36,9 +43,9 @@ function AdminVisit() {
           <li className="nav-item pe-4">
             <button
               className={`nav-link ${
-                activeTab === "cancelled-visit" ? "active" : "text-dark"
+                activeTab === "upcoming-visit" ? "active" : "text-dark"
               }`}
-              onClick={() => setActiveTab("cancelled-visit")}
+              onClick={() => setActiveTab("upcoming-visit")}
             >
               Upcoming Visits
             </button>
@@ -60,16 +67,12 @@ function AdminVisit() {
       </div>
       {/* Content */}
       <div className="mt-5">
-        {activeTab === "pre-scheduled-visit-table" && <ScheduledVisit />}
-        {activeTab === "completed-visit" && <CompletedVisitTable />}
-        {activeTab === "cancelled-visit" && <UpcomingVisit />}
-        {activeTab === "missed-visit" && <MissedVisitTbale />}
-        {/* {activeTab === "home" && <Home />}
-        {activeTab === "new-guest" && <NewGuest />}
-        {activeTab === "manage-guests" && <ManageGuests />}
-        {activeTab === "notifications" && <Notifications />} */}
-      </div>{" "}
-      {/* Hero Section */}
+        {/* Pass refreshKey and triggerRefresh to child components */}
+        {activeTab === "scheduled-visit-table" && <ScheduledVisit refreshKey={refreshVisitsKey} triggerRefresh={triggerRefresh} />}
+        {activeTab === "completed-visit" && <CompletedVisitTable refreshKey={refreshVisitsKey} triggerRefresh={triggerRefresh} />}
+        {activeTab === "upcoming-visit" && <UpcomingVisit refreshKey={refreshVisitsKey} triggerRefresh={triggerRefresh} />}
+        {activeTab === "missed-visit" && <MissedVisitTbale refreshKey={refreshVisitsKey} triggerRefresh={triggerRefresh} />}
+      </div>
     </div>
   );
 }

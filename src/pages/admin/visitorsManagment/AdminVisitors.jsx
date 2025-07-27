@@ -2,10 +2,49 @@ import { useState } from "react";
 import NavBar from "../include/NavBar";
 import AdminVisitorsTab from "./AdminVisitorsTab";
 import AdminVisit from "./AdminVisit";
+import api from "../../../context/api";
 
 function AdminVisitors() {
-  const [activeTab, setActiveTab] = useState("visitors");
+    const [activeTab, setActiveTab] = useState("visitors");
   const [showModal, setShowModal] = useState(false);
+  const [newVisitorData, setNewVisitorData] = useState({
+    name: "",
+    contact_number: "",
+    email: "",
+    address: "",
+    visitor_type: "Individual", // Default type
+  });
+  const [refreshVisitorsKey, setRefreshVisitorsKey] = useState(0); // Key to force re-render/re-fetch in child tabs
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewVisitorData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleAddVisitorSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post("/admin/visitors", newVisitorData);
+      console.log("Visitor created:", response.data);
+      setShowModal(false);
+      setNewVisitorData({ // Reset form
+        name: "",
+        contact_number: "",
+        email: "",
+        address: "",
+        visitor_type: "Individual",
+      });
+      setRefreshVisitorsKey((prevKey) => prevKey + 1); // Trigger refresh in child components
+      alert("Visitor added successfully!"); // Use a custom modal for alerts in production
+    } catch (error) {
+      console.error("Error adding visitor:", error.response?.data || error.message);
+      alert("Failed to add visitor: " + (error.response?.data?.message || error.message)); // Use custom modal
+    }
+  };
+
 
   return (
     <div>
@@ -108,7 +147,7 @@ function AdminVisitors() {
 
       {/* Tab Content */}
       <div className="container mt-5">
-        {activeTab === "visitors" && <AdminVisitorsTab />}
+          {activeTab === "visitors" && <AdminVisitorsTab refreshKey={refreshVisitorsKey} />}
         {activeTab === "visit" && <AdminVisit />}
       </div>
 
@@ -136,35 +175,69 @@ function AdminVisitors() {
                 ></button>
               </div>
               <div className="modal-body">
-                <form>
+                <form onSubmit={handleAddVisitorSubmit}>
                   <div className="mb-3">
                     <label className="form-label">Visitors Name</label>
-                    <input type="text" className="form-control" />
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="name"
+                      value={newVisitorData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="my-3">
                     <label className="form-label">Type</label>
-                    <select className="form-select">
-                      <option>Select Guest Type</option>
-                      <option>Individual </option>
-                      <option>Group</option>
+                    <select
+                      className="form-select"
+                      name="visitor_type"
+                      value={newVisitorData.visitor_type}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select Guest Type</option>
+                      <option value="individual">Individual</option>
+                      <option value="group">Group</option>
                     </select>
                   </div>
                   <div className="my-3">
                     <label className="form-label">Email Address</label>
-                    <input type="email" className="form-control" />
+                    <input
+                      type="email"
+                      className="form-control"
+                      name="email"
+                      value={newVisitorData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="my-3">
+                    <label className="form-label">Contact Number</label> {/* Added contact_number field */}
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="contact_number"
+                      value={newVisitorData.contact_number}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="my-3">
                     <label className="form-label">Address</label>
-                    <input type="text" className="form-control" />
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="address"
+                      value={newVisitorData.address}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="mt-5 text-center">
                     <button
                       type="submit"
                       className="btn btn-primary w-50"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setShowModal(false);
-                      }}
                     >
                       Create Visitor
                     </button>

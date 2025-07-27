@@ -3,8 +3,9 @@ import AllVisitors from "../include/visitors/AllVisitors";
 import VipVisitors from "../include/visitors/VipVisitors";
 import BlackListedVisitors from "../include/visitors/BlackListedVisitors";
 
-export default function AdminVisitorsTab() {
+export default function AdminVisitorsTab({ refreshKey }) { // Accept refreshKey prop
   const [activeTab, setActiveTab] = useState("all-visitors");
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center">
@@ -44,11 +45,11 @@ export default function AdminVisitorsTab() {
       </div>
       {/* Content */}
       <div className="mt-5">
-        {activeTab === "all-visitors" && <AllVisitors />}
-        {activeTab === "vip-visitors" && <VipVisitors />}
-        {activeTab === "blacklist-visitors" && <BlackListedVisitors />}
-      </div>{" "}
-      {/* Hero Section */}
+        {/* Pass refreshKey to child components */}
+        {activeTab === "all-visitors" && <AllVisitors refreshKey={refreshKey} />}
+        {activeTab === "vip-visitors" && <VipVisitors refreshKey={refreshKey} />}
+        {activeTab === "blacklist-visitors" && <BlackListedVisitors refreshKey={refreshKey} />}
+      </div>
     </div>
   );
 }

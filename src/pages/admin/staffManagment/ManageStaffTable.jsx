@@ -1,77 +1,182 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../../context/api"; // Assuming your Axios instance
+// No need for date-fns here unless you have date fields for staff like last login
 
-function ManageStaffTable() {
+function ManageStaffTable({ refreshKey, triggerRefresh }) {
+  const [staff, setStaff] = useState([]); // Stores staff data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({});
+  const [page, setPage] = useState(1); // State for current page
+
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [selectedVisitor, setSelectedVisitor] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false); // For "View Detail"
+  const [selectedStaff, setSelectedStaff] = useState(null); // Full staff object for modals
 
-  const visitorsData = [
-    {
-      name: "Henry Riggs",
-      role: "Staff",
-      dept: "Sales and Research",
-      lastLogin: "3:00pm on 11/10/24",
-      status: "Active", 
-    },
-    {
-      name: "Maya Luke",
-      role: "Security",
-      dept: "Finance and Analysis",
-      lastLogin: "3:00pm on 11/10/24",
-      status: "Inactive",
-    },
-    {
-      name: "Mary Smith",
-      role: "Frontdesk",
-      dept: "Marketing And Development",
-      lastLogin: "3:00pm on 11/10/24",
-      status: "Active",
-    },
-    {
-      name: "Henry Riggs",
-      role: "Staff",
-      dept: "Customer Support",
-      lastLogin: "3:00pm on 11/10/24",
-      status: "Inactive", 
-    },
-    {
-      name: "Maya Luke",
-      role: "Staff",
-      dept: "Product Manager",
-      lastLogin: "3:00pm on 11/10/24",
-      status: "Inactive",
-    },
-    {
-      name: "Mary Smith",
-      role: "Security",
-      dept: "HUMAN RESOURCES", 
-      lastLogin: "3:00pm on 11/10/24",
-      status: "Active",
-    },
-  ];
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+    department: "",
+    password: "",  
+    photo: null,
+    status: true,  
+  });
 
+ 
+  useEffect(() => {
+    fetchStaff();
+  }, [refreshKey, page]);  
 
-  const handleEdit = (visitor) => {
-    setSelectedVisitor(visitor);
-    setShowEditModal(true);
+  const fetchStaff = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+     
+      const response = await api.get(`admin/staff?page=${page}`);
+      
+      setStaff(Array.isArray(response.data.staff) ? response.data.staff : []);
+      setPagination(response.data.pagination);
+    } catch (err) {
+      console.error("Error fetching staff:", err.response?.data || err.message);
+      setError("Failed to load staff. Please try again.");
+      setStaff([]); 
+      setPagination({});  
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleInviteAgain = () => {
-    setShowInviteModal(true);
+  const handleEdit = async (staffId) => {
+    try {
+      const response = await api.get(`admin/staff/${staffId}`);
+      const staffData = response.data;
+      setSelectedStaff(staffData);
+      setEditFormData({
+        name: staffData.name,
+        email: staffData.email,
+        role: staffData.role,
+        department: staffData.department,
+        password: "",  
+        photo: staffData.photo,
+        status: staffData.status,
+      });
+      setShowEditModal(true);
+    } catch (err) {
+      console.error("Error fetching staff details for edit:", err.response?.data || err.message);
+      alert("Failed to load staff details for editing.");
+    }
   };
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedImage(URL.createObjectURL(file));
+  const handleEditFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditFormData((prevData) => ({
+      ...prevData,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...editFormData };
+      
+      if (payload.password === "") {
+        delete payload.password;
+      }
+
+      const response = await api.put(`admin/staff/${selectedStaff.id}`, payload);
+      console.log("Staff updated:", response.data);
+      setShowEditModal(false);
+      triggerRefresh(); // Refresh the table
+      alert("Staff updated successfully!");
+    } catch (err) {
+      console.error("Error updating staff:", err.response?.data || err.message);
+      alert("Failed to update staff: " + (err.response?.data?.message || JSON.stringify(err.response?.data?.errors) || err.message));
+    }
+  };
+
+  const handleDeactivateActivate = async (staffId, currentStatus) => {
+    const action = currentStatus ? 'deactivate' : 'activate';
+    const confirmMessage = currentStatus
+      ? "Are you sure you want to deactivate this staff account?"
+      : "Are you sure you want to activate this staff account?";
+
+    if (window.confirm(confirmMessage)) {
+      try {
+        const response = await api.post(`admin/staff/${staffId}/${action}`);
+        console.log(`Staff ${action}d:`, response.data);
+        triggerRefresh();
+        alert(response.data.message);
+      } catch (err) {
+        console.error(`Error ${action}ing staff:`, err.response?.data || err.message);
+        alert(`Failed to ${action} staff: ` + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleDeleteStaff = async (staffId) => {
+    if (window.confirm("Are you sure you want to delete this staff? This action cannot be undone.")) {
+      try {
+        const response = await api.delete(`admin/staff/${staffId}`);
+        console.log("Staff deleted:", response.data);
+        triggerRefresh();
+        alert(response.data.message);
+      } catch (err) {
+        console.error("Error deleting staff:", err.response?.data || err.message);
+        alert("Failed to delete staff: " + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleViewDetails = async (staffId) => {
+    try {
+      const response = await api.get(`admin/staff/${staffId}`);
+      setSelectedStaff(response.data);
+      setShowViewModal(true);
+    } catch (err) {
+      console.error("Error fetching staff details for view:", err.response?.data || err.message);
+      alert("Failed to load staff details.");
     }
   };
 
   const closeModal = () => {
     setShowEditModal(false);
-    setShowInviteModal(false);
+    setShowViewModal(false);
+    setSelectedStaff(null);
+    // Reset image preview if it was for a modal
+    // setSelectedImage(null); // This is managed by AdminStaff.jsx for add modal
   };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // For edit modal, if you support direct photo upload and update
+      // For now, this is a placeholder. Real implementation needs file upload.
+      setSelectedStaff(prev => ({ ...prev, photo: URL.createObjectURL(file) }));
+      setEditFormData(prev => ({ ...prev, photo: URL.createObjectURL(file) })); // Or a base64 string
+    }
+  };
+
+  const handlePrevious = () => {
+    if (pagination.current_page > 1) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (pagination.current_page < pagination.last_page) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  if (loading) {
+    return <p className="text-center mt-5">Loading staff data...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center mt-5 text-danger">{error}</p>;
+  }
 
   return (
     <div className="container">
@@ -82,26 +187,31 @@ function ManageStaffTable() {
               <th>Name</th>
               <th>Role</th>
               <th>Department</th>
-              <th>Last Login</th>
-              <th>Status</th> 
+              <th>Email</th> {/* Added Email for clarity */}
+              <th>Status</th>
               <th className="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            <React.Fragment>
-              {visitorsData.map((visitor, idx) => (
-                <tr key={idx}>
-                  <td>{visitor.name}</td>
-                  <td>{visitor.role}</td>
-                  <td>{visitor.dept}</td>
-                  <td>{visitor.lastLogin}</td>
-                  <td>{visitor.status}</td> 
+            {staff.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center text-muted py-4">No staff found.</td>
+              </tr>
+            ) : (
+              staff.map((s, idx) => (
+                <tr key={s.id || idx}> {/* Use s.id for unique key */}
+                  <td>{s.name}</td>
+                  <td>{s.role}</td>
+                  <td>{s.department}</td>
+                  <td>{s.email}</td>
+                  <td>{s.status ? "Active" : "Inactive"}</td>
                   <td className="text-center">
                     <div className="dropdown">
                       <button
                         className="btn btn-white border-primary"
                         type="button"
                         data-bs-toggle="dropdown"
+                        aria-expanded="false"
                       >
                         <i className="bi bi-three-dots-vertical"></i>
                       </button>
@@ -112,7 +222,7 @@ function ManageStaffTable() {
                         <li>
                           <button
                             className="dropdown-item"
-                            onClick={() => handleEdit(visitor)}
+                            onClick={() => handleEdit(s.id)}
                           >
                             Edit Info
                           </button>
@@ -120,7 +230,7 @@ function ManageStaffTable() {
                         <li>
                           <button
                             className="dropdown-item"
-                            onClick={handleInviteAgain}
+                            onClick={() => handleViewDetails(s.id)}
                           >
                             View Detail
                           </button>
@@ -129,22 +239,55 @@ function ManageStaffTable() {
                           <hr className="dropdown-divider" />
                         </li>
                         <li>
-                          <button className="dropdown-item text-danger">
-                           Deactivate
+                          <button
+                            className={`dropdown-item ${s.status ? 'text-warning' : 'text-success'}`}
+                            onClick={() => handleDeactivateActivate(s.id, s.status)}
+                          >
+                            {s.status ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            className="dropdown-item text-danger"
+                            onClick={() => handleDeleteStaff(s.id)}
+                          >
+                            Delete
                           </button>
                         </li>
                       </ul>
                     </div>
                   </td>
                 </tr>
-              ))}
-            </React.Fragment>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Edit Visitor Modal */}
-      {showEditModal && selectedVisitor && (
+      {/* Pagination Controls */}
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <button
+          className="btn btn-primary"
+          onClick={handlePrevious}
+          disabled={pagination.current_page === 1}
+        >
+          Previous
+        </button>
+        <span>
+          Page {pagination.current_page} of {pagination.last_page}
+        </span>
+        <button
+          className="btn btn-primary"
+          onClick={handleNext}
+          disabled={pagination.current_page === pagination.last_page}
+        >
+          Next
+        </button>
+      </div>
+
+
+      {/* Edit Staff Modal */}
+      {showEditModal && selectedStaff && (
         <div
           className="modal fade show d-block"
           tabIndex="-1"
@@ -167,32 +310,32 @@ function ManageStaffTable() {
           >
             <div className="modal-content py-5">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Information</h5>
+                <h5 className="modal-title">Edit Staff Information</h5>
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => setShowEditModal(false)}
+                  onClick={closeModal}
                 ></button>
               </div>
 
               <div className="modal-body p-4">
-                <form>
-                  <div className="row"> 
-                    <div className="d-flex flex-column gap-3"> 
+                <form onSubmit={handleEditSubmit}>
+                  <div className="row">
+                    <div className="d-flex flex-column gap-3">
                       <div className="">
                         <div className=" my-4">
                           <label className="form-label d-block">
-                            <small>Add Photo (Optional)</small>
+                            <small>Staff Photo (Optional)</small>
                           </label>
                           <input
                             type="file"
                             className="d-none"
-                            id="fileUpload"
+                            id="editFileUpload" // Unique ID
                             accept="image/*"
                             onChange={handleImageChange}
                           />
                           <label
-                            htmlFor="fileUpload"
+                            htmlFor="editFileUpload"
                             className="d-inline-block"
                           >
                             <div
@@ -204,10 +347,10 @@ function ManageStaffTable() {
                                 cursor: "pointer",
                               }}
                             >
-                              {selectedImage ? (
+                              {selectedStaff.photo ? (
                                 <img
-                                  src={selectedImage}
-                                  alt="Uploaded"
+                                  src={selectedStaff.photo}
+                                  alt="Staff"
                                   className="rounded-circle"
                                   style={{
                                     width: "100%",
@@ -229,7 +372,10 @@ function ManageStaffTable() {
                           <input
                             type="text"
                             className="form-control"
-                            placeholder="Enter full name"
+                            name="name"
+                            value={editFormData.name}
+                            onChange={handleEditFormChange}
+                            required
                           />
                         </div>
                         <div className="mb-3">
@@ -237,7 +383,10 @@ function ManageStaffTable() {
                           <input
                             type="email"
                             className="form-control"
-                            placeholder="Enter email"
+                            name="email"
+                            value={editFormData.email}
+                            onChange={handleEditFormChange}
+                            required
                           />
                         </div>
                         <div className="mb-3">
@@ -245,7 +394,10 @@ function ManageStaffTable() {
                           <input
                             type="text"
                             className="form-control"
-                            placeholder="Enter job role"
+                            name="role"
+                            value={editFormData.role}
+                            onChange={handleEditFormChange}
+                            required
                           />
                         </div>
                       </div>
@@ -254,168 +406,146 @@ function ManageStaffTable() {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Enter your dept"
-                        />
+                          name="department"
+                          value={editFormData.department}
+                          onChange={handleEditFormChange}
+                          required
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">New Password (leave blank to keep current)</label>
+                          <input
+                            type="password"
+                            className="form-control"
+                            name="password"
+                            value={editFormData.password}
+                            onChange={handleEditFormChange}
+                            placeholder="Enter new password"
+                          />
+                        </div>
+                        <div className="mb-3 form-check">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="staffStatus"
+                            name="status"
+                            checked={editFormData.status}
+                            onChange={handleEditFormChange}
+                          />
+                          <label className="form-check-label" htmlFor="staffStatus">
+                            Active
+                          </label>
+                        </div>
                       </div>
-                      <div className="mb-3">
-                        <label className="form-label">Role Assignment</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Enter assign role"
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Temporary Password</label>
-                        <input
-                          type="password"
-                          className="form-control"
-                          placeholder="Enter temporary password"
-                        />
+                      <div className="mt-4 text-center">
+                        <button type="submit" className="btn btn-primary w-50">
+                          Update
+                        </button>
                       </div>
                     </div>
-                    <div className="mt-4 text-center">
-                      <button type="button" className="btn btn-primary w-50">
-                        Update
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Invite Again Modal */}
-      {showInviteModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          role="dialog"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-          onClick={closeModal}
-        >
-          <div
-            className="modal-dialog modal-lg py-4"
-            style={{
-              position: "fixed",
-              top: 0,
-              right: 0,
-              width: "50%",
-              maxWidth: "40%",
-              height: "100vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-content p-3">
-              <div className="modal-header">
-                <h5 className="modal-title">View Information</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowInviteModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row g-3 container">
-                  <div className="col-12">
-                    <img
-                      src="../images/user.png"
-                      alt="User"
-                      className="rounded-circle mb-3"
-                      width="80"
-                      height="80"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Schedule Date</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>12/12/2024</small>
-                  </div>
-
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Guest Name</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>Femi Biodun</small>
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Visit Date</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>12-02-25</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <small className="fw-bold">Visit Time</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>2:00pm</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <small className="fw-bold">Host Name</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>Ajayi Adebayo</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <small className="fw-bold">Contact Info</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>femiempires@gmail.com</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <small className="fw-bold">Special Request</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>Parking Space</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <small className="fw-bold">Visit Status</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>Scheduled</small>
-                  </div>
-                  {/* <hr className="w-100" />
-
-                   <div className="mt-4 text-center">
-                    <button type="button" className="btn btn-primary w-50">
-                      Save Changes
-                    </button>
-                  </div> */}
+                  </form>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Modal Backdrops */}
-      {(showEditModal || showInviteModal) && (
-        <div className="modal-backdrop fade show"></div>
-      )}
-    </div>
-  );
-}
+        {/* View Staff Details Modal */}
+        {showViewModal && selectedStaff && (
+          <div
+            className="modal fade show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+            onClick={closeModal}
+          >
+            <div
+              className="modal-dialog modal-lg py-4"
+              style={{
+                position: "fixed",
+                top: 0,
+                right: 0,
+                width: "50%",
+                maxWidth: "40%",
+                height: "100vh",
+                overflowY: "auto",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-content p-3">
+                <div className="modal-header">
+                  <h5 className="modal-title">Staff Information</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeModal}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3 container">
+                    <div className="col-12 text-center mb-3">
+                      <img
+                        src={selectedStaff.photo || "../images/user.png"}
+                        alt="Staff"
+                        className="rounded-circle"
+                        width="100"
+                        height="100"
+                        style={{objectFit: 'cover'}}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <p className="fw-bold"><small>Full Name:</small></p>
+                    </div>
+                    <div className="col-md-6">
+                      <small>{selectedStaff.name}</small>
+                    </div>
+                    <hr className="w-100" />
+
+                    <div className="col-md-6">
+                      <p className="fw-bold"><small>Email:</small></p>
+                    </div>
+                    <div className="col-md-6">
+                      <small>{selectedStaff.email}</small>
+                    </div>
+                    <hr className="w-100" />
+
+                    <div className="col-md-6">
+                      <p className="fw-bold"><small>Job Role:</small></p>
+                    </div>
+                    <div className="col-md-6">
+                      <small>{selectedStaff.role}</small>
+                    </div>
+                    <hr className="w-100" />
+
+                    <div className="col-md-6">
+                      <p className="fw-bold"><small>Department:</small></p>
+                    </div>
+                    <div className="col-md-6">
+                      <small>{selectedStaff.department}</small>
+                    </div>
+                    <hr className="w-100" />
+
+                    <div className="col-md-6">
+                      <p className="fw-bold"><small>Status:</small></p>
+                    </div>
+                    <div className="col-md-6">
+                      <small>{selectedStaff.status ? "Active" : "Inactive"}</small>
+                    </div>
+                    <hr className="w-100" />
+                    {/* You might add last login, created_at, etc. if available */}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Backdrops */}
+        {(showEditModal || showViewModal) && (
+          <div className="modal-backdrop fade show"></div>
+        )}
+      </div>
+    );
+  }
 
 export default ManageStaffTable;
