@@ -11,69 +11,125 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "../include/NavBar";
+import api from "../../../context/api"; // Assuming your Axios instance
 
 function AnalyticalAndReport() {
-  // Dummy Data for Charts
-  const [view, setView] = useState("daily");
+  const [analyticsData, setAnalyticsData] = useState({
+    visits_chart_data: [],
+    total_visitors_today: 0,
+    checked_in_today: 0,
+    checked_out_today: 0,
+    pending_today: 0,
+    most_visited_staff: [],
+    peak_visitor_hours: [],
+    visitor_types: [],
+    purpose_of_visit: [],
+    most_frequent_visitors: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState("pdf"); // Default export format
+  const [showFilterModal, setShowFilterModal] = useState(false); // State for filter modal
 
-  // Mock data for Daily, Weekly, and Monthly views
-  const tariffData = {
-    daily: [
-      { date: "8 AM", visitors: 5 },
-      { date: "10 AM", visitors: 10 },
-      { date: "12 PM", visitors: 7 },
-      { date: "2 PM", visitors: 15 },
-      { date: "4 PM", visitors: 12 },
-      { date: "6 PM", visitors: 9 },
-    ],
-    weekly: [
-      { date: "Mon", visitors: 50 },
-      { date: "Tue", visitors: 70 },
-      { date: "Wed", visitors: 40 },
-      { date: "Thu", visitors: 90 },
-      { date: "Fri", visitors: 100 },
-      { date: "Sat", visitors: 65 },
-      { date: "Sun", visitors: 80 },
-    ],
-    monthly: [
-      { date: "Week 1", visitors: 300 },
-      { date: "Week 2", visitors: 500 },
-      { date: "Week 3", visitors: 450 },
-      { date: "Week 4", visitors: 600 },
-    ],
+  const [activeFilters, setActiveFilters] = useState({
+    timePeriod: 'daily', // 'daily', 'weekly', 'monthly'
+    vip: false,
+    blacklist: false,
+    walkins: false,
+    preregistered: false,
+  });
+
+  // Colors for Pie Charts
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AA336A", "#8884d8", "#82ca9d", "#ffc658"];
+
+  // Fetch data when component mounts or filters change
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [activeFilters]); // Dependency array includes all active filters
+
+  const fetchAnalyticsData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('filter', activeFilters.timePeriod);
+      if (activeFilters.vip) queryParams.append('vip', true);
+      if (activeFilters.blacklist) queryParams.append('blacklist', true);
+      if (activeFilters.walkins) queryParams.append('walkins', true);
+      if (activeFilters.preregistered) queryParams.append('preregistered', true);
+
+      const response = await api.get(`/admin/analytics?${queryParams.toString()}`);
+      setAnalyticsData(response.data);
+    } catch (err) {
+      console.error("Error fetching analytics data:", err.response?.data || err.message);
+      setError("Failed to load analytics data. Please try again.");
+      setAnalyticsData({ // Reset to initial state on error
+        visits_chart_data: [],
+        total_visitors_today: 0,
+        checked_in_today: 0,
+        checked_out_today: 0,
+        pending_today: 0,
+        most_visited_staff: [],
+        peak_visitor_hours: [],
+        visitor_types: [],
+        purpose_of_visit: [],
+        most_frequent_visitors: [],
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AA336A"];
 
-  const visitorTypeData = [
-    { name: "Pre-Registered", value: 60 },
-    { name: "Walk-in", value: 20 },
-    { name: "VIP", value: 20 },
-  ];
+  const handleExport = async () => {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('format', exportFormat);
+      // Pass current active filters to the export endpoint
+      queryParams.append('filter', activeFilters.timePeriod);
+      if (activeFilters.vip) queryParams.append('vip', true);
+      if (activeFilters.blacklist) queryParams.append('blacklist', true);
+      if (activeFilters.walkins) queryParams.append('walkins', true);
+      if (activeFilters.preregistered) queryParams.append('preregistered', true);
 
-  const visitPurposeData = [
-    { name: "Recruitment", value: 30 },
-    { name: "Personal/Unofficial", value: 20 },
-    { name: "Business Meeting", value: 15 },
-    { name: "Other", value: 20 },
-    { name: "Repairs/Maintenance", value: 15 },
-  ];
+      window.open(`/api/admin/analytics/export?${queryParams.toString()}`, '_blank');
+      setShowExportModal(false);
+      alert(`Exporting report as ${exportFormat.toUpperCase()}...`);
+    } catch (err) {
+      console.error("Error exporting report:", err.response?.data || err.message);
+      alert("Failed to export report. Please try again.");
+    }
+  };
 
-  const staffVisitsData = [
-    { name: "Joshua Harry", visits: 100 },
-    { name: "Akinbaye Bo.", visits: 65 },
-    { name: "John Adamu .", visits: 50 },
-    { name: "Amaka Agu .", visits: 50 },
-  ];
+  const handleFilterChange = (filterType, value) => {
+    // This function updates the activeFilters state.
+    // The useEffect hook, which depends on activeFilters, will then trigger fetchAnalyticsData.
+    if (filterType === 'timePeriod') {
+      setActiveFilters(prev => ({ ...prev, timePeriod: value }));
+    } else {
+      setActiveFilters(prev => ({
+        ...prev,
+        [filterType]: !prev[filterType]
+      }));
+    }
+  };
 
-  const peakHoursData = [
-    { hour: "6-8 AM", visitors: 50 },
-    { hour: "8-10 AM", visitors: 80 },
-    { hour: "11-1 PM", visitors: 90 },
-    { hour: "2-4 PM", visitors: 120 },
-    { hour: "5-6 PM", visitors: 150 },
-  ];
+  const handleApplyFilters = () => {
+    // This button explicitly triggers a data fetch with the current filters
+    // and closes the modal.
+    fetchAnalyticsData();
+    setShowFilterModal(false);
+  };
+
+  if (loading) {
+    return <p className="text-center mt-5">Loading analytics data...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center mt-5 text-danger">{error}</p>;
+  }
 
   return (
     <div>
@@ -99,11 +155,7 @@ function AnalyticalAndReport() {
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bod mb-0">Analytical Reports</h3>
 
-              {/* Plus Icon */}
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+              {/* Removed duplicate Export Button from header */}
             </div>
 
             {/* Badge & Line Row */}
@@ -139,30 +191,65 @@ function AnalyticalAndReport() {
         </div>
       </header>
 
+      {/* Dashboard Cards Section */}
+      <div className="container" style={{ marginTop: "-90px" }}>
+        <div className="row g-3 justify-content-center">
+          <div className="col-lg-3 col-md-6 col-sm-12">
+            <div className="card shadow-sm p-3 text-center rounded-4 border-0">
+              <h6 className="text-muted">Total Visitors Today</h6>
+              <h3 className="fw-bold text-primary">{analyticsData.total_visitors_today}</h3>
+            </div>
+          </div>
+          <div className="col-lg-3 col-md-6 col-sm-12">
+            <div className="card shadow-sm p-3 text-center rounded-4 border-0">
+              <h6 className="text-muted">Checked In Today</h6>
+              <h3 className="fw-bold text-success">{analyticsData.checked_in_today}</h3>
+            </div>
+          </div>
+          <div className="col-lg-3 col-md-6 col-sm-12">
+            <div className="card shadow-sm p-3 text-center rounded-4 border-0">
+              <h6 className="text-muted">Checked Out Today</h6>
+              <h3 className="fw-bold text-info">{analyticsData.checked_out_today}</h3>
+            </div>
+          </div>
+          <div className="col-lg-3 col-md-6 col-sm-12">
+            <div className="card shadow-sm p-3 text-center rounded-4 border-0">
+              <h6 className="text-muted">Pending Today</h6>
+              <h3 className="fw-bold text-warning">{analyticsData.pending_today}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       {/* Charts Section */}
       <div className="container mt-5">
-        <div className="row p-3">
-          {/* Visitors Tariff (Line Chart) */}
-          <div className="col-md-6 mb-4 p-3">
-            <h5>Visitors Tariff (Daily, Weekly, Monthly)</h5>
-            <div className="card p-2">
-              {/* Dropdown for selecting chart view */}
-              <div className="mb-3 text-center">
-                <select
-                  className="form-select rounded-pill border-secondary bg-light my-2"
-                  style={{ maxWidth: "100px" }}
-                  value={view}
-                  onChange={(e) => setView(e.target.value)}
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-              </div>
+        {/* Filter and Export Buttons (moved here as per screenshot) */}
+        <div className="d-flex align-items-center justify-content-between mb-3">
+            <button
+                type="button" // Explicitly set type to button
+                className="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2"
+                onClick={() => setShowFilterModal(true)}
+            >
+                <i className="bi bi-sliders2"></i> Apply Filters
+            </button>
+            <button
+                type="button" // Explicitly set type to button
+                className="btn btn-primary rounded-pill d-flex align-items-center gap-2"
+                onClick={() => setShowExportModal(true)}
+            >
+                <i className="bi bi-box-arrow-up"></i> Export Report
+            </button>
+        </div>
 
-              {/* Line Chart */}
+        <div className="row p-3">
+          {/* Left Column for Charts */}
+          <div className="col-md-6 mb-4 p-3">
+            {/* Visitors Tariff (Line Chart) */}
+            <h5 className="mb-3">Visitors Tariff</h5>
+            <div className="card p-2 shadow-sm rounded-4 border-0">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={tariffData[view]}>
+                <LineChart data={analyticsData.visits_chart_data.map(d => ({ ...d, date: new Date(d.date).toLocaleDateString() }))}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -170,33 +257,35 @@ function AnalyticalAndReport() {
                   <Legend />
                   <Line
                     type="monotone"
-                    dataKey="visitors"
+                    dataKey="visitors_count" // Use visitors_count from backend
                     stroke="#007bff"
                     strokeWidth={2}
+                    name="Visitors"
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
             {/* Visitor Type Graph (Pie Chart) */}
-            <h5 className="mt-5">Visitor Type Distribution</h5>
-            <div className="card p-2">
+            <h5 className="mt-5 mb-3">Visitor Type Distribution</h5>
+            <div className="card p-2 shadow-sm rounded-4 border-0">
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={visitorTypeData}
+                    data={analyticsData.visitor_types}
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
                     fill="#8884d8"
-                    dataKey="value"
+                    dataKey="count" // Use 'count' from backend
+                    nameKey="visitor_type" // Use 'visitor_type' from backend
                     label={({ name, percent }) =>
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
                   >
-                    {visitorTypeData.map((entry, index) => (
+                    {analyticsData.visitor_types.map((entry, index) => (
                       <Cell
-                        key={`cell-${index}`}
+                        key={`cell-visitor-type-${index}`}
                         fill={COLORS[index % COLORS.length]}
                       />
                     ))}
@@ -208,24 +297,25 @@ function AnalyticalAndReport() {
             </div>
 
             {/* Purpose of Visit Analysis (Pie Chart) */}
-            <h5 className="mt-5">Purpose of Visit Analysis</h5>
-            <div className="card p-2">
+            <h5 className="mt-5 mb-3">Purpose of Visit Analysis</h5>
+            <div className="card p-2 shadow-sm rounded-4 border-0">
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={visitPurposeData}
+                    data={analyticsData.purpose_of_visit}
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
                     fill="#82ca9d"
-                    dataKey="value"
+                    dataKey="count" // Use 'count' from backend
+                    nameKey="purpose" // Use 'purpose' from backend
                     label={({ name, percent }) =>
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
                   >
-                    {visitPurposeData.map((entry, index) => (
+                    {analyticsData.purpose_of_visit.map((entry, index) => (
                       <Cell
-                        key={`cell-${index}`}
+                        key={`cell-purpose-${index}`}
                         fill={COLORS[index % COLORS.length]}
                       />
                     ))}
@@ -237,33 +327,42 @@ function AnalyticalAndReport() {
             </div>
           </div>
 
-          {/* Most Visited Staff (Progress Bars) */}
+          {/* Right Column for Charts and Lists */}
           <div className="col-md-6 mb-4 p-3">
-            <h5>Most Visited Staff</h5>
-            <div className="card p-4">
-              {staffVisitsData.map((staff, index) => (
-                <div key={index} className="">
-                  <p className="mb-1">{staff.name}</p>
-                  <div className="progress" style={{ height: "5px" }}>
-                    <div
-                      className="progress-bar"
-                      role="progressbar"
-                      style={{
-                        width: `${staff.visits}%`,
-                        backgroundColor: COLORS[index % COLORS.length],
-                      }}
-                    ></div>
+            {/* Most Visited Staff (Progress Bars) */}
+            <h5 className="mb-3">Most Visited Staff</h5>
+            <div className="card p-4 shadow-sm rounded-4 border-0">
+              {analyticsData.most_visited_staff.length === 0 ? (
+                <p className="text-center text-muted">No data for most visited staff.</p>
+              ) : (
+                analyticsData.most_visited_staff.map((staff, index) => (
+                  <div key={`staff-${index}`} className="mb-3">
+                    <p className="mb-1 fw-bold">{staff.name}</p>
+                    <div className="progress" style={{ height: "8px", borderRadius: "5px" }}>
+                      <div
+                        className="progress-bar"
+                        role="progressbar"
+                        style={{
+                          width: `${staff.visits_count}%`, // Use visits_count
+                          backgroundColor: COLORS[index % COLORS.length],
+                          borderRadius: "5px",
+                        }}
+                        aria-valuenow={staff.visits_count}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div>
+                    <p className="mt-1 text-end text-muted small">{staff.visits_count} visits</p>
                   </div>
-                  <p className="mt-1 text-end">{staff.visits} visits</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             {/* Peak Visitors Hour (Line Chart) */}
-            <h5 className="mt-5">Peak Visitors Hour</h5>
-            <div className="card p-2">
+            <h5 className="mt-5 mb-3">Peak Visitors Hour</h5>
+            <div className="card p-2 shadow-sm rounded-4 border-0">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={peakHoursData}>
+                <LineChart data={analyticsData.peak_visitor_hours.map(d => ({ ...d, hour: `${d.hour}:00` }))}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
                   <YAxis />
@@ -271,138 +370,263 @@ function AnalyticalAndReport() {
                   <Legend />
                   <Line
                     type="monotone"
-                    dataKey="visitors"
+                    dataKey="count" // Use 'count' from backend
                     stroke="#FF8042"
                     strokeWidth={3}
+                    name="Visitors"
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <h5 className="mt-5">Most Frequent Visitors</h5>
-            <div className="card p-2">
-              <div className="row p-4">
-                <div className="col-md-4">
-                  <div className="card bg-light text-center p-3">
-                    {/* Profile Image */}
-                    <div className="d-flex justify-content-center">
-                      <div
-                        className="rounded-circle border border-success d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                        }}
-                      >
-                        <img
-                          src="../image2.png"
-                          className="rounded-circle"
+
+            {/* Most Frequent Visitors (Cards) */}
+            <h5 className="mt-5 mb-3">Most Frequent Visitors</h5>
+            <div className="card p-2 shadow-sm rounded-4 border-0">
+              <div className="row p-4 g-3">
+                {analyticsData.most_frequent_visitors.length === 0 ? (
+                  <p className="text-center text-muted">No data for most frequent visitors.</p>
+                ) : (
+                  analyticsData.most_frequent_visitors.map((visitor, index) => (
+                    <div className="col-md-4 col-sm-6" key={`frequent-visitor-${index}`}>
+                      <div className="card bg-light text-center p-3 rounded-3 border">
+                        {/* Profile Image */}
+                        <div className="d-flex justify-content-center">
+                          <div
+                            className="rounded-circle border border-success d-flex justify-content-center align-items-center"
+                            style={{
+                              width: "100px",
+                              height: "100px",
+                              backgroundColor: "#f8f9fa",
+                            }}
+                          >
+                            <img
+                              src={visitor.visitor_photo || "https://placehold.co/90x90/e0e0e0/000000?text=User"} // Use actual photo or placeholder
+                              className="rounded-circle"
+                              style={{
+                                width: "90%",
+                                height: "90%",
+                                objectFit: "cover",
+                              }}
+                              alt={visitor.visitor_name}
+                              onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/90x90/e0e0e0/000000?text=User"; }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Name */}
+                        <h5 className="mt-3 mb-1">{visitor.visitor_name}</h5>
+
+                        {/* Badge for Number of Visits */}
+                        <span
+                          className="badge mt-4 text-dark border border-primary px-3 py-2"
                           style={{
-                            width: "90%",
-                            height: "90%",
-                            objectFit: "cover",
+                            backgroundColor: "#F5FAFE",
                           }}
-                          alt="Logo"
-                        />
+                        >
+                          {visitor.count} Visits
+                        </span>
                       </div>
                     </div>
-
-                    {/* Name */}
-                    <h5 className="mt-3 mb-1">John Doe</h5>
-
-                    {/* Badge for Number of Visits */}
-                    <span
-                      className="badge mt-4 text-dark border border-primary px-3 py-2"
-                      style={{
-                        backgroundColor: "#F5FAFE",
-                      }}
-                    >
-                      100 Visits
-                    </span>
-                  </div>
-                </div>
-                <div className="col-md-4">
-                <div className="card bg-light text-center p-3">
-                    {/* Profile Image */}
-                    <div className="d-flex justify-content-center">
-                      <div
-                        className="rounded-circle border border-success d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                        }}
-                      >
-                        <img
-                          src="../image2.png"
-                          className="rounded-circle"
-                          style={{
-                            width: "90%",
-                            height: "90%",
-                            objectFit: "cover",
-                          }}
-                          alt="Logo"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Name */}
-                    <h5 className="mt-3 mb-1">John Doe</h5>
-
-                    {/* Badge for Number of Visits */}
-                    <span
-                      className="badge mt-4 text-dark border border-primary px-3 py-2"
-                      style={{
-                        backgroundColor: "#F5FAFE",
-                      }}
-                    >
-                      100 Visits
-                    </span>
-                  </div>
-                </div>
-                <div className="col-md-4">
-                <div className="card bg-light text-center p-3">
-                    {/* Profile Image */}
-                    <div className="d-flex justify-content-center">
-                      <div
-                        className="rounded-circle border border-success d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                        }}
-                      >
-                        <img
-                          src="../image2.png"
-                          className="rounded-circle"
-                          style={{
-                            width: "90%",
-                            height: "90%",
-                            objectFit: "cover",
-                          }}
-                          alt="Logo"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Name */}
-                    <h5 className="mt-3 mb-1">John Doe</h5>
-
-                    {/* Badge for Number of Visits */}
-                    <span
-                      className="badge mt-4 text-dark border border-primary px-3 py-2"
-                      style={{
-                        backgroundColor: "#F5FAFE",
-                      }}
-                    >
-                      100 Visits
-                    </span>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Export Options Modal */}
+      {showExportModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={() => setShowExportModal(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Export Options</h5>
+                <button
+                  type="button" // Explicitly set type to button
+                  className="btn-close"
+                  onClick={() => setShowExportModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="exportFormat"
+                    id="exportPdf"
+                    value="pdf"
+                    checked={exportFormat === "pdf"}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="exportPdf">
+                    PDF
+                  </label>
+                </div>
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="exportFormat"
+                    id="exportCsv"
+                    value="csv"
+                    checked={exportFormat === "csv"}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="exportCsv">
+                    CSV
+                  </label>
+                </div>
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="exportFormat"
+                    id="exportExcel"
+                    value="excel"
+                    checked={exportFormat === "excel"}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="exportExcel">
+                    Excel
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button" // Explicitly set type to button
+                  className="btn btn-secondary"
+                  onClick={() => setShowExportModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button" // Explicitly set type to button
+                  className="btn btn-primary"
+                  onClick={handleExport}
+                >
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Options Modal */}
+      {showFilterModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={() => setShowFilterModal(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Apply Filters</h5>
+                <button
+                  type="button" // Explicitly set type to button
+                  className="btn-close"
+                  onClick={() => setShowFilterModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <h6 className="mb-3">Time Period:</h6>
+                <div className="d-flex gap-2 mb-4">
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.timePeriod === 'daily' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('timePeriod', 'daily')}
+                  >
+                    Daily
+                  </button>
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.timePeriod === 'weekly' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('timePeriod', 'weekly')}
+                  >
+                    Weekly
+                  </button>
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.timePeriod === 'monthly' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('timePeriod', 'monthly')}
+                  >
+                    Monthly
+                  </button>
+                </div>
+
+                <h6 className="mb-3">Visitor Type:</h6>
+                <div className="d-flex flex-wrap gap-2">
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.vip ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('vip')}
+                  >
+                    VIP
+                  </button>
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.blacklist ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('blacklist')}
+                  >
+                    Blacklist
+                  </button>
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.walkins ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('walkins')}
+                  >
+                    Walk-ins
+                  </button>
+                  <button
+                    type="button" // Explicitly set type to button
+                    className={`btn btn-sm ${activeFilters.preregistered ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handleFilterChange('preregistered')}
+                  >
+                    Pre-Registered
+                  </button>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button" // Explicitly set type to button
+                  className="btn btn-secondary"
+                  onClick={() => setShowFilterModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button" // Explicitly set type to button
+                  className="btn btn-primary"
+                  onClick={handleApplyFilters}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Backdrops */}
+      {(showExportModal || showFilterModal) && (
+        <div className="modal-backdrop fade show"></div>
+      )}
     </div>
   );
 }
