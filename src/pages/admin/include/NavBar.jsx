@@ -3,9 +3,8 @@ import { useAuth } from "../../../context/AuthContext";
 
 function Navbar() {
   const location = useLocation();
-  const { user, logout } = useAuth(); 
+  const { user, logout } = useAuth();
 
-  
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
@@ -119,7 +118,7 @@ function Navbar() {
           </a>
 
           {/* User Profile Dropdown */}
-            <div className="dropdown">
+          <div className="dropdown">
             <button
               className="btn text-white d-flex align-items-center dropdown-toggle"
               type="button"
