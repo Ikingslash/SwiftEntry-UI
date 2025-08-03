@@ -386,21 +386,10 @@ function Profile() {
                                         <label className="form-label">Department</label>
                                         <input type="text" className="form-control" name="department" value={newAdmin.department} onChange={handleNewAdminChange} required />
                                     </div>
-                                   <div className="d-flex align-items-center mb-4">
-                                <div className="d-flex align-items-center">
-                                    <img
-                                        src={previewCompanyLogo || newAdmin.logo || "https://placehold.co/80x80/E0E7FF/000000?text=Company"}
-                                        alt="Company Logo"
-                                        className="me-3"
-                                        width="80"
-                                        height="80"
-                                    />
-                                    <div>
-                                        <p className="fw-bold mb-0">Admin Image</p>
-                                        <input type="file" onChange={handleAdminPhotoChange} className="form-control-file" />
+                                    <div className="mb-3">
+                                        <label className="form-label">Role Assignment</label>
+                                        <input type="text" className="form-control" name="roleAssignment" value={newAdmin.roleAssignment} onChange={handleNewAdminChange} required />
                                     </div>
-                                </div>
-                            </div>
                                 </div>
                                 <div className="modal-footer">
                                     <button type="submit" className="btn btn-primary w-100">Add</button>
