@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import api from "../../context/api";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
+import { toast } from 'react-toastify'; // Added toast import
 
 export default function RegisterNewGuestIndividual() {
   const [formData, setFormData] = useState({
@@ -54,14 +55,14 @@ export default function RegisterNewGuestIndividual() {
 
     if (formData.visit_time) {
       const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime)) {
+      if (!isNaN(visitTime.getTime())) { // Check if date is valid
         const formattedVisitTime = visitTime
           .toISOString()
           .slice(0, 19)
           .replace("T", " ");
         formDataToSend.append("visit_time", formattedVisitTime);
       } else {
-        alert("Invalid visit time format.");
+        toast.error("Invalid visit time format."); // Changed alert to toast
         setLoading(false);
         return;
       }
@@ -124,17 +125,18 @@ export default function RegisterNewGuestIndividual() {
         });
         setSelectedImage(null);
 
+        toast.success("Visitor registered successfully!"); // Added success toast
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        alert("Error: " + (response.data.message || "Something went wrong"));
+        toast.error("Error: " + (response.data.message || "Something went wrong")); // Changed alert to toast
       }
     } catch (error) {
       console.error("Error:", error);
-      alert(
+      toast.error( // Changed alert to toast
         "Failed to register guest. " +
           (error.response?.data?.message || "Server error.")
       );
@@ -144,27 +146,46 @@ export default function RegisterNewGuestIndividual() {
   };
 
   const handlePrint = () => {
-    const original = document.body.innerHTML;
-    document.body.innerHTML = printRef.current.innerHTML;
-    window.print();
-    document.body.innerHTML = original;
-    window.location.reload();
+    const element = printRef.current;
+    if (element) {
+      const printWindow = window.open('', '', 'height=600,width=800');
+      printWindow.document.write('<html><head><title>Visitor Badge</title>');
+      // Include Bootstrap CSS for styling in the printout
+      printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
+      printWindow.document.write('</head><body>');
+      printWindow.document.write('<div class="p-5">' + element.innerHTML + '</div>');
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    } else {
+      toast.error("Error: Print content not found."); // Toast for print error
+    }
   };
 
   const downloadBadgeAsPDF = () => {
     const element = printRef.current;
-    setTimeout(() => {
-      html2pdf()
-        .set({
-          margin: 0.3,
-          filename: "Visitor_Badge.pdf",
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-        })
-        .from(element)
-        .save();
-    }, 100);
+    if (element) {
+      setTimeout(() => {
+        html2pdf()
+          .set({
+            margin: 0.3,
+            filename: "Visitor_Badge.pdf",
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+          })
+          .from(element)
+          .save()
+          .catch(err => {
+            console.error("Error generating PDF:", err);
+            toast.error("Failed to generate PDF. Please try again.");
+          });
+      }, 100);
+    } else {
+      toast.error("Error: Content for PDF not found."); // Toast for PDF content error
+    }
   };
 
   return (
