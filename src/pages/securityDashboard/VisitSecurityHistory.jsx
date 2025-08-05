@@ -4,6 +4,7 @@ import TabPreRegisteredVisitors from "./include/TabPreRegisteredVisitors";
 import TabWalkInVisitors from "./include/TabWalkInVisitors";
 import { IoCheckmark } from "react-icons/io5";
 import api from "../../context/api";
+import { toast } from 'react-toastify'; // Import toast
 
 function VisitSecurityHistory() {
   const [activeTab, setActiveTab] = useState("pre-registered-visitors");
@@ -13,12 +14,19 @@ function VisitSecurityHistory() {
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState("");
   const [category, setCategory] = useState("all"); // Optional: add more filters
-  const perPage = 10; // or allow user to change
-  const page = 1;
+  const [currentPage, setCurrentPage] = useState(1); // State for current page
+
+  // Define perPage here or pass it as a prop if it can be changed by the user
+  const perPage = 10; 
+
+  useEffect(() => {
+    // Reset currentPage to 1 when filters or tabs change
+    setCurrentPage(1);
+  }, [activeFilter, month, category, activeTab]);
 
   useEffect(() => {
     fetchHistory();
-  }, [activeFilter, month, category, activeTab]);
+  }, [activeFilter, month, category, activeTab, currentPage]); // Add currentPage to dependencies
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -42,17 +50,24 @@ function VisitSecurityHistory() {
           purpose: category,
           status: statusParam,
           per_page: perPage,
-          page,
+          page: currentPage, // Pass currentPage to the backend
         },
       });
       setGroupedVisits(response.data.grouped_visits || {});
       setPagination(response.data.pagination || {});
     } catch (err) {
       console.error("Error fetching history:", err);
+      toast.error("Failed to load visit history. Please try again."); // Toast for error
     } finally {
       setLoading(false);
     }
   };
+
+  // Function to handle page changes from child components
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   console.log("Grouped Visits: ", groupedVisits);
 
   return (
@@ -196,6 +211,7 @@ function VisitSecurityHistory() {
               className="form-select me-3"
               style={{ minWidth: "150px", flex: "1" }}
               onChange={(e) => setMonth(e.target.value)}
+              value={month} // Controlled component
             >
               <option value="">Select Month</option>
               {[
@@ -211,9 +227,9 @@ function VisitSecurityHistory() {
                 "October",
                 "November",
                 "December",
-              ].map((month) => (
-                <option key={month} value={month}>
-                  {month}
+              ].map((monthName, index) => (
+                <option key={monthName} value={monthName}>
+                  {monthName}
                 </option>
               ))}
             </select>
@@ -272,6 +288,8 @@ function VisitSecurityHistory() {
             groupedVisits={groupedVisits}
             pagination={pagination}
             loading={loading}
+            handlePageChange={handlePageChange} // Pass handlePageChange
+            currentPage={currentPage} // Pass currentPage
           />
         )}
         {activeTab === "walk-in-visitors" && (
@@ -279,6 +297,8 @@ function VisitSecurityHistory() {
             groupedVisits={groupedVisits}
             pagination={pagination}
             loading={loading}
+            handlePageChange={handlePageChange} // Pass handlePageChange
+            currentPage={currentPage} // Pass currentPage
           />
         )}
       </div>
