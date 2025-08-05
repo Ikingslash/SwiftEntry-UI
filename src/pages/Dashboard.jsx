@@ -37,6 +37,7 @@ export default function Dashboard() {
       setRecents(recentsRes.data.recents.visits);
       setTodaysGuests(todaysGuestsRes.data.guests);
       setNotifications(recentsRes.data.recents.notifications.slice(0, 3));
+       toast.success("Page loaded successfully!");
     } catch (error) {
       toast.error("Failed to load dashboard data.");
     } finally {

@@ -110,7 +110,7 @@ export default function MainDashboard({ user, summaryData, notifications, todays
                     <div className="card p-2 m-2 shadow-sm rounded-3 text-center">
                       {/* Conditional rendering for the guest image. */}
                       {guest.visitor?.image_url ? (
-                        <img src={guest.visitor.image_url} alt="Guest" className="img-fluid rounded-circle" />
+                        <img src={guest.visitor.photo} alt="Guest" className="img-fluid rounded-circle" />
                       ) : (
                         // Default user icon if no image URL is provided.
                         <div className="p-2 mx-auto rounded-circle bg-light d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
@@ -145,7 +145,7 @@ export default function MainDashboard({ user, summaryData, notifications, todays
                     <div className="card p-3 shadow-sm d-flex flex-row align-items-center rounded-3">
                       {/* Conditional rendering for the guest image in the list view. */}
                       {guest.visitor?.image_url ? (
-                        <img src={guest.visitor.image_url} alt="Guest" className="rounded-circle me-3" style={{width: '40px', height: '40px'}} />
+                        <img src={guest.visitor.photo} alt="Guest" className="rounded-circle me-3" style={{width: '40px', height: '40px'}} />
                       ) : (
                         <div className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#e9f5ff' }}>
                           <User size={24} color="#0d6efd" />

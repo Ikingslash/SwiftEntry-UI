@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import api from "../../context/api";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
+import { toast } from 'react-toastify';
 
 export default function NewGuestIndividual() {
   const [formData, setFormData] = useState({
@@ -60,8 +61,8 @@ export default function NewGuestIndividual() {
           .slice(0, 19)
           .replace("T", " ");
         formDataToSend.append("visit_time", formattedVisitTime);
-      } else {
-        alert("Invalid visit time format.");
+      } else { 
+        toast.error("Invalid visit time format.");
         setLoading(false);
         return;
       }
@@ -124,17 +125,19 @@ export default function NewGuestIndividual() {
         });
         setSelectedImage(null);
 
+        // Show a success toast and then the modal
+        toast.success("Visitor registered successfully!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        alert("Error: " + (response.data.message || "Something went wrong"));
+        toast.error("Error: " + (response.data.message || "Something went wrong"));
       }
     } catch (error) {
       console.error("Error:", error);
-      alert(
+      toast.error(
         "Failed to register guest. " +
           (error.response?.data?.message || "Server error.")
       );
@@ -144,15 +147,32 @@ export default function NewGuestIndividual() {
   };
 
   const handlePrint = () => {
-    const original = document.body.innerHTML;
-    document.body.innerHTML = printRef.current.innerHTML;
-    window.print();
-    document.body.innerHTML = original;
-    window.location.reload();
+    // Get the HTML content of the visit card
+    const element = printRef.current;
+    
+    // Create a new window to print
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Visitor Badge</title>');
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
+    printWindow.document.write('</head><body >');
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write('</div>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    // Wait for the content to load and then print
+    printWindow.onload = function() {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
   };
 
   const downloadBadgeAsPDF = () => {
     const element = printRef.current;
+    // Wrapping the call in setTimeout to ensure the HTML is rendered before conversion
     setTimeout(() => {
       html2pdf()
         .set({
@@ -489,7 +509,10 @@ export default function NewGuestIndividual() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src="http://127.0.0.1:8000/storage/images/user2.png"
+                        src={
+                          guestDetails.photo ||
+                          "http://127.0.0.1:8000/storage/images/user2.png"
+                        }
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"

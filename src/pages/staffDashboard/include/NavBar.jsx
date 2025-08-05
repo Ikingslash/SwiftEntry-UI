@@ -139,15 +139,29 @@ function Navbar() {
               className="dropdown-menu dropdown-menu-end"
               aria-labelledby="profileDropdown"
             >
-              <li>
-                <a className="dropdown-item py-2" href="/profile">
-                  Profile
-                </a>
+              <li> 
+                   <NavLink
+                   className={`dropdown-item py-2 ${
+                  location.pathname === "/staff-dashboard/profile"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                }`} 
+                to="/staff-dashboard/profile"
+              >
+                Profile
+              </NavLink>
               </li>
               <li>
-                <a className="dropdown-item py-2" href="/settings">
-                  Settings
-                </a>
+                  <NavLink 
+                className={`dropdown-item py-2 ${
+                  location.pathname === "/staff-dashboard/settings"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                }`} 
+                to="/staff-dashboard/profile"
+              >
+                Settings
+              </NavLink> 
               </li>
               <li>
                 <hr className="dropdown-divider" />

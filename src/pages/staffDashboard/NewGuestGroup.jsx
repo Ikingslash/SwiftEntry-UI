@@ -1,7 +1,8 @@
-import api from "../../context/api";
 import { useRef, useState } from "react";
+import api from "../../context/api";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
+import { toast } from 'react-toastify';
 
 function NewGuestGroup() {
   const [formData, setFormData] = useState({
@@ -51,8 +52,6 @@ function NewGuestGroup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  //  alert(JSON.stringify(formData, null, 2));
-  //   console.log("Form Data before submission:", formData);
     
     const formDataToSend = new FormData();
 
@@ -61,24 +60,11 @@ function NewGuestGroup() {
         formDataToSend.append(key, value);
       }
     });
- 
 
-    // if (formData.visit_time) {
-    //   const visitTime = new Date(formData.visit_time);
-    //   if (!isNaN(visitTime)) {
-    //     const formattedVisitTime = visitTime
-    //       .toISOString()
-    //       .slice(0, 19)
-    //       .replace("T", " ");
-    //     formDataToSend.append("visit_time", formattedVisitTime);
-    //   } else {
-    //     alert("Invalid visit time format.");
-    //     setLoading(false);
-    //     return;
-    //   }
-    // }
-    if (formData.visit_time) {
-  formDataToSend.append("visit_time", formData.visit_time);
+  if (formData.visit_time) {
+
+formDataToSend.append("visit_time", formData.visit_time);
+
 }
 
 
@@ -137,19 +123,20 @@ function NewGuestGroup() {
           photo: null,
         });
         setSelectedImage(null);
-
+        
+        toast.success("Group visitor registered successfully!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        alert("Error: " + (response.data.message || "Something went wrong"));
+        toast.error("Error: " + (response.data.message || "Something went wrong"));
       }
     } catch (error) {
       console.error("Error:", error);
-      alert(
-        "Failed to register guest. " + (error.response?.data?.message || "")
+      toast.error(
+        "Failed to register guest. " + (error.response?.data?.message || "Server error.")
       );
     } finally {
       setLoading(false);
@@ -157,11 +144,26 @@ function NewGuestGroup() {
   };
 
   const handlePrint = () => {
-    const original = document.body.innerHTML;
-    document.body.innerHTML = printRef.current.innerHTML;
-    window.print();
-    document.body.innerHTML = original;
-    window.location.reload();
+    const element = printRef.current;
+    
+    // Create a new window to print
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Visitor Badge</title>');
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
+    printWindow.document.write('</head><body >');
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write('</div>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    // Wait for the content to load and then print
+    printWindow.onload = function() {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
   };
 
   const downloadBadgeAsPDF = () => {

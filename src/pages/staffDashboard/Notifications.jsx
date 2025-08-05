@@ -1,30 +1,61 @@
 import { useEffect, useState } from "react";
 import api from "../../context/api";
 import NavBar from "./include/NavBar";
+import { toast } from 'react-toastify';
+import { BellRing, UserCheck, CheckSquare } from 'lucide-react'; // Added icons
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Loading notifications...");
   const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await api.get("/staff/notifications");
+        setLoading(false); // Set loading to false after the API call finishes
 
-        if (Array.isArray(response.data.notifications)) {
-          setNotifications(response.data.notifications);
+        if (response.data.notifications.data && Array.isArray(response.data.notifications.data)) {
+          setNotifications(response.data.notifications.data);
+          setMessage(response.data.message || "");
         } else {
+          setNotifications([]); // Set to an empty array if data is not as expected
           setMessage(response.data.message || "No Notifications Yet");
         }
       } catch (error) {
+        setLoading(false);
         console.error("Error fetching notifications:", error);
         setMessage("An error occurred while loading notifications.");
+        toast.error("An error occurred while loading notifications.");
       }
     };
 
     fetchNotifications();
   }, []);
+
+  // Function to get the appropriate icon based on notification category
+  const getNotificationIcon = (category) => {
+    switch (category) {
+      case 'Visitor':
+        return <UserCheck size={28} />;
+      case 'Registration':
+        return <CheckSquare size={28} />;
+      default:
+        return <BellRing size={28} />;
+    }
+  };
+
+  // Function to get the appropriate color class based on notification status
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Pending':
+        return 'text-warning';
+      case 'Success':
+        return 'text-success';
+      default:
+        return 'text-secondary';
+    }
+  };
 
   return (
     <div>
@@ -70,28 +101,23 @@ function Notifications() {
       </header>
 
       <section id="notifications" className="container p-4">
-        {message && <p>{message}</p>}
         {loading ? (
-          <p className="text-center">Loading...</p>
+          <p className="text-center">{message}</p>
         ) : notifications.length > 0 ? (
-          
           <div className="row">
             {notifications.map((notification, index) => (
-              <div key={index} className="col-12 col-md-10 mx-auto mb-3">
+              <div key={notification.id} className="col-12 col-md-10 mx-auto mb-3">
                 <div
                   className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
                   style={{ borderRadius: "12px" }}
                 >
                   <div className="d-flex align-items-center w-100">
-                    <img
-                      src="../images/clock.png"
-                      alt="Logo"
-                      className="rounded-circle me-3"
-                      width="50"
-                      height="50"
-                    />
+                    <div className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#e9f5ff' }}>
+                      {getNotificationIcon(notification.category)}
+                    </div>
                     <div className="flex-grow-1">
-                      <p className="mb-2 fw-semibold text-muted" style={{ fontSize: "14px" }}>
+                      <h6 className="mb-1 fw-bold text-dark">{notification.title || 'No Title'}</h6>
+                      <p className="mb-0 text-muted" style={{ fontSize: "14px" }}>
                         {notification.message || "No message"}
                       </p>
                       <small className="text-muted">
@@ -102,9 +128,7 @@ function Notifications() {
                     </div>
                   </div>
                   <span
-                    className={`ms-md-3 ${
-                      index % 2 === 0 ? "text-success" : "text-danger"
-                    }`}
+                    className={`ms-md-3 mt-3 mt-md-0 ${getStatusColor(notification.status)}`}
                     style={{ fontSize: "18px" }}
                   >
                     ●
