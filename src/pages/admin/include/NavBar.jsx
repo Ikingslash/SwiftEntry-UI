@@ -155,14 +155,28 @@ function Navbar() {
               aria-labelledby="profileDropdown"
             >
               <li>
-                <a className="dropdown-item py-2" href="/profile">
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/admin-dashboard/profile"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/admin-dashboard/profile"
+                >
                   Profile
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a className="dropdown-item py-2" href="/settings">
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/admin-dashboard/settings"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/admin-dashboard/profile"
+                >
                   Settings
-                </a>
+                </NavLink>
               </li>
               <li>
                 <hr className="dropdown-divider" />

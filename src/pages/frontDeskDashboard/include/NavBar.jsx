@@ -1,13 +1,10 @@
-import { NavLink, useLocation } from "react-router-dom"; 
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-
- 
- 
 
 function Navbar() {
   const location = useLocation();
-   const { user, logout } = useAuth();
-   
+  const { user, logout } = useAuth();
+
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
@@ -109,7 +106,7 @@ function Navbar() {
           </a>
 
           {/* User Profile Dropdown */}
-            <div className="dropdown">
+          <div className="dropdown">
             <button
               className="btn text-white d-flex align-items-center dropdown-toggle"
               type="button"
@@ -146,14 +143,28 @@ function Navbar() {
               aria-labelledby="profileDropdown"
             >
               <li>
-                <a className="dropdown-item py-2" href="/profile">
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/front-desk-dashboard/profile"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/front-desk-dashboard/profile"
+                >
                   Profile
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a className="dropdown-item py-2" href="/settings">
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/front-desk-dashboard/settings"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/front-desk-dashboard/profile"
+                >
                   Settings
-                </a>
+                </NavLink>
               </li>
               <li>
                 <hr className="dropdown-divider" />

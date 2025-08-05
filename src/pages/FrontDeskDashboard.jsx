@@ -3,6 +3,9 @@ import NavBar from "./frontDeskDashboard/include/NavBar";
 import TabIncoming from "./frontDeskDashboard/include/TabIncoming";
 import TabOutgoing from "./frontDeskDashboard/include/TabOutgoing";
 
+// This is the main dashboard component.
+// It manages the state for the active tab, filters, and search query,
+// and passes these states as props to the child components (TabIncoming and TabOutgoing).
 function FrontDeskDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showFilters, setShowFilters] = useState(false);

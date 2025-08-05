@@ -23,6 +23,7 @@ import FrontDeskDashboard from "./pages/FrontDeskDashboard";
 import RegisterGuest from "./pages/frontDeskDashboard/RegisterGuest";
 import VisitHistory from "./pages/frontDeskDashboard/VisitHistory";
 import FrontDeskNotifications from "./pages/frontDeskDashboard/FrontDeskNotifications";
+import FrontDeskProfile from "./pages/frontDeskDashboard/FrontDeskProfile";
 
 import SecurityLayout from "./layout/SecurityLayout";
 import SecurityDashboard from "./pages/SecurityDashboard";
@@ -83,6 +84,7 @@ function App() {
             <Route path="register-guest" element={<RegisterGuest />} />
             <Route path="history" element={<VisitHistory />} />
             <Route path="notifications" element={<FrontDeskNotifications />} />
+             <Route path="profile" element={<FrontDeskProfile />} />
           </Route>
 
           {/* <Route path="/admin-dashboard" element={<AdminLayout />}> */}
