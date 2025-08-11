@@ -8,10 +8,10 @@ const token = localStorage.getItem('token'); // Your auth token
 
 const echo = new Echo({
   broadcaster: 'pusher',
-  key: import.meta.env.VITE_PUSHER_KEY,
-  cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+  key: '8a728cd26ae422539269', // Hardcoded Pusher key
+  cluster: 'ap2', // Hardcoded Pusher cluster
   forceTLS: true,
-  authEndpoint: `${import.meta.env.VITE_API_BASE_URL}/broadcasting/auth`,
+  authEndpoint: 'https://vms.194.62.99.202.sslip.io/broadcasting/auth', // Hardcoded API base URL
   auth: {
     headers: {
       Authorization: `Bearer ${token}`,
