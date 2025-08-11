@@ -46,7 +46,7 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
-      <NotificationProvider>
+     
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
@@ -109,7 +109,9 @@ function App() {
             path="/security-dashboard"
             element={
               <PrivateRoute>
+                 <NotificationProvider>
                 <SecurityLayout />
+                </NotificationProvider>
               </PrivateRoute>
             }
           >
@@ -128,7 +130,7 @@ function App() {
 
           {/* john.smith@sydani.com */}
         </Routes>
-      </NotificationProvider>
+      
       </AuthProvider>
       <ToastContainer />
     </div>
