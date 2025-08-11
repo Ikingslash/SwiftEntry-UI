@@ -11,7 +11,7 @@ const echo = new Echo({
   key: '8a728cd26ae422539269', // Hardcoded Pusher key
   cluster: 'ap2', // Hardcoded Pusher cluster
   forceTLS: true,
-  authEndpoint: 'https://vms.194.62.99.202.sslip.io/broadcasting/auth', // Hardcoded API base URL
+  authEndpoint: 'https://vms.194.62.99.202.sslip.io/api/broadcasting/auth',
   auth: {
     headers: {
       Authorization: `Bearer ${token}`,
