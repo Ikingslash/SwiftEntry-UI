@@ -1,26 +1,27 @@
-import { useEffect, useState } from "react"; // Import useEffect and useState
-import NavBar from "./include/NavBar"; // Ensure this path is correct
-import api from "../../context/api"; // Ensure this path is correct for your api.js file
+import { useEffect, useState } from "react";
+import NavBar from "./include/NavBar";
+import api from "../../context/api";
+import { useNotifications } from "../../context/NotificationContext"; 
+
 
 function SecurityNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
+  const { markNotificationsAsRead } = useNotifications(); // Access the function to clear the count
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+    markNotificationsAsRead();
+  }, [markNotificationsAsRead]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (page = 1) => {
     setLoading(true);
     try {
       const response = await api.get("security/notifications", {
         params: {
           per_page: 10,
-          page: 1,
-          // Add start_date and end_date params here if you want to filter from frontend
-          // start_date: new Date().toISOString().split('T')[0],
-          // end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          page: page,
         },
       });
       setNotifications(response.data.notifications || []);
@@ -59,8 +60,6 @@ function SecurityNotifications() {
             {/* Header Content */}
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bold mb-0">Notifications</h3>
-
-              {/* Plus Icon (For Adding New SecurityNotifications) */}
               <i
                 className="bi bi-plus-circle fs-1 text-white-50 p-2"
                 style={{
@@ -71,8 +70,6 @@ function SecurityNotifications() {
                 onMouseOut={(e) => (e.target.style.color = "white")}
               ></i>
             </div>
-
-            {/* Divider Line */}
             <div
               className="w-100 mt-3"
               style={{
@@ -98,7 +95,7 @@ function SecurityNotifications() {
                 className="col-12 col-md-10 mx-auto mb-3"
               >
                 <div
-                  className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
+                  className={`card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center ${!notification.read_at ? 'bg-light' : ''}`}
                   style={{
                     borderRadius: "12px",
                   }}
@@ -106,7 +103,7 @@ function SecurityNotifications() {
                   {/* Left: Image & Details */}
                   <div className="d-flex align-items-center w-100">
                     <img
-                      src="../images/clock.png" // Consider a more dynamic image or icon based on category/status
+                      src="../images/clock.png"
                       alt="Notification Icon"
                       className="rounded-circle me-3"
                       width="50"
@@ -114,9 +111,10 @@ function SecurityNotifications() {
                     />
                     <div className="flex-grow-1">
                       <p
-                        className="mb-2 fw-semibold text-muted"
+                        className="mb-2 fw-semibold"
                         style={{
                           fontSize: "14px",
+                          color: !notification.read_at ? '#000' : '#6c757d', // Bold/darker text for unread
                         }}
                       >
                         {notification.title} - {notification.message}
@@ -128,22 +126,14 @@ function SecurityNotifications() {
                   </div>
 
                   {/* Right: Notification Indicator */}
-                  <span
-                    className={`ms-md-3 ${
-                      notification.status === "success"
-                        ? "text-success"
-                        : "text-danger"
-                    }`} // Use status from backend
-                    style={{ fontSize: "18px" }}
-                  >
-                    ●
-                  </span>
+                  {!notification.read_at && (
+                     <span className="ms-md-3 text-primary" style={{ fontSize: "18px" }}>●</span>
+                  )}
                 </div>
               </div>
             ))
           )}
         </div>
-        {/* You can add pagination controls here using the 'pagination' state */}
       </section>
     </div>
   );

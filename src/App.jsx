@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import VerifyAccount from "./pages/VerifyAccount";
 import SetNewPassword from "./pages/SetNewPassword";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import PrivateRoute from "./customRoute/PrivateRoute";
 
 import StaffLayout from "./layout/StaffLayout";
@@ -45,6 +46,7 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
+      <NotificationProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SignIn />} />
@@ -72,14 +74,14 @@ function App() {
           </Route>
 
           {/* <Route path="/front-desk-dashboard" element={<FrontDeskLayout />}> */}
-            <Route
+          <Route
             path="/front-desk-dashboard"
             element={
               <PrivateRoute>
                 <FrontDeskLayout />
               </PrivateRoute>
             }
-          >
+            >
             <Route index element={<FrontDeskDashboard />} />
             <Route path="register-guest" element={<RegisterGuest />} />
             <Route path="history" element={<VisitHistory />} />
@@ -88,7 +90,7 @@ function App() {
           </Route>
 
           {/* <Route path="/admin-dashboard" element={<AdminLayout />}> */}
-            <Route
+          <Route
             path="/admin-dashboard"
             element={
               <PrivateRoute>
@@ -126,6 +128,7 @@ function App() {
 
           {/* john.smith@sydani.com */}
         </Routes>
+      </NotificationProvider>
       </AuthProvider>
       <ToastContainer />
     </div>

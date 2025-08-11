@@ -1,13 +1,63 @@
+import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-
- 
- 
+import api from "../../../context/api"; 
+import echo from '../../../context/echo';
+import { useNotifications } from "../../../context/NotificationContext";
 
 function Navbar() {
   const location = useLocation();
-   const { user, logout } = useAuth();
-   
+  const { user, logout } = useAuth();
+  // Get the unread count and fetch function from the context
+  const { unreadCount, fetchUnreadCount } = useNotifications();
+  const echoRef = useRef(null);
+
+  // Subscribe to the private channel for this security user
+  useEffect(() => {
+    if (!user?.id) {
+        console.log("User not available, skipping Echo subscription.");
+        return;
+    }
+
+    // Assign echo to the ref if not already assigned
+    if (!echoRef.current) {
+        echoRef.current = echo;
+    }
+
+    const channelName = `App.Models.Security.${user.id}`;
+    const eventName = 'NewNotification';
+
+    console.log(`Attempting to subscribe to private channel: ${channelName}`);
+
+    // Subscribe and listen for events
+    echoRef.current.private(channelName)
+      .notification((notification) => {  
+        console.log('Received new notification:', notification);
+        // Call the context function to update the count
+        fetchUnreadCount();
+      })
+      .listen(eventName, (e) => { 
+        console.log(`Received custom event '${eventName}':`, e);
+        // Call the context function to update the count
+        fetchUnreadCount();
+      })
+      .error((error) => {
+        console.error('Echo channel error:', error);
+      });
+
+    return () => {
+      // Leave channel on unmount or user ID change
+      if (echoRef.current && channelName) {
+        echoRef.current.leave(channelName);
+        console.log(`Left channel: ${channelName}`);
+      }
+    };
+    // Re-run this effect if the user ID or the fetch function changes
+  }, [user?.id, fetchUnreadCount]);
+
+  // Removed the useEffect that marked notifications as read in the NavBar,
+  // as this is now handled by the SecurityNotifications component.
+
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
@@ -89,38 +139,20 @@ function Navbar() {
                 Notifications
               </NavLink>
             </li>
-            {/* <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/security-dashboard/generate-qr-code"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
-                to="/security-dashboard/generate-qr-code"
-              >
-                Generate
-              </NavLink>
-            </li> */}
-           
-        
           </ul>
         </div>
 
         {/* Right Side Icons */}
         <div className="d-flex align-items-center">
           {/* Notification Icon */}
-          <a
-            href="#notifications"
-            className="me-3 position-relative d-flex align-items-center"
-          >
-            <i
-              className="bi bi-bell fs-4 text-white rounded-circle p-2"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                transition: "0.3s ease-in-out",
-              }}
-            ></i>
-          </a>
+ <NavLink className="me-3 position-relative d-flex align-items-center" to="/security-dashboard/notifications">
+      <i className="bi bi-bell fs-4 text-white rounded-circle p-2" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}></i>
+      {unreadCount > 0 && (
+        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.7rem' }}>
+          {unreadCount}
+        </span>
+      )}
+    </NavLink>
 
           {/* User Profile Dropdown */}
            <div className="dropdown">
