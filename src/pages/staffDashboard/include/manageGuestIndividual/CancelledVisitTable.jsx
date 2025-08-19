@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../../../context/api";
+import { toast } from "react-toastify";
 
 function CancelledVisitTable() {
   const [visits, setVisits] = useState([]);
@@ -16,13 +17,19 @@ function CancelledVisitTable() {
     const fetchVisits = async () => {
       setLoading(true);
       try {
-        const response = await api.get("staff/guests/individual-cancelled-visit", {
-          params: { per_page: perPage, page },
-        });
+        const response = await api.get(
+          "staff/guests/individual-cancelled-visit",
+          {
+            params: { per_page: perPage, page },
+          }
+        );
         setVisits(response.data.visits);
         setPagination(response.data.pagination);
       } catch (error) {
         console.error("Error fetching visits:", error);
+        toast.error("Error fetching visits:", error);
+        setVisits([]);
+
       } finally {
         setLoading(false);
       }
@@ -36,7 +43,8 @@ function CancelledVisitTable() {
   };
 
   const handleNext = () => {
-    if (pagination.current_page < pagination.last_page) setPage((prev) => prev + 1);
+    if (pagination.current_page < pagination.last_page)
+      setPage((prev) => prev + 1);
   };
 
   const handleRescheduleClick = (visit) => {
@@ -54,9 +62,11 @@ function CancelledVisitTable() {
 
     try {
       // Reschedule visit
-      await api.put(`staff/guests/reschedule/${selectedVisit.visitor.id}`, {
+      await api.put(`staff/guests/reschedule/${selectedVisit.id}`, {
+        // Changed to use visit.id
         new_date: newDate,
         new_time: newTime,
+        host_name: selectedVisit.host_name, // Added host_name from the selected visit object
       });
 
       // Notify visitor
@@ -65,11 +75,11 @@ function CancelledVisitTable() {
         message: `Your visit has been rescheduled to ${newDate} at ${newTime}`,
       });
 
-      alert("Rescheduled and notification sent!");
+      toast.success("Rescheduled and notification sent!");
       setShowModal(false);
     } catch (error) {
       console.error("Reschedule error:", error);
-      alert("Failed to reschedule or notify.");
+      toast.error("Failed to reschedule or notify.");
     }
   };
 
@@ -101,7 +111,10 @@ function CancelledVisitTable() {
                   <td>{visit.visitor?.special_requirements || "None"}</td>
                   <td>{visit.status}</td>
                   <td>
-                    <button className="btn btn-sm btn-link" onClick={() => handleRescheduleClick(visit)}>
+                    <button
+                      className="btn btn-sm btn-link"
+                      onClick={() => handleRescheduleClick(visit)}
+                    >
                       Reschedule
                     </button>
                   </td>
@@ -112,13 +125,21 @@ function CancelledVisitTable() {
 
           {/* Pagination Controls */}
           <div className="d-flex justify-content-between align-items-center mt-3">
-            <button className="btn btn-primary" onClick={handlePrevious} disabled={pagination.current_page === 1}>
+            <button
+              className="btn btn-primary"
+              onClick={handlePrevious}
+              disabled={pagination.current_page === 1}
+            >
               Previous
             </button>
             <span>
               Page {pagination.current_page} of {pagination.last_page}
             </span>
-            <button className="btn btn-primary" onClick={handleNext} disabled={pagination.current_page === pagination.last_page}>
+            <button
+              className="btn btn-primary"
+              onClick={handleNext}
+              disabled={pagination.current_page === pagination.last_page}
+            >
               Next
             </button>
           </div>
@@ -129,22 +150,43 @@ function CancelledVisitTable() {
 
       {/* Reschedule Modal */}
       {showModal && (
-        <div className="modal d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog" role="document">
             <div className="modal-content p-4">
               <h5 className="modal-title">Reschedule Visit</h5>
               <div className="modal-body">
                 <label>New Date</label>
-                <input type="date" className="form-control mb-2" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+                <input
+                  type="date"
+                  className="form-control mb-2"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                />
 
                 <label>New Time</label>
-                <input type="time" className="form-control mb-3" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
+                <input
+                  type="time"
+                  className="form-control mb-3"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                />
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
                   Cancel
                 </button>
-                <button className="btn btn-success" onClick={handleRescheduleSubmit}>
+                <button
+                  className="btn btn-success"
+                  onClick={handleRescheduleSubmit}
+                >
                   Submit
                 </button>
               </div>

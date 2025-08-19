@@ -1,9 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useNotifications } from "../../../context/NotificationContext"; // New import
 
 function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications(); // Get the unread count from the context
 
   return (
     <nav
@@ -92,9 +94,10 @@ function Navbar() {
         {/* Right Side Icons */}
         <div className="d-flex align-items-center">
           {/* Notification Icon */}
-          <a
-            href="#notifications"
+          <NavLink
+            to="/front-desk-dashboard/notifications"
             className="me-3 position-relative d-flex align-items-center"
+            aria-label="Notifications"
           >
             <i
               className="bi bi-bell fs-4 text-white rounded-circle p-2"
@@ -103,7 +106,17 @@ function Navbar() {
                 transition: "0.3s ease-in-out",
               }}
             ></i>
-          </a>
+            {/* Display the unread count badge */}
+            {unreadCount > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{ fontSize: "10px" }}
+              >
+                {unreadCount}
+                <span className="visually-hidden">unread messages</span>
+              </span>
+            )}
+          </NavLink>
 
           {/* User Profile Dropdown */}
           <div className="dropdown">

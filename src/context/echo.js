@@ -1,21 +1,24 @@
 // src/context/echo.js
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
 
 window.Pusher = Pusher;
 
-const token = localStorage.getItem('token'); // Your auth token
-
 const echo = new Echo({
-  broadcaster: 'pusher',
-  key: '8a728cd26ae422539269', // Hardcoded Pusher key
-  cluster: 'ap2', // Hardcoded Pusher cluster
-  forceTLS: true,
-  authEndpoint: 'https://vms.194.62.99.202.sslip.io/api/broadcasting/auth',
+  broadcaster: "pusher",
+  key: import.meta.env.VITE_PUSHER_APP_KEY,
+  cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+  wsHost: import.meta.env.VITE_ECHO_HOST.replace(/^https?:\/\//, ""),
+  wsPort: import.meta.env.VITE_ECHO_PORT,
+  wssPort: import.meta.env.VITE_ECHO_PORT,
+  forceTLS: import.meta.env.VITE_PUSHER_FORCE_TLS === "true",
+  disableStats: true,
+  enabledTransports: ["ws", "wss"],
+  authEndpoint: `${import.meta.env.VITE_BACKEND_URL}/api/broadcasting/auth`,
   auth: {
     headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+      Accept: "application/json",
     },
   },
 });

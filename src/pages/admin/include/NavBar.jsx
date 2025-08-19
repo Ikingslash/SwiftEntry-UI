@@ -1,9 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useNotifications } from '../../../context/NotificationContext';
+import React from 'react';
 
 function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
 
   return (
     <nav
@@ -103,9 +106,9 @@ function Navbar() {
 
         {/* Right Side Icons */}
         <div className="d-flex align-items-center">
-          {/* Notification Icon */}
-          <a
-            href="#notifications"
+          {/* Notification Icon with Badge */}
+          <NavLink
+            to="/admin-dashboard/notifications"
             className="me-3 position-relative d-flex align-items-center"
           >
             <i
@@ -115,7 +118,16 @@ function Navbar() {
                 transition: "0.3s ease-in-out",
               }}
             ></i>
-          </a>
+            {unreadCount > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{ fontSize: '0.7em' }}
+              >
+                {unreadCount}
+                <span className="visually-hidden">unread messages</span>
+              </span>
+            )}
+          </NavLink>
 
           {/* User Profile Dropdown */}
           <div className="dropdown">

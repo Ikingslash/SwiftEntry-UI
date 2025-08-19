@@ -1,9 +1,19 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useEffect, useRef } from "react";
+import api from "../../../context/api";
+import echo from '../../../context/echo';
+import { useNotifications } from "../../../context/NotificationContext";
 
 function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
+
+  // If the user object is not yet available, don't render the navbar
+  if (!user) {
+    return null;
+  }
 
   return (
     <nav
@@ -89,18 +99,34 @@ function Navbar() {
         {/* Right Icons */}
         <div className="d-flex align-items-center">
           {/* Bell Icon */}
-          <a
-            href="#notifications"
+          <NavLink
             className="me-3 position-relative d-flex align-items-center"
+            to="/staff-dashboard/notifications"
           >
             <i
               className="bi bi-bell fs-4 text-white rounded-circle p-2"
-              style={{
+               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.2)",
                 transition: "0.3s ease-in-out",
               }}
             ></i>
-          </a>
+
+            {unreadCount > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{ fontSize: "0.7rem" }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </NavLink>
+
+
+
+
+
+
+
 
           {/* User Profile Dropdown */}
           <div className="dropdown">
@@ -117,13 +143,17 @@ function Navbar() {
               }}
             >
               <span className="fw-semibold">{user?.name}</span>
-              <img
-                src={`http://127.0.0.1:8000/storage/${user.profile_picture}`}
-                alt="Profile"
-                className="rounded-circle border"
-                width="40"
-                height="40"
-              />
+           <img
+              src={
+                user?.profile_picture
+                  ? `http://127.0.0.1:8000/storage/${user.profile_picture}`
+                  : "/default-avatar.png"
+              }
+              alt="Profile"
+              className="rounded-circle border"
+              width="40"
+              height="40"
+            />
             </button>
 
             {/* Remove the default arrow using inline style or override */}
@@ -139,29 +169,29 @@ function Navbar() {
               className="dropdown-menu dropdown-menu-end"
               aria-labelledby="profileDropdown"
             >
-              <li> 
+              <li>
                    <NavLink
                    className={`dropdown-item py-2 ${
                   location.pathname === "/staff-dashboard/profile"
                     ? "text-primary bg-white fw-bold"
                     : "text-dark bg-white"
-                }`} 
+                }`}
                 to="/staff-dashboard/profile"
               >
                 Profile
               </NavLink>
               </li>
               <li>
-                  <NavLink 
+                  <NavLink
                 className={`dropdown-item py-2 ${
                   location.pathname === "/staff-dashboard/settings"
                     ? "text-primary bg-white fw-bold"
                     : "text-dark bg-white"
-                }`} 
+                }`}
                 to="/staff-dashboard/profile"
               >
                 Settings
-              </NavLink> 
+              </NavLink>
               </li>
               <li>
                 <hr className="dropdown-divider" />

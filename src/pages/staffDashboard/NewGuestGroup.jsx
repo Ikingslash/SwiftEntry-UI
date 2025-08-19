@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import api from "../../context/api";
+import { requestForToken, onMessageListener } from "../../context/firebase";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
 import { toast } from 'react-toastify';
@@ -28,15 +29,105 @@ function NewGuestGroup() {
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
   const [qrValue, setQrValue] = useState("");
+  const [appUsers, setAppUsers] = useState([]);
+   const [visitPurposes, setVisitPurposes] = useState([]);
   const printRef = useRef();
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          console.log("FCM token:", fcmToken);
+          toast.info("FCM token:", fcmToken);
+
+          api
+            .post("/staff/save-fcm-token", { fcm_token: fcmToken })
+            .then((response) => {
+              console.log("FCM token saved on backend:", response.data);
+              toast.success("FCM token saved on backend:", response.data);
+            })
+            .catch((error) => {
+              console.error("Failed to save FCM token on backend:", error);
+              toast.error("Failed to save FCM token on backend:", error);
+            });
+        }
+      })
+      .catch((err) => {
+        console.error("An error occurred while retrieving token. ", err);
+        toast.error("Failed to retrieve FCM token:", err);
+      });
+
+    // Fetch the list of all app users (staff, security, front desk)
+    api
+      .get("/staff/app-users")
+      .then((response) => {
+        // Assuming the response is an array of user names
+        if (response.data && Array.isArray(response.data.users)) {
+          setAppUsers(response.data.users);
+        } else {
+          console.error(
+            "API response for users is not an array:",
+            response.data
+          );
+
+          toast.error("API response for users is not an array:", response.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch app users:", error);
+        toast.error("Failed to fetch app users:", error);
+      });
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/staff/settings/visit-purposes")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        } else {
+          console.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch visit purposes:", error);
+        toast.error("Failed to fetch visit purposes:", error);
+      });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value, selectedOptions } = e.target;
+    // Special handling for the host selection to also get the ID
+    if (name === "host_id") {
+      const selectedHostName = selectedOptions[0]?.text;
+      const selectedHostRole = selectedOptions[0]?.dataset.role;
+      setFormData({
+        ...formData,
+        host_id: value,
+        host_name: selectedHostName, // Keep host_name for display
+        host_role: selectedHostRole,
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -52,21 +143,25 @@ function NewGuestGroup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const formDataToSend = new FormData();
 
+
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "photo" && key !== "visit_time") {
+      if (
+        key !== "photo" &&
+        key !== "visit_time" &&
+        key !== "host_id" &&
+        key !== "host_role"
+      ) {
         formDataToSend.append(key, value);
       }
     });
 
-  if (formData.visit_time) {
 
-formDataToSend.append("visit_time", formData.visit_time);
-
-}
-
+    if (formData.visit_time) {
+      formDataToSend.append("visit_time", formData.visit_time);
+    }
 
     if (formData.photo) {
       formDataToSend.append("photo", formData.photo);
@@ -84,6 +179,26 @@ formDataToSend.append("visit_time", formData.visit_time);
       if (response.status === 200 || response.status === 201) {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
+
+       // After successful registration, trigger the backend to send a notification
+              // This is the call to the corrected backend route
+              try {
+                await api.post("/staff/notify-host", {
+                  host_id: formData.host_id,
+                  host_role: formData.host_role, // Now sending the role
+                  guest_name: formData.name,
+                  purpose: formData.purpose,
+                });
+                console.log("Notification trigger sent to backend.");
+                toast.success("Notification sent to host successfully.");
+              } catch (notificationError) {
+                console.error("Failed to trigger notification:", notificationError);
+                // Don't stop the main process, just log the error.
+                toast.error(
+                  "Failed to send notification. " +
+                    (notificationError.response?.data?.message || "Server error.")
+                );
+              }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
@@ -112,7 +227,8 @@ formDataToSend.append("visit_time", formData.visit_time);
           organization_name: "",
           group_size: "",
           visit_time: "",
-          host_name: "",
+           host_name: "",
+          host_id: "",
           building: "",
           floor: "",
           purpose: "",
@@ -123,7 +239,7 @@ formDataToSend.append("visit_time", formData.visit_time);
           photo: null,
         });
         setSelectedImage(null);
-        
+
         toast.success("Group visitor registered successfully!");
         setShowSuccessModal(true);
         setTimeout(() => {
@@ -131,12 +247,15 @@ formDataToSend.append("visit_time", formData.visit_time);
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error("Error: " + (response.data.message || "Something went wrong"));
+        toast.error(
+          "Error: " + (response.data.message || "Something went wrong")
+        );
       }
     } catch (error) {
       console.error("Error:", error);
       toast.error(
-        "Failed to register guest. " + (error.response?.data?.message || "Server error.")
+        "Failed to register guest. " +
+          (error.response?.data?.message || "Server error.")
       );
     } finally {
       setLoading(false);
@@ -145,21 +264,23 @@ formDataToSend.append("visit_time", formData.visit_time);
 
   const handlePrint = () => {
     const element = printRef.current;
-    
+
     // Create a new window to print
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Visitor Badge</title>');
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Visitor Badge</title>");
     // Include Bootstrap CSS for styling in the print window
-    printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
-    printWindow.document.write('</head><body >');
+    printWindow.document.write(
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+    );
+    printWindow.document.write("</head><body >");
     printWindow.document.write('<div class="p-5">');
     printWindow.document.write(element.outerHTML);
-    printWindow.document.write('</div>');
-    printWindow.document.write('</body></html>');
+    printWindow.document.write("</div>");
+    printWindow.document.write("</body></html>");
     printWindow.document.close();
-    
+
     // Wait for the content to load and then print
-    printWindow.onload = function() {
+    printWindow.onload = function () {
       printWindow.focus();
       printWindow.print();
       printWindow.close();
@@ -265,16 +386,29 @@ formDataToSend.append("visit_time", formData.visit_time);
                       onChange={handleChange}
                     />
                   </div>
+
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
-                    <input
-                      type="text"
-                      name="host_name"
-                      className="form-control"
-                      placeholder="Enter host name"
-                      value={formData.host_name}
+                    {/* The Host Name input is replaced with a select dropdown */}
+                    <select
+                      className="form-select rounded-pill"
+                      name="host_id"
+                      value={formData.host_id}
                       onChange={handleChange}
-                    />
+                      required
+                    >
+                      <option value="">Select a host</option>
+                      {appUsers.map((user) => (
+                        // We now use a composite key for uniqueness
+                        <option
+                          key={user.role + "-" + user.id}
+                          value={user.id}
+                          data-role={user.role}
+                        >
+                          {user.name} ({user.role})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="row">
@@ -324,16 +458,11 @@ formDataToSend.append("visit_time", formData.visit_time);
                       onChange={handleChange}
                     >
                       <option value="">Select Purpose</option>
-                      <option value="recruitment">Recruitment</option>
-                      <option value="business meeting">Business Meeting</option>
-                      <option value="repairs/maintenance">
-                        Repairs/Maintenance
-                      </option>
-                      <option value="personal/official">
-                        Personal/Official
-                      </option>
-                      <option value="conference">Conference</option>
-                      <option value="other">Other</option>
+                      {visitPurposes.map((purpose, index) => (
+                        <option key={purpose} value={purpose}>
+                          {purpose}
+                        </option>
+                      ))}
                     </select>
                   </div>
 

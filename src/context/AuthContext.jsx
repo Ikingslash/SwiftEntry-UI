@@ -2,6 +2,7 @@ import { createContext, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import api from "./api";
+import { toast } from "react-toastify";
 
 const AuthContext = createContext();
 
@@ -16,24 +17,24 @@ export const AuthProvider = ({ children }) => {
       await api.get("/sanctum/csrf-cookie", {
         baseURL: "https://vms-api.85.9.202.212.nip.io",
       });
- 
+
       const endpoints = [
         "/front-desk/auth/login",
         "/staff/auth/login",
         "/security/auth/login",
         "/admin/login",
       ];
-  
+
       for (const endpoint of endpoints) {
         try {
           const response = await api.post(endpoint, { email, password });
-  
+
           if (response.data.token) {
             setUser(response.data.user);
             setToken(response.data.token);
             localStorage.setItem("token", response.data.token);
             api.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
-  
+
             switch (response.data.user.role) {
               case "admin":
                 navigate("/admin-dashboard");
@@ -56,16 +57,16 @@ export const AuthProvider = ({ children }) => {
           console.error(`Failed login attempt at ${endpoint}`, error.response?.data || error.message);
         }
       }
-  
+
       alert("Invalid credentials or user not found.");
       return false; // Indicate failed login
     } catch (error) {
-      console.error("Login failed:", error);
-      alert("An error occurred. Please try again.");
+      console.error("Login failed:", error); 
+      toast.error("An error occurred. Please try again.");
       return false; // Indicate error in login
     }
   };
-  
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -86,5 +87,3 @@ AuthProvider.propTypes = {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-

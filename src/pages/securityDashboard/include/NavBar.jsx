@@ -6,57 +6,16 @@ import echo from '../../../context/echo';
 import { useNotifications } from "../../../context/NotificationContext";
 
 function Navbar() {
-  const location = useLocation();
+   const location = useLocation();
   const { user, logout } = useAuth();
-  // Get the unread count and fetch function from the context
-  const { unreadCount, fetchUnreadCount } = useNotifications();
-  const echoRef = useRef(null);
+    const { unreadCount, setUnreadCount, markAllAsRead } = useNotifications(); 
 
-  // Subscribe to the private channel for this security user
-  useEffect(() => {
-    if (!user?.id) {
-        console.log("User not available, skipping Echo subscription.");
-        return;
+      useEffect(() => {
+    if (location.pathname === "/notifications" && unreadCount > 0) {
+      markAllAsRead(); // updates backend
+      setUnreadCount(0); // instantly update UI
     }
-
-    // Assign echo to the ref if not already assigned
-    if (!echoRef.current) {
-        echoRef.current = echo;
-    }
-
-    const channelName = `App.Models.Security.${user.id}`;
-    const eventName = 'NewNotification';
-
-    console.log(`Attempting to subscribe to private channel: ${channelName}`);
-
-    // Subscribe and listen for events
-    echoRef.current.private(channelName)
-      .notification((notification) => {  
-        console.log('Received new notification:', notification);
-        // Call the context function to update the count
-        fetchUnreadCount();
-      })
-      .listen(eventName, (e) => { 
-        console.log(`Received custom event '${eventName}':`, e);
-        // Call the context function to update the count
-        fetchUnreadCount();
-      })
-      .error((error) => {
-        console.error('Echo channel error:', error);
-      });
-
-    return () => {
-      // Leave channel on unmount or user ID change
-      if (echoRef.current && channelName) {
-        echoRef.current.leave(channelName);
-        console.log(`Left channel: ${channelName}`);
-      }
-    };
-    // Re-run this effect if the user ID or the fetch function changes
-  }, [user?.id, fetchUnreadCount]);
-
-  // Removed the useEffect that marked notifications as read in the NavBar,
-  // as this is now handled by the SecurityNotifications component.
+  }, [location, unreadCount, markAllAsRead, setUnreadCount]);
 
   return (
     <nav
@@ -145,14 +104,24 @@ function Navbar() {
         {/* Right Side Icons */}
         <div className="d-flex align-items-center">
           {/* Notification Icon */}
- <NavLink className="me-3 position-relative d-flex align-items-center" to="/security-dashboard/notifications">
-      <i className="bi bi-bell fs-4 text-white rounded-circle p-2" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}></i>
-      {unreadCount > 0 && (
-        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.7rem' }}>
-          {unreadCount}
-        </span>
-      )}
-    </NavLink>
+        <NavLink
+            className="me-3 position-relative d-flex align-items-center"
+            to="/security-dashboard/notifications"
+          >
+            <i
+              className="bi bi-bell fs-4 text-white rounded-circle p-2"
+              style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+            ></i> 
+
+            {unreadCount > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{ fontSize: "0.7rem" }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </NavLink>
 
           {/* User Profile Dropdown */}
            <div className="dropdown">
@@ -179,7 +148,7 @@ function Navbar() {
             </button>
 
             {/* Remove the default arrow using inline style or override */}
-            <style>
+         <style>
               {`
                 #profileDropdown::after {
                   display: none !important;
@@ -191,15 +160,29 @@ function Navbar() {
               className="dropdown-menu dropdown-menu-end"
               aria-labelledby="profileDropdown"
             >
-              <li>
-                <a className="dropdown-item py-2" href="/profile">
-                  Profile
-                </a>
+             <li> 
+                   <NavLink
+                   className={`dropdown-item py-2 ${
+                  location.pathname === "/security-dashboard/profile"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                }`} 
+                to="/security-dashboard/profile"
+              >
+                Profile
+              </NavLink>
               </li>
               <li>
-                <a className="dropdown-item py-2" href="/settings">
-                  Settings
-                </a>
+                  <NavLink 
+                className={`dropdown-item py-2 ${
+                  location.pathname === "/security-dashboard/settings"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                }`} 
+                to="/security-dashboard/profile"
+              >
+                Settings
+              </NavLink> 
               </li>
               <li>
                 <hr className="dropdown-divider" />

@@ -2,37 +2,47 @@ import { useEffect, useState } from "react";
 import NavBar from "./include/NavBar";
 import api from "../../context/api";
 import { useNotifications } from "../../context/NotificationContext"; 
+import echo from "../../context/echo"; 
+import { toast } from 'react-toastify';
 
 
 function SecurityNotifications() {
-  const [notifications, setNotifications] = useState([]);
+ const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({});
-  const { markNotificationsAsRead } = useNotifications(); // Access the function to clear the count
-
-  useEffect(() => {
-    fetchNotifications();
-    markNotificationsAsRead();
-  }, [markNotificationsAsRead]);
+  const { markNotificationsAsRead, addNotification } = useNotifications();
 
   const fetchNotifications = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await api.get("security/notifications", {
-        params: {
-          per_page: 10,
-          page: page,
-        },
+      const response = await api.get("/security/notifications", {
+        params: { per_page: 10, page }
       });
       setNotifications(response.data.notifications || []);
-      setPagination(response.data.pagination || {});
     } catch (err) {
       console.error("Error fetching notifications:", err);
+      toast.error("Error fetching notifications:", error);
       setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+    markNotificationsAsRead();
+
+    // ✅ Listen for real-time pushes
+    const channel = echo.private(`notifications.${localStorage.getItem("user_id")}`);
+    channel.listen(".new-notification", (event) => {
+      setNotifications((prev) => [event.notification, ...prev]);
+      addNotification(event.notification);
+    });
+
+    return () => {
+      echo.leave(`notifications.${localStorage.getItem("user_id")}`);
+    };
+  }, []);
+
 
   return (
     <div>
@@ -82,7 +92,7 @@ function SecurityNotifications() {
       </header>
 
       {/* SecurityNotifications List */}
-      <section id="front-desk-notifications" className="container p-5">
+   <section className="container p-5">
         <div className="row">
           {loading ? (
             <p className="text-center">Loading notifications...</p>
@@ -90,17 +100,10 @@ function SecurityNotifications() {
             <p className="text-center">No notifications found.</p>
           ) : (
             notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className="col-12 col-md-10 mx-auto mb-3"
-              >
-                <div
-                  className={`card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center ${!notification.read_at ? 'bg-light' : ''}`}
-                  style={{
-                    borderRadius: "12px",
-                  }}
+              <div key={notification.id} className="col-12 col-md-10 mx-auto mb-3">
+                <div className={`card border-0 shadow-sm p-3 ${!notification.read_at ? 'bg-light' : ''}`}
+                  style={{ borderRadius: "12px" }}
                 >
-                  {/* Left: Image & Details */}
                   <div className="d-flex align-items-center w-100">
                     <img
                       src="../images/clock.png"
@@ -110,24 +113,16 @@ function SecurityNotifications() {
                       height="50"
                     />
                     <div className="flex-grow-1">
-                      <p
-                        className="mb-2 fw-semibold"
-                        style={{
-                          fontSize: "14px",
-                          color: !notification.read_at ? '#000' : '#6c757d', // Bold/darker text for unread
-                        }}
+                      <p className="mb-2 fw-semibold"
+                        style={{ fontSize: "14px", color: !notification.read_at ? '#000' : '#6c757d' }}
                       >
                         {notification.title} - {notification.message}
                       </p>
-                      <small className="text-muted">
-                        {notification.timestamp}
-                      </small>
+                      <small className="text-muted">{notification.timestamp}</small>
                     </div>
                   </div>
-
-                  {/* Right: Notification Indicator */}
                   {!notification.read_at && (
-                     <span className="ms-md-3 text-primary" style={{ fontSize: "18px" }}>●</span>
+                    <span className="ms-md-3 text-primary" style={{ fontSize: "18px" }}>●</span>
                   )}
                 </div>
               </div>

@@ -2,36 +2,55 @@ import { useEffect, useState } from "react";
 import api from "../../context/api";
 import NavBar from "./include/NavBar";
 import { toast } from 'react-toastify';
-import { BellRing, UserCheck, CheckSquare } from 'lucide-react'; // Added icons
+import { BellRing, UserCheck, CheckSquare } from 'lucide-react';
+import { useNotifications } from "../../context/NotificationContext";
+import { useLocation } from "react-router-dom";
+
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [message, setMessage] = useState("Loading notifications...");
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
+  // Corrected the function name from markAllAsRead to markNotificationsAsRead
+  const { markNotificationsAsRead, fetchNotificationCount } = useNotifications();
+  const location = useLocation();
+
+  // Function to fetch the paginated notifications
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get("/staff/notifications");
+      setLoading(false);
+
+      if (response.data.notifications.data && Array.isArray(response.data.notifications.data)) {
+        setNotifications(response.data.notifications.data);
+        setMessage(response.data.message || "");
+      } else {
+        setNotifications([]);
+        setMessage(response.data.message || "No Notifications Yet");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Error fetching notifications:", error);
+      setMessage("An error occurred while loading notifications.");
+      toast.error("An error occurred while loading notifications.");
+    }
+  };
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await api.get("/staff/notifications");
-        setLoading(false); // Set loading to false after the API call finishes
-
-        if (response.data.notifications.data && Array.isArray(response.data.notifications.data)) {
-          setNotifications(response.data.notifications.data);
-          setMessage(response.data.message || "");
-        } else {
-          setNotifications([]); // Set to an empty array if data is not as expected
-          setMessage(response.data.message || "No Notifications Yet");
-        }
-      } catch (error) {
-        setLoading(false);
-        console.error("Error fetching notifications:", error);
-        setMessage("An error occurred while loading notifications.");
-        toast.error("An error occurred while loading notifications.");
-      }
-    };
-
     fetchNotifications();
-  }, []);
+
+    // When the user navigates to the notifications page, mark all as read.
+    if (location.pathname === "/staff-dashboard/notifications") {
+      // Calling the correctly named function from the context
+      markNotificationsAsRead();
+      // Also, re-fetch the unread count in the context to sync it
+      fetchNotificationCount();
+    }
+    
+    // The real-time listener for new notifications is now handled in NotificationContext
+    // so we don't need it here.
+
+  }, [location, markNotificationsAsRead, fetchNotificationCount]);
 
   // Function to get the appropriate icon based on notification category
   const getNotificationIcon = (category) => {
@@ -55,6 +74,11 @@ function Notifications() {
       default:
         return 'text-secondary';
     }
+  };
+  
+  // Get color for card background if it's unread
+  const getCardBackgroundColor = (readAt) => {
+    return readAt ? '#ffffff' : '#f0f4f8';
   };
 
   return (
@@ -105,11 +129,11 @@ function Notifications() {
           <p className="text-center">{message}</p>
         ) : notifications.length > 0 ? (
           <div className="row">
-            {notifications.map((notification, index) => (
+            {notifications.map((notification) => (
               <div key={notification.id} className="col-12 col-md-10 mx-auto mb-3">
                 <div
                   className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                  style={{ borderRadius: "12px" }}
+                  style={{ borderRadius: "12px", backgroundColor: getCardBackgroundColor(notification.read_at) }}
                 >
                   <div className="d-flex align-items-center w-100">
                     <div className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#e9f5ff' }}>
@@ -138,7 +162,7 @@ function Notifications() {
             ))}
           </div>
         ) : (
-          <div className="text-center align-items-center p-5 text-muted"> 
+          <div className="text-center align-items-center p-5 text-muted">
             <img src="../images/notification_bucket.png"  width="400" height="400" alt="Notification" className="" />
             <h4  className="text-muted">{message}</h4>
           </div>

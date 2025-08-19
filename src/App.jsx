@@ -1,6 +1,7 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 
 import SignIn from "./pages/SignIn";
 import Loading from "./pages/Loading";
@@ -33,6 +34,7 @@ import GenerateByUniqueCode from "./pages/securityDashboard/GenerateByUniqueCode
 import RegisterNewGuest from "./pages/securityDashboard/RegisterNewGuest";
 import VisitSecurityHistory from "./pages/securityDashboard/VisitSecurityHistory";
 import SecurityNotifications from "./pages/securityDashboard/SecurityNotifications";
+import SecurityProfile from "./pages/securityDashboard/SecurityProfile";
 
 import AdminLayout from "./layout/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -40,99 +42,80 @@ import AdminVisitors from "./pages/admin/visitorsManagment/AdminVisitors";
 import AdminStaff from "./pages/admin/staffManagment/AdminStaff";
 import AnalyticalAndReport from "./pages/admin/analytical_report/AnalyticalAndReport";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
+import AdminProfile from "./pages/admin/AdminProfile";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 
 
 function App() {
-  return (
+ return (
     <div className="App">
-      <AuthProvider>
-     
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<SignIn />} />
-          <Route path="/loading" element={<Loading />} />
-          <Route path="/password-success" element={<PasswordSuccessAlert />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-account" element={<VerifyAccount />} />
-          <Route path="/set-new-password" element={<SetNewPassword />} />
+        <AuthProvider>
+          <NotificationProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<SignIn />} />
+              <Route path="/loading" element={<Loading />} />
+              <Route path="/password-success" element={<PasswordSuccessAlert />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-account" element={<VerifyAccount />} />
+              <Route path="/set-new-password" element={<SetNewPassword />} />
 
-          {/* Protected Routes - Wrapped with PrivateRoute */}
-          {/* <Route path="/staff-dashboard" element={<StaffLayout />}> */}
-            <Route
-            path="/staff-dashboard"
-            element={
-              <PrivateRoute>
-                <StaffLayout />
-              </PrivateRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="new-guest" element={<NewGuest />} />
-            <Route path="manage-guest" element={<ManageGuestsIndividual />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
+              {/* Protected Routes */}
+              <Route path="/staff-dashboard/*" element={
+                <PrivateRoute requiredRole="staff">
+                  <StaffLayout />
+                </PrivateRoute>
+              }>
+                <Route index element={<Dashboard />} />
+                <Route path="new-guest" element={<NewGuest />} />
+                <Route path="manage-guest" element={<ManageGuestsIndividual />} />
+                <Route path="notifications" element={<Notifications />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
 
-          {/* <Route path="/front-desk-dashboard" element={<FrontDeskLayout />}> */}
-          <Route
-            path="/front-desk-dashboard"
-            element={
-              <PrivateRoute>
-                <FrontDeskLayout />
-              </PrivateRoute>
-            }
-            >
-            <Route index element={<FrontDeskDashboard />} />
-            <Route path="register-guest" element={<RegisterGuest />} />
-            <Route path="history" element={<VisitHistory />} />
-            <Route path="notifications" element={<FrontDeskNotifications />} />
-             <Route path="profile" element={<FrontDeskProfile />} />
-          </Route>
+              <Route path="/front-desk-dashboard/*" element={
+                <PrivateRoute requiredRole="front_desk">
+                  <FrontDeskLayout />
+                </PrivateRoute>
+              }>
+                <Route index element={<FrontDeskDashboard />} />
+                <Route path="register-guest" element={<RegisterGuest />} />
+                <Route path="history" element={<VisitHistory />} />
+                <Route path="notifications" element={<FrontDeskNotifications />} />
+                <Route path="profile" element={<FrontDeskProfile />} />
+              </Route>
 
-          {/* <Route path="/admin-dashboard" element={<AdminLayout />}> */}
-          <Route
-            path="/admin-dashboard"
-            element={
-              <PrivateRoute>
-                <AdminLayout />
-              </PrivateRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="visitors" element={<AdminVisitors />} />
-            <Route path="staffs" element={<AdminStaff />} />
-            <Route path="analytical-report" element={<AnalyticalAndReport />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
+              <Route path="/admin-dashboard/*" element={
+                <PrivateRoute requiredRole="admin">
+                  <AdminLayout />
+                </PrivateRoute>
+              }>
+                <Route index element={<AdminDashboard />} />
+                <Route path="visitors" element={<AdminVisitors />} />
+                <Route path="staffs" element={<AdminStaff />} />
+                <Route path="analytical-report" element={<AnalyticalAndReport />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="profile" element={<AdminProfile />} />
+                <Route path="notifications" element={<AdminNotifications />} />
+              </Route>
 
-          <Route
-            path="/security-dashboard"
-            element={
-              <PrivateRoute>
-                 <NotificationProvider>
-                <SecurityLayout />
-                </NotificationProvider>
-              </PrivateRoute>
-            }
-          >
-            {/* <Route path="/security-dashboard" element={<SecurityLayout />}> */}
-            <Route index element={<SecurityDashboard />} />
-            <Route path="generate-qr-code" element={<GenerateQRCode />} />
-            <Route
-              path="generate-by-unique-code"
-              element={<GenerateByUniqueCode />}
-            />
-            <Route path="register-new-guest" element={<RegisterNewGuest />} />
-            <Route path="history" element={<VisitSecurityHistory />} />
-            <Route path="notifications" element={<SecurityNotifications />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-
-          {/* john.smith@sydani.com */}
-        </Routes>
-      
-      </AuthProvider>
-      <ToastContainer />
+              <Route path="/security-dashboard/*" element={
+                <PrivateRoute requiredRole="security">
+                  <SecurityLayout />
+                </PrivateRoute>
+              }>
+                <Route index element={<SecurityDashboard />} />
+                <Route path="generate-qr-code" element={<GenerateQRCode />} />
+                <Route path="generate-by-unique-code" element={<GenerateByUniqueCode />} />
+                <Route path="register-new-guest" element={<RegisterNewGuest />} />
+                <Route path="history" element={<VisitSecurityHistory />} />
+                <Route path="notifications" element={<SecurityNotifications />} />
+                <Route path="profile" element={<SecurityProfile />} />
+              </Route>
+            </Routes>
+          </NotificationProvider>
+        </AuthProvider>
+        <ToastContainer />
     </div>
   );
 }

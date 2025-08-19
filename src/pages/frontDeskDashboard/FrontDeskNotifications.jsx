@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import api from "../../context/api";
 import NavBar from "./include/NavBar";
 import { toast } from 'react-toastify';
-import { BellRing, UserCheck, CheckSquare } from 'lucide-react'; // Added icons
+import { BellRing, UserCheck, CheckSquare } from 'lucide-react';
+import { useNotifications } from "../../context/NotificationContext";
+import { useLocation } from "react-router-dom";
+
 
 // Pagination component to display page numbers and navigation buttons.
 const Pagination = ({ pagination, handlePageChange }) => {
@@ -57,10 +60,9 @@ function FrontDeskNotifications() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({}); // State for pagination data
   const [currentPage, setCurrentPage] = useState(1); // State for current page
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [currentPage]); // Re-fetch when currentPage changes
+  // Get functions from the NotificationContext
+  const { markNotificationsAsRead, fetchNotificationCount } = useNotifications();
+  const location = useLocation();
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -95,6 +97,16 @@ function FrontDeskNotifications() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+
+    // Mark notifications as read and update the count when navigating to this page
+    if (location.pathname === "/front-desk-dashboard/notifications") {
+      markNotificationsAsRead();
+      fetchNotificationCount();
+    }
+  }, [currentPage, location, markNotificationsAsRead, fetchNotificationCount]); // Add new dependencies to the effect
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= pagination.last_page) {
