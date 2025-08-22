@@ -2,19 +2,38 @@ import { useState, useEffect } from "react";
 import NavBar from "./frontDeskDashboard/include/NavBar";
 import TabIncoming from "./frontDeskDashboard/include/TabIncoming";
 import TabOutgoing from "./frontDeskDashboard/include/TabOutgoing";
+import AddGuestModal from "./frontDeskDashboard/include/AddGuestModal";
+import api from "../context/api"; // Assuming your api context is here
+import { PlusCircle } from "lucide-react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-// This is the main dashboard component.
-// It manages the state for the active tab, filters, and search query,
-// and passes these states as props to the child components (TabIncoming and TabOutgoing).
 function FrontDeskDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddGuest, setShowAddGuest] = useState(false);
+const [refreshKey, setRefreshKey] = useState(0);
   const [filters, setFilters] = useState({
     group: false,
     individual: false,
     pending: false,
   });
-  const [searchQuery, setSearchQuery] = useState(''); // State for the search input
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // State variables for the AddGuestModal
+  const [name, setName] = useState("");
+  const [visitorType, setVisitorType] = useState("Individual");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [contact_number, setContact_number] = useState("");
+  const [emergency_contact, setEmergencyContact] = useState("");
+  const [special_requirements, setSpecialRequirements] = useState("");
+  const [photo, setPhoto] = useState("");
+  const [is_vip, setIs_vip] = useState(false);
+  const [is_blacklisted, setIs_blacklisted] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   // Function to handle filter checkbox changes
   const handleFilterChange = (filterType) => {
@@ -24,21 +43,78 @@ function FrontDeskDashboard() {
     }));
   };
 
-  // Function to handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Function to apply filters (just closes the dropdown, actual filtering happens in child components' useEffect)
   const applyFilters = () => {
     setShowFilters(false);
-    // The change in `filters` or `searchQuery` state will trigger
-    // the `useEffect` in `TabIncoming` or `TabOutgoing` automatically.
   };
+
+  const openAddGuestModal = () => {
+    setShowAddGuest(true);
+  };
+
+  // Function to handle adding a new guest (connected to the API)
+  const handleAddGuest = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        name,
+        contact_number,
+        email,
+        address,
+        is_vip,
+        is_blacklisted,
+        emergency_contact,
+        special_requirements,
+        photo,
+        visitor_type: visitorType,
+      };
+
+      const response = await api.post("/front-desk/guests/visitors", payload);
+
+      if (response.status === 201) {
+        toast.success("New visitor registered successfully!");
+        setShowAddGuest(false);
+
+        // Reset form fields
+        setName("");
+        setVisitorType("Individual");
+        setEmail("");
+        setAddress("");
+        setContact_number("");
+        setEmergencyContact("");
+        setSpecialRequirements("");
+        setPhoto("");
+        setIs_vip(false);
+        setIs_blacklisted(false);
+
+        // TODO: refresh incoming list if needed
+         setRefreshKey((prev) => prev + 1);
+      } else {
+        toast.error(response.data.message || "Failed to register visitor.");
+      }
+    } catch (error) {
+      console.error("Error creating new visitor:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to create visitor. Please check your network connection.";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    // Fetch initial data if needed
+    // For example, you can fetch the list of guests or any other data here
+  }, []);
 
   return (
     <div>
       <NavBar />
+      <ToastContainer position="top-right" autoClose={5000} />
       <header
         id="home"
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
@@ -61,11 +137,14 @@ function FrontDeskDashboard() {
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bod mb-0">Guest Confirmation</h2>
 
-              {/* Plus Icon */}
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+              {/* Plus Icon with onClick handler to open the modal */}
+              <button
+                onClick={openAddGuestModal}
+                className="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-circle"
+                style={{ width: "48px", height: "48px" }}
+              >
+                <PlusCircle size={24} className="text-white" />
+              </button>
             </div>
 
             {/* Badge & Line Row */}
@@ -106,7 +185,6 @@ function FrontDeskDashboard() {
         <ul
           className="nav nav-tabs container d-flex align-items-center justify-content-between"
           style={{
-            // Removed overflow: "hidden" to allow dropdown to show
             border: "none",
           }}
         >
@@ -261,12 +339,45 @@ function FrontDeskDashboard() {
       {/* Tab Content */}
       <div className="container mt-5">
         {activeTab === "incoming" && (
-          <TabIncoming filters={filters} searchQuery={searchQuery} />
+          <TabIncoming
+            filters={filters}
+            searchQuery={searchQuery}
+            refreshKey={refreshKey} // 🔑 pass down
+          />
         )}
         {activeTab === "outgoing" && (
-          <TabOutgoing filters={filters} searchQuery={searchQuery} />
+          <TabOutgoing filters={filters} searchQuery={searchQuery} refreshKey={refreshKey} />
         )}
       </div>
+
+      {/* Add Guest Modal */}
+      <AddGuestModal
+        show={showAddGuest}
+        onClose={() => setShowAddGuest(false)}
+        name={name}
+        visitorType={visitorType}
+        email={email}
+        address={address}
+        contact_number={contact_number}
+        emergency_contact={emergency_contact}
+        special_requirements={special_requirements}
+        is_vip={is_vip}
+        is_blacklisted={is_blacklisted}
+        photo={photo}
+        setName={setName}
+        setVisitorType={setVisitorType}
+        setEmail={setEmail}
+        setAddress={setAddress}
+        setContact_number={setContact_number}
+        setEmergencyContact={setEmergencyContact}
+        setSpecialRequirements={setSpecialRequirements}
+        setIs_vip={setIs_vip}
+        setIs_blacklisted={setIs_blacklisted}
+        setPhoto={setPhoto}
+        handleAddGuest={handleAddGuest}
+        loading={loading}
+        setLoading={setLoading}
+      />
     </div>
   );
 }

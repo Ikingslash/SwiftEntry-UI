@@ -1,6 +1,67 @@
 import React from "react";
 
-function TabWalkInVisitors({ groupedVisits, loading }) {
+const Pagination = ({ pagination, handlePageChange }) => {
+  if (!pagination || !pagination.last_page) return null;
+  const { current_page, last_page } = pagination;
+  const pages = [];
+  for (let i = 1; i <= last_page; i++) {
+    pages.push(i);
+  }
+  if (pages.length === 0) return null;
+
+  return (
+    <nav aria-label="Page navigation">
+      <ul className="pagination justify-content-center">
+        <li className={`page-item ${current_page === 1 ? "disabled" : ""}`}>
+          <a
+            className="page-link"
+            href="#"
+            onClick={() => handlePageChange(current_page - 1)}
+            aria-label="Previous"
+          >
+            Previous
+          </a>
+        </li>
+        {pages.map((page) => (
+          <li
+            key={page}
+            className={`page-item ${current_page === page ? "active" : ""}`}
+          >
+            <a
+              className="page-link"
+              href="#"
+              onClick={() => handlePageChange(page)}
+              aria-label={`Page ${page}`}
+            >
+              {page}
+            </a>
+          </li>
+        ))}
+        <li
+          className={`page-item ${
+            current_page === last_page ? "disabled" : ""
+          }`}
+        >
+          <a
+            className="page-link"
+            href="#"
+            aria-label="Next"
+            onClick={() => handlePageChange(current_page + 1)}
+          >
+            Next
+          </a>
+        </li>
+      </ul>
+    </nav>
+  );
+};
+
+function TabWalkInVisitors({
+  groupedVisits,
+  loading,
+  pagination,
+  handlePageChange,
+}) {
   const sortedDates = Object.keys(groupedVisits || {}).sort(
     (a, b) => new Date(b) - new Date(a)
   );
@@ -30,23 +91,29 @@ function TabWalkInVisitors({ groupedVisits, loading }) {
                 {sortedDates.map((date, index) => (
                   <React.Fragment key={index}>
                     <tr className="table">
-                      <td colSpan="7" className="py-4" style={{ backgroundColor: "#F5FAFE" }}>
-                        {date === new Date().toISOString().split("T")[0] ? "Today" : date}
+                      <td
+                        colSpan="7"
+                        className="py-4"
+                        style={{ backgroundColor: "#F5FAFE" }}
+                      >
+                        {date === new Date().toISOString().split("T")[0]
+                          ? "Today"
+                          : date}
                       </td>
                     </tr>
                     {groupedVisits[date].map((visit, idx) => (
                       <tr key={idx}>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visit.visitor?.name || "N/A"}
+                          {visit.visitor_name || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visit.visitor?.contact_number || "N/A"}
+                          {visit.visitor_contact_number || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visit.visitor?.email || "N/A"}
+                          {visit.visitor_email || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visit.visitor?.address || "N/A"}
+                          {visit.visitor_address || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
                           {visit.host_name || "N/A"}
@@ -55,7 +122,7 @@ function TabWalkInVisitors({ groupedVisits, loading }) {
                           {visit.visit_date || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visit.visitor?.special_requirements || "None"}
+                          {visit.special_requirements || "None"}
                         </td>
                       </tr>
                     ))}
@@ -65,6 +132,15 @@ function TabWalkInVisitors({ groupedVisits, loading }) {
             </table>
           </div>
         </div>
+      </div>
+
+      <div>
+        {pagination && pagination.last_page > 1 && (
+          <Pagination
+            pagination={pagination}
+            handlePageChange={handlePageChange}
+          />
+        )}
       </div>
     </div>
   );

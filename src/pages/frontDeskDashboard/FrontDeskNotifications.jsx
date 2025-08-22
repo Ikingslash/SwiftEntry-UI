@@ -170,12 +170,7 @@ function FrontDeskNotifications() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bold mb-0">Notifications</h3>
-              <i
-                className="bi bi-plus-circle fs-1 text-white-50 p-2"
-                style={{ cursor: "pointer", transition: "0.3s" }}
-                onMouseOver={(e) => (e.target.style.color = "#0d6efd")}
-                onMouseOut={(e) => (e.target.style.color = "white")}
-              ></i>
+
             </div>
 
             <div

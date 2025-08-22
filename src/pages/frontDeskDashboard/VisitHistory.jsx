@@ -4,6 +4,22 @@ import TabPreRegisteredVisitors from "./include/TabPreRegisteredVisitors";
 import TabWalkInVisitors from "./include/TabWalkInVisitors";
 import { IoCheckmark } from "react-icons/io5";
 import api from "../../context/api";
+import { toast } from "react-toastify";
+
+// Helper function to group visits by date
+const groupVisitsByDate = (visits) => {
+  if (!Array.isArray(visits)) {
+    return {};
+  }
+  return visits.reduce((acc, visit) => {
+    const date = visit.visit_date; // Assuming your backend returns 'visit_date'
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(visit);
+    return acc;
+  }, {});
+};
 
 function VisitSecurityHistory() {
   const [activeTab, setActiveTab] = useState("pre-registered-visitors");
@@ -12,48 +28,95 @@ function VisitSecurityHistory() {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState("");
-  const [category, setCategory] = useState("all"); // Optional: add more filters
-  const perPage = 10; // or allow user to change
-  const page = 1;
+  const [purpose, setPurpose] = useState("all");
+  const perPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [visitPurposes, setVisitPurposes] = useState([]);
 
   useEffect(() => {
     fetchHistory();
-  }, [activeFilter, month, category, activeTab]);
+    api
+      .get("/front-desk/guests/settings/visit-purposes")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        } else {
+          console.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for purposes is not an array: Please check the backend response."
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch visit purposes:", error);
+        toast.error(
+          "Failed to fetch visit purposes: " +
+            (error.response?.data?.message || "Server error.")
+        );
+      });
+  }, [activeFilter, month, purpose, activeTab, currentPage]);
 
-  const fetchHistory = async () => {
-    setLoading(true);
-    try {
-      const monthParam = month
-        ? new Date(`${month} 1, 2025`).getMonth() + 1
-        : null;
+const fetchHistory = async () => {
+  setLoading(true);
+  try {
+    const monthParam = month
+      ? new Date(`${month} 1, 2025`).getMonth() + 1
+      : null;
 
-      // Determine the status based on the activeTab
-      let statusParam = null;
-      if (activeTab === "pre-registered-visitors") {
-        statusParam = "pre_registered_visit";
-      } else if (activeTab === "walk-in-visitors") {
-        statusParam = "Walk_In";
-      }
+    let response;
 
-      const response = await api.get("/guest-history", {
+    if (activeTab === "pre-registered-visitors") {
+      // Pre-registered visitors use guest-history
+      response = await api.get("/guest-history", {
         params: {
           visitor_type: activeFilter,
           month: monthParam,
-          purpose: category,
-          status: statusParam,
+          purpose: purpose !== "all" ? purpose : null,
+          status: "pre_registered_visit",
           per_page: perPage,
-          page,
+          page: currentPage,
         },
       });
-      setGroupedVisits(response.data.grouped_visits || {});
-      setPagination(response.data.pagination || {});
-    } catch (err) {
-      console.error("Error fetching history:", err);
-    } finally {
-      setLoading(false);
+    } else if (activeTab === "walk-in-visitors") {
+      // Walk-in visitors use dedicated endpoint
+      response = await api.get("/front-desk/history/walk-ins", {
+        params: {
+          visitor_type: activeFilter,
+          month: monthParam,
+          purpose: purpose !== "all" ? purpose : null,
+          per_page: perPage,
+          page: currentPage,
+        },
+      });
     }
+
+    if (!response?.data || !response.data.visits) {
+      throw new Error("Invalid response structure: 'visits' key not found.");
+    }
+
+    const groupedData = groupVisitsByDate(response.data.visits);
+    setGroupedVisits(groupedData);
+    setPagination(response.data.pagination || {});
+    toast.success("Visit history fetched successfully.");
+  } catch (err) {
+      console.error("Error fetching history:", err);
+      if (err.response && err.response.status === 422) {
+          toast.error("Validation error: " + JSON.stringify(err.response.data));
+      } else {
+          toast.error("Failed to fetch visit history. Please try again.");
+      }
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // useEffect will handle the new fetch
   };
-  console.log("Grouped Visits: ", groupedVisits);
 
   return (
     <div>
@@ -70,26 +133,20 @@ function VisitSecurityHistory() {
           borderBottomRightRadius: "3%",
         }}
       >
-        {/* Left Content */}
         <div className="container">
           <div
             className="text-white shadow-sm"
             style={{ backgroundColor: "#053561", minHeight: "180px" }}
           >
-            {/* Row for Welcome Text & Plus Icon */}
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bod mb-0">History</h3>
-
-              {/* Plus Icon */}
               <i
                 className="bi bi-plus-circle fs-1 text-primary p-2"
                 style={{ cursor: "pointer" }}
               ></i>
             </div>
 
-            {/* Badge & Line Row */}
-            <div className="d-flex align-items-center  mt-2">
-              {/* Badge */}
+            <div className="d-flex align-items-center mt-2">
               <p
                 className="badge text-white"
                 style={{
@@ -106,8 +163,6 @@ function VisitSecurityHistory() {
                   Company
                 </span>
               </p>
-
-              {/* Extending Line */}
               <div
                 className="flex-grow-1 ms-3 mb-3"
                 style={{
@@ -120,12 +175,9 @@ function VisitSecurityHistory() {
         </div>
       </header>
 
-      {/* Tabs Navigation (Positioned Below Header) */}
       <div className="container mt-5">
         <div className="d-flex align-items-center justify-content-between">
-          {/* Tabs Section */}
           <div className="d-flex flex-column w-100 position-relative">
-            {/* Full-width thin bottom line */}
             <div
               style={{
                 position: "absolute",
@@ -133,7 +185,7 @@ function VisitSecurityHistory() {
                 left: 0,
                 width: "100%",
                 height: "1px",
-                backgroundColor: "rgb(200, 200, 200)", // Light grey bottom border
+                backgroundColor: "rgb(200, 200, 200)",
               }}
             ></div>
 
@@ -189,9 +241,7 @@ function VisitSecurityHistory() {
             </ul>
           </div>
 
-          {/* Filters Section */}
           <div className="d-flex gap-2">
-            {/* Month Filter */}
             <select
               className="form-select me-3"
               style={{ minWidth: "150px", flex: "1" }}
@@ -221,25 +271,20 @@ function VisitSecurityHistory() {
             <select
               className="form-select me-3"
               style={{ minWidth: "150px", flex: "1" }}
-              onChange={(e) => setCategory(e.target.value)}
-              value={category}
+              onChange={(e) => setPurpose(e.target.value)}
+              value={purpose}
             >
               <option value="all">All Categories</option>
-              <option value="recruitment">Recruitment</option>
-              <option value="business meeting">Business Meeting</option>
-              <option value="repairs/maintenance">Repairs/Maintenance</option>
-              <option value="personal/official">Personal/Official</option>
-              <option value="other">Other</option>
+              {visitPurposes.map((purpose, index) => (
+                <option key={index} value={purpose}>
+                  {purpose}
+                </option>
+              ))}
             </select>
 
-            {/* Visitor Type Filter */}
             {[
               { label: "All", value: "all", width: "60px" },
-              {
-                label: "Individual",
-                value: "individual",
-                width: "180px",
-              },
+              { label: "Individual", value: "individual", width: "180px" },
               { label: "Group", value: "group", width: "160px" },
             ].map((item) => (
               <a
@@ -265,13 +310,13 @@ function VisitSecurityHistory() {
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="container mt-5">
         {activeTab === "pre-registered-visitors" && (
           <TabPreRegisteredVisitors
             groupedVisits={groupedVisits}
             pagination={pagination}
             loading={loading}
+            handlePageChange={handlePageChange}
           />
         )}
         {activeTab === "walk-in-visitors" && (
@@ -279,6 +324,7 @@ function VisitSecurityHistory() {
             groupedVisits={groupedVisits}
             pagination={pagination}
             loading={loading}
+            handlePageChange={handlePageChange}
           />
         )}
       </div>

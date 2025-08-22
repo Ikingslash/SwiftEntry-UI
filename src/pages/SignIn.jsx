@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 function SignIn() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ function SignIn() {
       const success = await login(email, password);
       if (!success) {
         setErrorMessage("Invalid email or password");
+        toast.error("Invalid email or password");
         navigate("/"); // go back to login
       } else {
         setErrorMessage(""); // clear previous error
@@ -27,10 +29,11 @@ function SignIn() {
     } catch (error) {
       console.error("Error logging in:", error);
       setErrorMessage("Something went wrong. Please try again.");
+       toast.error("Something went wrong. Please try again.");
       navigate("/");
     }
   };
-  
+
 
   return (
     <div

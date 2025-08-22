@@ -44,7 +44,7 @@ function NewGuestGroup() {
           toast.info("FCM token:", fcmToken);
 
           api
-            .post("/staff/save-fcm-token", { fcm_token: fcmToken })
+            .post("/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
               console.log("FCM token saved on backend:", response.data);
               toast.success("FCM token saved on backend:", response.data);

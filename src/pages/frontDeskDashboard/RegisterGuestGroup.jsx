@@ -1,8 +1,9 @@
 import api from "../../context/api";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import { requestForToken, onMessageListener } from "../../context/firebase";
 
 function RegisterGuestGroup() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ function RegisterGuestGroup() {
     group_size: "",
     visit_time: "",
     host_name: "",
+    host_id: "", // Added host_id to state
+    host_role: "", // Added host_role to state
     building: "",
     floor: "",
     purpose: "",
@@ -28,15 +31,91 @@ function RegisterGuestGroup() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
   const [qrValue, setQrValue] = useState("");
   const printRef = useRef();
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken().catch((err) => {
+      console.error("An error occurred while retrieving token. ", err);
+      toast.error("Failed to retrieve FCM token: " + err.message);
+    });
+
+    // Fetch the list of all app users (staff, security, front desk)
+    api
+      .get("/frontdesk-app-users") // Corrected API endpoint
+      .then((response) => {
+        // Assuming the response is an array of user names
+        if (response.data && Array.isArray(response.data.users)) {
+          setAppUsers(response.data.users);
+        } else {
+          console.error(
+            "API response for users is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for users is not an array: Please check the backend response."
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch app users:", error);
+        toast.error(
+          "Failed to fetch app users: " +
+            (error.response?.data?.message || "Server error.")
+        );
+      });
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/front-desk/guests/settings/visit-purposes") // Corrected API endpoint
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        } else {
+          console.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for purposes is not an array: Please check the backend response."
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch visit purposes:", error);
+        toast.error(
+          "Failed to fetch visit purposes: " +
+            (error.response?.data?.message || "Server error.")
+        );
+      });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value, selectedOptions } = e.target;
+    // Special handling for the host selection to also get the ID and Role
+    if (name === "host_id") {
+      const selectedHostName = selectedOptions[0]?.text.split("(")[0].trim(); // Trim name like in individual registration
+      const selectedHostRole = selectedOptions[0]?.dataset.role;
+      setFormData({
+        ...formData,
+        host_id: value,
+        host_name: selectedHostName, // Keep host_name for display
+        host_role: selectedHostRole,
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageChange = (e) => {
@@ -53,30 +132,47 @@ function RegisterGuestGroup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const formDataToSend = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "photo" && key !== "visit_time") {
+      if (
+        key !== "photo" &&
+        key !== "visit_time" &&
+        key !== "host_id" &&
+        key !== "host_role"
+      ) {
         formDataToSend.append(key, value);
       }
     });
- 
+
+    // Format visit_time
     if (formData.visit_time) {
       const visitDate = new Date(formData.visit_time);
-      if (!isNaN(visitDate.getTime())) { // Check if date is valid
-        const formattedVisitTime = visitDate.toISOString().slice(0, 19).replace("T", " ");
+      if (!isNaN(visitDate.getTime())) {
+        // Check if date is valid
+        const formattedVisitTime = visitDate
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
         formDataToSend.append("visit_time", formattedVisitTime);
       } else {
-        toast.error("Invalid visit time format.");
+        toast.error(
+          "Invalid visit time format. Please select a valid date and time."
+        );
         setLoading(false);
         return;
       }
     }
-    
-    if (formData.photo) {
+
+    if (formData.photo instanceof File) {
+      // Ensure it's a File object
       formDataToSend.append("photo", formData.photo);
     }
+
+    // Append host_id and host_role
+    formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_role", formData.host_role);
 
     try {
       const response = await api.post(
@@ -89,7 +185,29 @@ function RegisterGuestGroup() {
 
       if (response.status === 200 || response.status === 201) {
         const visit = response.data.visit;
-        const visitor = response.data.visitor;
+        const visitor = response.data.visitor; // This would be the group leader
+
+        // Trigger notification to host
+        if (formData.host_id && formData.host_role) {
+          try {
+            await api.post("/genereal-notify-host", {
+              host_id: formData.host_id,
+              host_role: formData.host_role,
+              guest_name: formData.group_leader_name, // Use group leader's name
+              purpose: formData.purpose,
+            });
+            console.log("Notification trigger sent to backend.");
+            toast.success("Notification sent to host successfully.");
+          } catch (notificationError) {
+            console.error("Failed to trigger notification:", notificationError);
+            toast.error(
+              "Failed to send host notification: " +
+                (notificationError.response?.data?.message || "Server error.")
+            );
+          }
+        } else {
+          console.warn("Host ID or Role missing, skipping host notification.");
+        }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
@@ -97,7 +215,7 @@ function RegisterGuestGroup() {
         const time = visitTimeParts?.[1] || "";
 
         setGuestDetails({
-          name: visitor.name,
+          name: visitor.name, // This will be the group leader's name
           id: visit.code || "",
           host: visit.host_name,
           date,
@@ -111,6 +229,7 @@ function RegisterGuestGroup() {
         if (visit.code) {
           setQrValue(visit.code);
         }
+        // Reset form data after successful submission
         setFormData({
           group_leader_name: "",
           group_leader_contact: "",
@@ -120,6 +239,8 @@ function RegisterGuestGroup() {
           group_size: "",
           visit_time: "",
           host_name: "",
+          host_id: "",
+          host_role: "",
           building: "",
           floor: "",
           purpose: "",
@@ -138,12 +259,15 @@ function RegisterGuestGroup() {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error("Error: " + (response.data.message || "Something went wrong"));
+        toast.error(
+          "Error: " + (response.data.message || "Something went wrong")
+        );
       }
     } catch (error) {
       console.error("Error:", error);
       toast.error(
-        "Failed to register guest. " + (error.response?.data?.message || "Server error.")
+        "Failed to register group guest. " +
+          (error.response?.data?.message || "Server error.")
       );
     } finally {
       setLoading(false);
@@ -153,12 +277,15 @@ function RegisterGuestGroup() {
   const handlePrint = () => {
     const element = printRef.current;
     if (element) {
-      const printWindow = window.open('', '', 'height=600,width=800');
-      printWindow.document.write('<html><head><title>Visitor Badge</title>');
-      printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write('<div class="p-5">' + element.innerHTML + '</div>');
-      printWindow.document.write('</body></html>');
+      const printWindow = window.open("", "", "height=600,width=800");
+      printWindow.document.write("<html><head><title>Visitor Badge</title>");
+      printWindow.document.write(
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+      );
+      printWindow.document.write("</head><body>");
+      printWindow.document.write(
+        '<div class="p-5">' + element.innerHTML + "</div>"
+      );
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
@@ -182,7 +309,7 @@ function RegisterGuestGroup() {
           })
           .from(element)
           .save()
-          .catch(err => {
+          .catch((err) => {
             console.error("Error generating PDF:", err);
             toast.error("Failed to generate PDF. Please try again.");
           });
@@ -208,25 +335,31 @@ function RegisterGuestGroup() {
                 <div className=" p-4">
                   <h5 className="fw-bold">Group Leader Information</h5>
                   <div className="mb-3">
-                    <label className="form-label">Name</label>
+                    <label htmlFor="group_leader_name" className="form-label">
+                      Group Name
+                    </label>
                     <input
                       type="text"
                       name="group_leader_name"
                       className="form-control"
-                      placeholder="Enter Name"
                       value={formData.group_leader_name}
                       onChange={handleChange}
+                      placeholder="Enter group leader's name"
+                      required
                     />
                   </div>
                   <div className="row">
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label className="form-label">Contact Number</label>
+                        <label className="form-label">
+                          Group Contact Number
+                        </label>
                         <input
                           type="text"
                           name="group_leader_contact"
                           className="form-control"
-                          placeholder="Enter contact number"
+                          placeholder="Enter group leader's contact number"
+                          required
                           value={formData.group_leader_contact}
                           onChange={handleChange}
                         />
@@ -234,7 +367,7 @@ function RegisterGuestGroup() {
                     </div>
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label className="form-label">Email</label>
+                        <label className="form-label">Group Email</label>
                         <input
                           type="email"
                           name="group_leader_email"
@@ -290,14 +423,25 @@ function RegisterGuestGroup() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
-                    <input
-                      type="text"
-                      name="host_name"
-                      className="form-control"
-                      placeholder="Enter host name"
-                      value={formData.host_name}
+                    <select
+                      className="form-select rounded-pill"
+                      id="host_id"
+                      name="host_id"
+                      value={formData.host_id}
                       onChange={handleChange}
-                    />
+                      required
+                    >
+                      <option value="">Select a host</option>
+                      {appUsers.map((user) => (
+                        <option
+                          key={user.role + "-" + user.id}
+                          value={user.id}
+                          data-role={user.role}
+                        >
+                          {user.name} ({user.role})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="row">
@@ -345,18 +489,14 @@ function RegisterGuestGroup() {
                       name="purpose"
                       value={formData.purpose}
                       onChange={handleChange}
+                      required
                     >
                       <option value="">Select Purpose</option>
-                      <option value="recruitment">Recruitment</option>
-                      <option value="business meeting">Business Meeting</option>
-                      <option value="repairs/maintenance">
-                        Repairs/Maintenance
-                      </option>
-                      <option value="personal/official">
-                        Personal/Official
-                      </option>
-                      <option value="conference">Conference</option>
-                      <option value="other">Other</option>
+                      {visitPurposes.map((purpose, index) => (
+                        <option key={index} value={purpose}>
+                          {purpose}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -499,7 +639,9 @@ function RegisterGuestGroup() {
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content bg-success text-white text-center">
             <div className="modal-body">
-              <h5 className="modal-title">Visitor Registered Successfully!</h5>
+              <h5 className="modal-title">
+                Group Visitor Registered Successfully!
+              </h5>
             </div>
           </div>
         </div>
@@ -544,17 +686,25 @@ function RegisterGuestGroup() {
                   </div>
                   <div className="card-body d-flex">
                     <div className="me-3">
-                      <img
-                        src={
-                          guestDetails.photo ||
-                          "http://127.0.0.1:8000/storage/images/user2.png"
-                        }
-                        alt="Guest"
-                        className="rounded-circle shadow"
-                        width="100"
-                        height="100"
-                        style={{ border: "4px solid #007bff" }}
-                      />
+                      {guestDetails.photo ? (
+                        <img
+                          src={guestDetails.photo}
+                          alt="Guest"
+                          className="img-fluid rounded-circle border border-primary"
+                          style={{
+                            width: "120px",
+                            height: "120px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto border border-primary"
+                          style={{ width: "120px", height: "120px" }}
+                        >
+                          <span className="text-muted">No Photo</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>

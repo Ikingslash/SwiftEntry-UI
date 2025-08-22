@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../../context/api"; 
+import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
 // Pagination component to display page numbers and navigation buttons.
@@ -47,12 +47,12 @@ const Pagination = ({ pagination, handlePageChange }) => {
   );
 };
 
-function TabOutgoing({ filters, searchQuery }) {
+function TabOutgoing({ filters, searchQuery, refreshKey }) {
   const [outgoingVisits, setOutgoingVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
   const [selectedVisitForModal, setSelectedVisitForModal] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1); 
+  const [currentPage, setCurrentPage] = useState(1);
 
   // The base URL for the storage. Replace this with your actual Laravel storage URL.
   const LARAVEL_APP_STORAGE_URL = "YOUR_LARAVEL_APP_STORAGE_URL";
@@ -60,8 +60,8 @@ function TabOutgoing({ filters, searchQuery }) {
   // UseEffect to fetch data whenever filters, search query, or page changes
   useEffect(() => {
     fetchOutgoingVisits();
-  }, [filters, searchQuery, currentPage]);
-  
+  }, [filters, searchQuery, currentPage,refreshKey]);
+
 
 
   const fetchOutgoingVisits = async () => {
@@ -87,7 +87,7 @@ function TabOutgoing({ filters, searchQuery }) {
       setPagination(response.data.pagination || {});
     } catch (error) {
       console.error("Error fetching outgoing visits:", error);
-      setOutgoingVisits([]); 
+      setOutgoingVisits([]);
        toast.error("Failed to fetch outgoing visits. Please try again.', 'error'");
     } finally {
       setLoading(false);
@@ -119,7 +119,7 @@ function TabOutgoing({ filters, searchQuery }) {
       printWindow.print();
       printWindow.close();
     } else {
-      console.error("Print modal not found."); 
+      console.error("Print modal not found.");
       toast.error("Print modal not found.', error");
     }
   };
@@ -353,7 +353,7 @@ function TabOutgoing({ filters, searchQuery }) {
           </div>
         </div>
       )}
-     
+
     </div>
   );
 }

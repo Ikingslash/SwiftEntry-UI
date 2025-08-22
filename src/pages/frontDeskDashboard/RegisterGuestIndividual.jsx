@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import api from "../../context/api";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
-import { toast } from 'react-toastify'; // Added toast import
+import { toast } from "react-toastify";
+import { requestForToken, onMessageListener } from "../../context/firebase";
 
 export default function RegisterGuestIndividual() {
   const [formData, setFormData] = useState({
@@ -12,13 +13,15 @@ export default function RegisterGuestIndividual() {
     address: "",
     visit_time: "",
     host_name: "",
+    host_id: "", // Added host_id to state
+    host_role: "", // Added host_role to state
     building: "",
     floor: "",
     purpose: "",
     special_requirements: "",
     emergency_contact: "",
     details: "",
-    photo: "",
+    photo: null, // Initialize photo as null
   });
 
   const [loading, setLoading] = useState(false);
@@ -26,17 +29,100 @@ export default function RegisterGuestIndividual() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
   const [qrValue, setQrValue] = useState("");
   const printRef = useRef();
 
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken().catch((err) => {
+      console.error("An error occurred while retrieving token. ", err);
+      toast.error("Failed to retrieve FCM token: " + err.message); // More user-friendly error
+    });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
+    // Fetch the list of all app users (staff, security, front desk)
+    api
+      .get("/frontdesk-app-users")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data.users)) {
+          setAppUsers(response.data.users);
+        } else {
+          console.error(
+            "API response for users is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for users is not an array: Please check the backend response."
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch app users:", error);
+        toast.error(
+          "Failed to fetch app users: " +
+            (error.response?.data?.message || "Server error.")
+        );
+      });
+
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/front-desk/guests/settings/visit-purposes") // Ensure this matches your api.php route
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        } else {
+          console.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for purposes is not an array: Please check the backend response."
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch visit purposes:", error);
+        toast.error(
+          "Failed to fetch visit purposes: " +
+            (error.response?.data?.message || "Server error.")
+        );
+      });
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, selectedOptions } = e.target;
+    // Special handling for the host selection to also get the ID and Role
+    if (name === "host_id") {
+      const selectedHostName = selectedOptions[0]?.text.split("(")[0].trim();
+      const selectedHostRole = selectedOptions[0]?.dataset.role;
+      setFormData({
+        ...formData,
+        host_id: value,
+        host_name: selectedHostName, // Keep host_name for display
+        host_role: selectedHostRole,
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, photo: file }));
+      setFormData((prev) => ({
+        ...prev,
+        photo: file,
+      }));
       setSelectedImage(URL.createObjectURL(file));
     }
   };
@@ -47,30 +133,45 @@ export default function RegisterGuestIndividual() {
 
     const formDataToSend = new FormData();
 
+    // Append all non-photo, non-visit_time, non-host_id, non-host_role fields first
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "photo" && key !== "visit_time") {
+      if (
+        key !== "photo" &&
+        key !== "visit_time" &&
+        key !== "host_id" &&
+        key !== "host_role"
+      ) {
         formDataToSend.append(key, value);
       }
     });
 
+    // Format visit_time
     if (formData.visit_time) {
       const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime.getTime())) { // Check if date is valid
+      if (!isNaN(visitTime.getTime())) {
+        // Check if date is valid
         const formattedVisitTime = visitTime
           .toISOString()
           .slice(0, 19)
           .replace("T", " ");
         formDataToSend.append("visit_time", formattedVisitTime);
       } else {
-        toast.error("Invalid visit time format."); // Changed alert to toast
+        toast.error(
+          "Invalid visit time format. Please select a valid date and time."
+        );
         setLoading(false);
         return;
       }
     }
 
-    if (formData.photo) {
+    // Append photo if it exists and is a File object
+    if (formData.photo instanceof File) {
       formDataToSend.append("photo", formData.photo);
     }
+
+    // Append host_id and host_role
+    formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_role", formData.host_role);
 
     try {
       const response = await api.post(
@@ -86,6 +187,28 @@ export default function RegisterGuestIndividual() {
       if (response.status === 200 || response.status === 201) {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
+
+        // Trigger notification to host
+        if (formData.host_id && formData.host_role) {
+          try {
+            await api.post("/genereal-notify-host", {
+              host_id: formData.host_id,
+              host_role: formData.host_role,
+              guest_name: formData.name,
+              purpose: formData.purpose,
+            });
+            console.log("Notification trigger sent to backend.");
+            toast.success("Notification sent to host successfully.");
+          } catch (notificationError) {
+            console.error("Failed to trigger notification:", notificationError);
+            toast.error(
+              "Failed to send host notification: " +
+                (notificationError.response?.data?.message || "Server error.")
+            );
+          }
+        } else {
+          console.warn("Host ID or Role missing, skipping host notification.");
+        }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
@@ -108,6 +231,7 @@ export default function RegisterGuestIndividual() {
           setQrValue(visit.code);
         }
 
+        // Reset form data after successful submission
         setFormData({
           name: "",
           contact_number: "",
@@ -115,6 +239,8 @@ export default function RegisterGuestIndividual() {
           address: "",
           visit_time: "",
           host_name: "",
+          host_id: "",
+          host_role: "",
           building: "",
           floor: "",
           purpose: "",
@@ -125,18 +251,20 @@ export default function RegisterGuestIndividual() {
         });
         setSelectedImage(null);
 
-        toast.success("Visitor registered successfully!"); // Added success toast
+        toast.success("Visitor registered successfully!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error("Error: " + (response.data.message || "Something went wrong")); // Changed alert to toast
+        toast.error(
+          "Error: " + (response.data.message || "Something went wrong")
+        );
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error( // Changed alert to toast
+      toast.error(
         "Failed to register guest. " +
           (error.response?.data?.message || "Server error.")
       );
@@ -148,19 +276,23 @@ export default function RegisterGuestIndividual() {
   const handlePrint = () => {
     const element = printRef.current;
     if (element) {
-      const printWindow = window.open('', '', 'height=600,width=800');
-      printWindow.document.write('<html><head><title>Visitor Badge</title>');
+      const printWindow = window.open("", "", "height=600,width=800");
+      printWindow.document.write("<html><head><title>Visitor Badge</title>");
       // Include Bootstrap CSS for styling in the printout
-      printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write('<div class="p-5">' + element.innerHTML + '</div>');
-      printWindow.document.write('</body></html>');
+      printWindow.document.write(
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+      );
+      printWindow.document.write("</head><body>");
+      printWindow.document.write(
+        '<div class="p-5">' + element.innerHTML + "</div>"
+      );
+      printWindow.document.write("</body></html>");
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
       printWindow.close();
     } else {
-      toast.error("Error: Print content not found."); // Toast for print error
+      toast.error("Error: Print content not found.");
     }
   };
 
@@ -178,13 +310,13 @@ export default function RegisterGuestIndividual() {
           })
           .from(element)
           .save()
-          .catch(err => {
+          .catch((err) => {
             console.error("Error generating PDF:", err);
-            toast.error("Failed to generate PDF. Please try again."); // Toast for PDF error
+            toast.error("Failed to generate PDF. Please try again.");
           });
       }, 100);
     } else {
-      toast.error("Error: Content for PDF not found."); // Toast for PDF content error
+      toast.error("Error: Content for PDF not found.");
     }
   };
 
@@ -275,15 +407,26 @@ export default function RegisterGuestIndividual() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter host name"
-                      name="host_name"
-                      value={formData.host_name}
+                    <select
+                      className="form-select rounded-pill"
+                      id="host_id"
+                      name="host_id"
+                      value={formData.host_id}
                       onChange={handleChange}
                       required
-                    />
+                    >
+                      <option value="">Select a host</option>
+                      {appUsers.map((user) => (
+                        // Using a composite key for uniqueness and passing role as a data attribute
+                        <option
+                          key={user.role + "-" + user.id}
+                          value={user.id}
+                          data-role={user.role}
+                        >
+                          {user.name} ({user.role})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="row">
                     <div className="col-md-6">
@@ -333,17 +476,14 @@ export default function RegisterGuestIndividual() {
                       name="purpose"
                       value={formData.purpose}
                       onChange={handleChange}
+                      required
                     >
                       <option value="">Select Purpose</option>
-                      <option value="recruitment">Recruitment</option>
-                      <option value="business meeting">Business Meeting</option>
-                      <option value="repairs/maintenance">
-                        Repair/Maintenance
-                      </option>
-                      <option value="personal/official">
-                        personal/official
-                      </option>
-                      <option value="other">others</option>
+                      {visitPurposes.map((purpose, index) => (
+                        <option key={index} value={purpose}>
+                          {purpose}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -415,7 +555,7 @@ export default function RegisterGuestIndividual() {
                   <label className="form-label">
                     Special Requirements (Optional)
                   </label>
-                  
+
                   <select
                     className="form-select"
                     name="special_requirements"
@@ -423,13 +563,13 @@ export default function RegisterGuestIndividual() {
                     onChange={handleChange}
                   >
                     <option value="">Select special requirements</option>
-                    <option value="wheelchair/accessibility">Wheelchair Access</option>
+                    <option value="wheelchair/accessibility">
+                      Wheelchair Access
+                    </option>
                     <option value="sign_language_interpreter">
                       Sign Language Interpreter
                     </option>
-                    <option value="parking space">
-                      Parking Space
-                    </option>
+                    <option value="parking space">Parking Space</option>
                     <option value="language interpretation">
                       Language Translation
                     </option>
@@ -516,14 +656,25 @@ export default function RegisterGuestIndividual() {
                   </div>
                   <div className="card-body d-flex">
                     <div className="me-3">
-                      <img
-                        src="http://127.0.0.1:8000/storage/images/user2.png"
-                        alt="Guest"
-                        className="rounded-circle shadow"
-                        width="100"
-                        height="100"
-                        style={{ border: "4px solid #007bff" }}
-                      />
+                      {guestDetails.photo ? (
+                        <img
+                          src={guestDetails.photo}
+                          alt="Guest"
+                          className="img-fluid rounded-circle border border-primary"
+                          style={{
+                            width: "120px",
+                            height: "120px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto border border-primary"
+                          style={{ width: "120px", height: "120px" }}
+                        >
+                          <span className="text-muted">No Photo</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
@@ -554,7 +705,7 @@ export default function RegisterGuestIndividual() {
                     <div>
                       {typeof guestDetails.id === "string" &&
                       guestDetails.id.length > 0 ? (
-                        <QRCode value={guestDetails.id} size={130} />
+                        <QRCode value={guestDetails.id} size={130} level="H" />
                       ) : (
                         <div className="text-muted">QR not ready</div>
                       )}

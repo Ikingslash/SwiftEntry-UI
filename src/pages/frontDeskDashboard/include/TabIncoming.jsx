@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../../context/api"; 
+import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
 // Pagination component to display page numbers and navigation buttons.
@@ -48,7 +48,7 @@ const Pagination = ({ pagination, handlePageChange }) => {
 };
 
 
-function TabIncoming({ filters, searchQuery }) {
+function TabIncoming({ filters, searchQuery, refreshKey }) {
   const [incomingVisits, setIncomingVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
@@ -62,9 +62,9 @@ function TabIncoming({ filters, searchQuery }) {
   // UseEffect to fetch data whenever filters, search query, or page changes
   useEffect(() => {
     fetchIncomingVisits();
-  }, [filters, searchQuery, currentPage]);
+  }, [filters, searchQuery, currentPage, refreshKey]);
 
- 
+
 
   const fetchIncomingVisits = async () => {
     setLoading(true);
@@ -78,7 +78,8 @@ function TabIncoming({ filters, searchQuery }) {
       }
 
       // Determine status_filter based on filters. Pending will filter for pre-registered visits.
-      let statusFilterParam = 'scheduled_visit';
+      let statusFilterParam =
+        "scheduled_visit, pre_registered_visit, Walk_In";
       if (filters.pending) {
         statusFilterParam = 'pre_registered_visit';
       }
@@ -349,7 +350,7 @@ function TabIncoming({ filters, searchQuery }) {
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }
