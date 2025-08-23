@@ -19,6 +19,7 @@ import NewGuest from "./pages/staffDashboard/NewGuest";
 import Notifications from "./pages/staffDashboard/Notifications";
 import Profile from "./pages/staffDashboard/Profile";
 import ManageGuestsIndividual from "./pages/staffDashboard/ManageGuestsIndividual";
+import StaffSettings from "./pages/staffDashboard/StaffSettings";
 
 import FrontDeskLayout from "./layout/FrontDeskLayout";
 import FrontDeskDashboard from "./pages/FrontDeskDashboard";
@@ -26,6 +27,8 @@ import RegisterGuest from "./pages/frontDeskDashboard/RegisterGuest";
 import VisitHistory from "./pages/frontDeskDashboard/VisitHistory";
 import FrontDeskNotifications from "./pages/frontDeskDashboard/FrontDeskNotifications";
 import FrontDeskProfile from "./pages/frontDeskDashboard/FrontDeskProfile";
+import FrontDeskSettings from "./pages/frontDeskDashboard/FrontDeskSettings";
+
 
 import SecurityLayout from "./layout/SecurityLayout";
 import SecurityDashboard from "./pages/SecurityDashboard";
@@ -35,6 +38,7 @@ import RegisterNewGuest from "./pages/securityDashboard/RegisterNewGuest";
 import VisitSecurityHistory from "./pages/securityDashboard/VisitSecurityHistory";
 import SecurityNotifications from "./pages/securityDashboard/SecurityNotifications";
 import SecurityProfile from "./pages/securityDashboard/SecurityProfile";
+import SecuritySettings from "./pages/securityDashboard/SecuritySettings";
 
 import AdminLayout from "./layout/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -48,76 +52,107 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 
 function App() {
  return (
-    <div className="App">
-        <AuthProvider>
-          <NotificationProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<SignIn />} />
-              <Route path="/loading" element={<Loading />} />
-              <Route path="/password-success" element={<PasswordSuccessAlert />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/verify-account" element={<VerifyAccount />} />
-              <Route path="/set-new-password" element={<SetNewPassword />} />
+   <div className="App">
+     <AuthProvider>
+       <NotificationProvider>
+         <Routes>
+           {/* Public Routes */}
+           <Route path="/" element={<SignIn />} />
+           <Route path="/loading" element={<Loading />} />
+           <Route path="/password-success" element={<PasswordSuccessAlert />} />
+           <Route path="/forgot-password" element={<ForgotPassword />} />
+           <Route path="/verify-account" element={<VerifyAccount />} />
+           <Route path="/set-new-password" element={<SetNewPassword />} />
 
-              {/* Protected Routes */}
-              <Route path="/staff-dashboard/*" element={
-                <PrivateRoute requiredRole="staff">
-                  <StaffLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<Dashboard />} />
-                <Route path="new-guest" element={<NewGuest />} />
-                <Route path="manage-guest" element={<ManageGuestsIndividual />} />
-                <Route path="notifications" element={<Notifications />} />
-                <Route path="profile" element={<Profile />} />
-              </Route>
+           {/* Protected Routes */}
+           <Route
+             path="/staff-dashboard/*"
+             element={
+               <PrivateRoute requiredRole="staff">
+                 <StaffLayout />
+               </PrivateRoute>
+             }
+           >
+             <Route index element={<Dashboard />} />
+             <Route path="new-guest" element={<NewGuest />} />
+             <Route path="manage-guest" element={<ManageGuestsIndividual />} />
+             <Route path="notifications" element={<Notifications />} />
+             <Route path="profile" element={<Profile />} />
+              <Route
+               path="staff-settings"
+               element={<StaffSettings />}
+             />
+           </Route>
 
-              <Route path="/front-desk-dashboard/*" element={
-                <PrivateRoute requiredRole="front_desk">
-                  <FrontDeskLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<FrontDeskDashboard />} />
-                <Route path="register-guest" element={<RegisterGuest />} />
-                <Route path="history" element={<VisitHistory />} />
-                <Route path="notifications" element={<FrontDeskNotifications />} />
-                <Route path="profile" element={<FrontDeskProfile />} />
-              </Route>
+           <Route
+             path="/front-desk-dashboard/*"
+             element={
+               <PrivateRoute requiredRole="front_desk">
+                 <FrontDeskLayout />
+               </PrivateRoute>
+             }
+           >
+             <Route index element={<FrontDeskDashboard />} />
+             <Route path="register-guest" element={<RegisterGuest />} />
+             <Route path="history" element={<VisitHistory />} />
+             <Route path="notifications" element={<FrontDeskNotifications />} />
+             <Route path="profile" element={<FrontDeskProfile />} />
+             <Route
+               path="front-desk-settings"
+               element={<FrontDeskSettings />}
+             />
+           </Route>
 
-              <Route path="/admin-dashboard/*" element={
-                <PrivateRoute requiredRole="admin">
-                  <AdminLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<AdminDashboard />} />
-                <Route path="visitors" element={<AdminVisitors />} />
-                <Route path="staffs" element={<AdminStaff />} />
-                <Route path="analytical-report" element={<AnalyticalAndReport />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="profile" element={<AdminProfile />} />
-                <Route path="notifications" element={<AdminNotifications />} />
-              </Route>
+           <Route
+             path="/admin-dashboard/*"
+             element={
+               <PrivateRoute requiredRole="admin">
+                 <AdminLayout />
+               </PrivateRoute>
+             }
+           >
+             <Route index element={<AdminDashboard />} />
+             <Route path="visitors" element={<AdminVisitors />} />
+             <Route path="staffs" element={<AdminStaff />} />
+             <Route
+               path="analytical-report"
+               element={<AnalyticalAndReport />}
+             />
+             <Route path="settings" element={<AdminSettings />} />
+             <Route path="profile" element={<AdminProfile />} />
+             <Route path="notifications" element={<AdminNotifications />} />
+           </Route>
 
-              <Route path="/security-dashboard/*" element={
-                <PrivateRoute requiredRole="security">
-                  <SecurityLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<SecurityDashboard />} />
-                <Route path="generate-qr-code" element={<GenerateQRCode />} />
-                <Route path="generate-by-unique-code" element={<GenerateByUniqueCode />} />
-                <Route path="register-new-guest" element={<RegisterNewGuest />} />
-                <Route path="history" element={<VisitSecurityHistory />} />
-                <Route path="notifications" element={<SecurityNotifications />} />
-                <Route path="profile" element={<SecurityProfile />} />
-              </Route>
-            </Routes>
-          </NotificationProvider>
-        </AuthProvider>
-        <ToastContainer />
-    </div>
-  );
+           <Route
+             path="/security-dashboard/*"
+             element={
+               <PrivateRoute requiredRole="security">
+                 <SecurityLayout />
+               </PrivateRoute>
+             }
+           >
+             <Route index element={<SecurityDashboard />} />
+             <Route path="generate-qr-code" element={<GenerateQRCode />} />
+             <Route
+               path="generate-by-unique-code"
+               element={<GenerateByUniqueCode />}
+             />
+             <Route path="register-new-guest" element={<RegisterNewGuest />} />
+             <Route path="history" element={<VisitSecurityHistory />} />
+             <Route path="notifications" element={<SecurityNotifications />} />
+             <Route path="profile" element={<SecurityProfile />} />
+             <Route
+               path="security-settings"
+               element={<SecuritySettings />}
+             />
+           </Route>
+
+         </Routes>
+       </NotificationProvider>
+     </AuthProvider>
+     <ToastContainer />
+   </div>
+ );
 }
 
 export default App;

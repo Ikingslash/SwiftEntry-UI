@@ -43,7 +43,10 @@ function Navbar() {
         </button>
 
         {/* Nav Links */}
-        <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <div
+          className="collapse navbar-collapse justify-content-center"
+          id="navbarNav"
+        >
           <ul className="navbar-nav text-center fs-6">
             <li className="nav-item">
               <NavLink
@@ -105,7 +108,7 @@ function Navbar() {
           >
             <i
               className="bi bi-bell fs-4 text-white rounded-circle p-2"
-               style={{
+              style={{
                 backgroundColor: "rgba(255, 255, 255, 0.2)",
                 transition: "0.3s ease-in-out",
               }}
@@ -120,13 +123,6 @@ function Navbar() {
               </span>
             )}
           </NavLink>
-
-
-
-
-
-
-
 
           {/* User Profile Dropdown */}
           <div className="dropdown">
@@ -143,17 +139,17 @@ function Navbar() {
               }}
             >
               <span className="fw-semibold">{user?.name}</span>
-           <img
-              src={
-                user?.profile_picture
-                  ? `http://127.0.0.1:8000/storage/${user.profile_picture}`
-                  : "/default-avatar.png"
-              }
-              alt="Profile"
-              className="rounded-circle border"
-              width="40"
-              height="40"
-            />
+              <img
+                src={
+                  user?.profile_picture
+                    ? `http://127.0.0.1:8000/storage/${user.profile_picture}`
+                    : "/default-avatar.png"
+                }
+                alt="Profile"
+                className="rounded-circle border"
+                width="40"
+                height="40"
+              />
             </button>
 
             {/* Remove the default arrow using inline style or override */}
@@ -170,28 +166,28 @@ function Navbar() {
               aria-labelledby="profileDropdown"
             >
               <li>
-                   <NavLink
-                   className={`dropdown-item py-2 ${
-                  location.pathname === "/staff-dashboard/profile"
-                    ? "text-primary bg-white fw-bold"
-                    : "text-dark bg-white"
-                }`}
-                to="/staff-dashboard/profile"
-              >
-                Profile
-              </NavLink>
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/staff-dashboard/profile"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/staff-dashboard/profile"
+                >
+                  Profile
+                </NavLink>
               </li>
               <li>
-                  <NavLink
-                className={`dropdown-item py-2 ${
-                  location.pathname === "/staff-dashboard/settings"
-                    ? "text-primary bg-white fw-bold"
-                    : "text-dark bg-white"
-                }`}
-                to="/staff-dashboard/profile"
-              >
-                Settings
-              </NavLink>
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/staff-dashboard/staff-settings"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/staff-dashboard/staff-settings"
+                >
+                  Settings
+                </NavLink>
               </li>
               <li>
                 <hr className="dropdown-divider" />

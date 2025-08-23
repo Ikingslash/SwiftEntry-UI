@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import api from "../../../context/api"; 
+import api from "../../../context/api";
 import echo from '../../../context/echo';
 import { useNotifications } from "../../../context/NotificationContext";
 
 function Navbar() {
    const location = useLocation();
   const { user, logout } = useAuth();
-    const { unreadCount, setUnreadCount, markAllAsRead } = useNotifications(); 
+    const { unreadCount, setUnreadCount, markAllAsRead } = useNotifications();
 
       useEffect(() => {
     if (location.pathname === "/notifications" && unreadCount > 0) {
@@ -24,7 +24,10 @@ function Navbar() {
     >
       <div className="container">
         {/* Logo on the left */}
-        <a className="navbar-brand fw-bold text-white pt-2" href="/security-dashboard">
+        <a
+          className="navbar-brand fw-bold text-white pt-2"
+          href="/security-dashboard"
+        >
           <img src="../image.png" width={140} alt="Logo" />
         </a>
 
@@ -83,7 +86,7 @@ function Navbar() {
                 }`}
                 to="/security-dashboard/history"
               >
-               History
+                History
               </NavLink>
             </li>
             <li className="nav-item">
@@ -104,14 +107,14 @@ function Navbar() {
         {/* Right Side Icons */}
         <div className="d-flex align-items-center">
           {/* Notification Icon */}
-        <NavLink
+          <NavLink
             className="me-3 position-relative d-flex align-items-center"
             to="/security-dashboard/notifications"
           >
             <i
               className="bi bi-bell fs-4 text-white rounded-circle p-2"
               style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
-            ></i> 
+            ></i>
 
             {unreadCount > 0 && (
               <span
@@ -124,7 +127,7 @@ function Navbar() {
           </NavLink>
 
           {/* User Profile Dropdown */}
-           <div className="dropdown">
+          <div className="dropdown">
             <button
               className="btn text-white d-flex align-items-center dropdown-toggle"
               type="button"
@@ -148,7 +151,7 @@ function Navbar() {
             </button>
 
             {/* Remove the default arrow using inline style or override */}
-         <style>
+            <style>
               {`
                 #profileDropdown::after {
                   display: none !important;
@@ -160,29 +163,30 @@ function Navbar() {
               className="dropdown-menu dropdown-menu-end"
               aria-labelledby="profileDropdown"
             >
-             <li> 
-                   <NavLink
-                   className={`dropdown-item py-2 ${
-                  location.pathname === "/security-dashboard/profile"
-                    ? "text-primary bg-white fw-bold"
-                    : "text-dark bg-white"
-                }`} 
-                to="/security-dashboard/profile"
-              >
-                Profile
-              </NavLink>
+              <li>
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname === "/security-dashboard/profile"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/security-dashboard/profile"
+                >
+                  Profile
+                </NavLink>
               </li>
               <li>
-                  <NavLink 
-                className={`dropdown-item py-2 ${
-                  location.pathname === "/security-dashboard/settings"
-                    ? "text-primary bg-white fw-bold"
-                    : "text-dark bg-white"
-                }`} 
-                to="/security-dashboard/profile"
-              >
-                Settings
-              </NavLink> 
+                <NavLink
+                  className={`dropdown-item py-2 ${
+                    location.pathname ===
+                    "/security-dashboard/security-settings"
+                      ? "text-primary bg-white fw-bold"
+                      : "text-dark bg-white"
+                  }`}
+                  to="/security-dashboard/security-settings"
+                >
+                  Settings
+                </NavLink>
               </li>
               <li>
                 <hr className="dropdown-divider" />
