@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import api from "../../context/api";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
-import { toast } from 'react-toastify'; // Added toast import
+import { toast } from "react-toastify";
+import { requestForToken, onMessageListener } from "../../context/firebase";
 
 export default function RegisterNewGuestIndividual() {
   const [formData, setFormData] = useState({
@@ -28,9 +29,101 @@ export default function RegisterNewGuestIndividual() {
   const [guestDetails, setGuestDetails] = useState({});
   const [qrValue, setQrValue] = useState("");
   const printRef = useRef();
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
+
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          console.log("FCM token:", fcmToken);
+          toast.info("FCM token:", fcmToken);
+
+          api
+            .post("/save-fcm-token", { fcm_token: fcmToken })
+            .then((response) => {
+              console.log("FCM token saved on backend:", response.data);
+              toast.success("FCM token saved on backend:", response.data);
+            })
+            .catch((error) => {
+              console.error("Failed to save FCM token on backend:", error);
+              toast.error("Failed to save FCM token on backend:", error);
+            });
+        }
+      })
+      .catch((err) => {
+        console.error("An error occurred while retrieving token. ", err);
+        toast.error("Failed to retrieve FCM token:", err);
+      });
+
+    // Fetch the list of all app users (staff, security, front desk)
+    api
+      .get("/frontdesk-app-users")
+      .then((response) => {
+        // Assuming the response is an array of user names
+        if (response.data && Array.isArray(response.data.users)) {
+          setAppUsers(response.data.users);
+        } else {
+          console.error(
+            "API response for users is not an array:",
+            response.data
+          );
+
+          toast.error("API response for users is not an array:", response.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch app users:", error);
+        toast.error("Failed to fetch app users:", error);
+      });
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/security/settings/visit-purposes")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        } else {
+          console.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+          toast.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch visit purposes:", error);
+        toast.error("Failed to fetch visit purposes:", error);
+      });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, selectedOptions } = e.target;
+    // Special handling for the host selection to also get the ID
+    if (name === "host_id") {
+      const selectedHostName = selectedOptions[0]?.text;
+      const selectedHostRole = selectedOptions[0]?.dataset.role;
+      setFormData({
+        ...formData,
+        host_id: value,
+        host_name: selectedHostName, // Keep host_name for display
+        host_role: selectedHostRole,
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageChange = (e) => {
@@ -48,14 +141,20 @@ export default function RegisterNewGuestIndividual() {
     const formDataToSend = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "photo" && key !== "visit_time") {
+      if (
+        key !== "photo" &&
+        key !== "visit_time" &&
+        key !== "host_id" &&
+        key !== "host_role"
+      ) {
         formDataToSend.append(key, value);
       }
     });
 
     if (formData.visit_time) {
       const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime.getTime())) { // Check if date is valid
+      if (!isNaN(visitTime.getTime())) {
+        // Check if date is valid
         const formattedVisitTime = visitTime
           .toISOString()
           .slice(0, 19)
@@ -66,7 +165,7 @@ export default function RegisterNewGuestIndividual() {
         setLoading(false);
         return;
       }
-    }
+    } 
 
     if (formData.photo) {
       formDataToSend.append("photo", formData.photo);
@@ -87,11 +186,28 @@ export default function RegisterNewGuestIndividual() {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
 
+        try {
+          await api.post("/staff/notify-host", {
+            host_id: formData.host_id,
+            host_role: formData.host_role, // Now sending the role
+            guest_name: formData.name,
+            purpose: formData.purpose,
+          });
+          console.log("Notification trigger sent to backend.");
+          toast.success("Notification sent to host successfully.");
+        } catch (notificationError) {
+          console.error("Failed to trigger notification:", notificationError);
+          // Don't stop the main process, just log the error.
+          toast.error(
+            "Failed to send notification. " +
+              (notificationError.response?.data?.message || "Server error.")
+          );
+        }
+
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
         const date = visitTimeParts?.[0] || "";
         const time = visitTimeParts?.[1] || "";
-
         setGuestDetails({
           name: visitor.name,
           id: visit.code || "",
@@ -115,6 +231,7 @@ export default function RegisterNewGuestIndividual() {
           address: "",
           visit_time: "",
           host_name: "",
+          host_id: "",
           building: "",
           floor: "",
           purpose: "",
@@ -132,11 +249,14 @@ export default function RegisterNewGuestIndividual() {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error("Error: " + (response.data.message || "Something went wrong")); // Changed alert to toast
+        toast.error(
+          "Error: " + (response.data.message || "Something went wrong")
+        ); // Changed alert to toast
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error( // Changed alert to toast
+      toast.error(
+        // Changed alert to toast
         "Failed to register guest. " +
           (error.response?.data?.message || "Server error.")
       );
@@ -148,13 +268,17 @@ export default function RegisterNewGuestIndividual() {
   const handlePrint = () => {
     const element = printRef.current;
     if (element) {
-      const printWindow = window.open('', '', 'height=600,width=800');
-      printWindow.document.write('<html><head><title>Visitor Badge</title>');
+      const printWindow = window.open("", "", "height=600,width=800");
+      printWindow.document.write("<html><head><title>Visitor Badge</title>");
       // Include Bootstrap CSS for styling in the printout
-      printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write('<div class="p-5">' + element.innerHTML + '</div>');
-      printWindow.document.write('</body></html>');
+      printWindow.document.write(
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+      );
+      printWindow.document.write("</head><body>");
+      printWindow.document.write(
+        '<div class="p-5">' + element.innerHTML + "</div>"
+      );
+      printWindow.document.write("</body></html>");
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
@@ -178,7 +302,7 @@ export default function RegisterNewGuestIndividual() {
           })
           .from(element)
           .save()
-          .catch(err => {
+          .catch((err) => {
             console.error("Error generating PDF:", err);
             toast.error("Failed to generate PDF. Please try again.");
           });
@@ -275,15 +399,25 @@ export default function RegisterNewGuestIndividual() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter host name"
-                      name="host_name"
-                      value={formData.host_name}
+                    <select
+                      className="form-select rounded-pill"
+                      name="host_id"
+                      value={formData.host_id}
                       onChange={handleChange}
                       required
-                    />
+                    >
+                      <option value="">Select a host</option>
+                      {appUsers.map((user) => (
+                        // We now use a composite key for uniqueness
+                        <option
+                          key={user.role + "-" + user.id}
+                          value={user.id}
+                          data-role={user.role}
+                        >
+                          {user.name} ({user.role})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="row">
                     <div className="col-md-6">
@@ -335,15 +469,11 @@ export default function RegisterNewGuestIndividual() {
                       onChange={handleChange}
                     >
                       <option value="">Select Purpose</option>
-                      <option value="recruitment">Recruitment</option>
-                      <option value="business meeting">Business Meeting</option>
-                      <option value="repairs/maintenance">
-                        Repair/Maintenance
-                      </option>
-                      <option value="personal/official">
-                        personal/official
-                      </option>
-                      <option value="other">others</option>
+                      {visitPurposes.map((purpose, index) => (
+                        <option key={purpose} value={purpose}>
+                          {purpose}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -415,7 +545,7 @@ export default function RegisterNewGuestIndividual() {
                   <label className="form-label">
                     Special Requirements (Optional)
                   </label>
-                  
+
                   <select
                     className="form-select"
                     name="special_requirements"
@@ -423,13 +553,13 @@ export default function RegisterNewGuestIndividual() {
                     onChange={handleChange}
                   >
                     <option value="">Select special requirements</option>
-                    <option value="wheelchair/accessibility">Wheelchair Access</option>
+                    <option value="wheelchair/accessibility">
+                      Wheelchair Access
+                    </option>
                     <option value="sign_language_interpreter">
                       Sign Language Interpreter
                     </option>
-                    <option value="parking space">
-                      Parking Space
-                    </option>
+                    <option value="parking space">Parking Space</option>
                     <option value="language interpretation">
                       Language Translation
                     </option>

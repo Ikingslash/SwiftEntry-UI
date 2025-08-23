@@ -399,7 +399,7 @@ export default function NewGuestIndividual() {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label">Host</label> 
+                    <label className="form-label">Host</label>
                     <select
                       className="form-select rounded-pill"
                       name="host_id"

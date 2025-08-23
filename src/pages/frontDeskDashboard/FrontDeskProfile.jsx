@@ -4,6 +4,7 @@ import NavBar from "./include/NavBar";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { IoPencil } from 'react-icons/io5';
 
 // Removed the Pagination component as it's not relevant for a profile page.
 
@@ -12,12 +13,25 @@ function FrontDeskProfile() {
   const { logout } = useAuth(); // Assume AuthContext provides 'user' and 'logout'
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState({
+      name: "",
+      email: "",
+      position: "",
+      company_name: "",
+      employee_id: "",
+    });
+
 
   // Function to fetch the user's profile data
   const fetchProfileData = async () => {
+    setLoading(true);
+
     try {
       const response = await api.get("front-desk/profile");
       setProfileData(response.data);
+      setFormData(response.data);
+
       toast.success("Profile loaded successfully!");
     } catch (error) {
       console.error("Error fetching profile data:", error);
@@ -31,6 +45,7 @@ function FrontDeskProfile() {
   // Fetch profile data on component mount
   useEffect(() => {
     fetchProfileData();
+
   }, []); // Empty dependency array means this runs once on mount
 
   // Handle logout
@@ -44,6 +59,33 @@ function FrontDeskProfile() {
       toast.error("Failed to log out. Please try again."); // Corrected error message
     }
   };
+
+    const handleEditClick = () => {
+      setIsModalOpen(true);
+    };
+
+    const handleFormChange = (e) => {
+      const { name, value } = e.target;
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    };
+
+    const handleFormSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        // Send the updated data to the backend
+        const response = await api.put("/front-desk/update-profile", formData);
+        setProfileData(response.data); // Update the profile data state
+        setIsModalOpen(false); // Close the modal
+        toast.success("Profile updated successfully!");
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update profile. Please try again.");
+      }
+    };
+
 
   // Placeholder image for when a profile picture isn't available
   const defaultProfilePicture = "https://placehold.co/100x100";
@@ -129,6 +171,14 @@ function FrontDeskProfile() {
                   </ul>
                 </div>
 
+                  {/* Edit Profile Button */}
+                                <div className="d-grid mt-4 px-3">
+                                  <button onClick={handleEditClick} className="btn btn-primary btn-lg rounded-pill fw-bold">
+                                    <IoPencil className="me-2" />
+                                    Edit Profile
+                                  </button>
+                                </div>
+
                 {/* Log Out Button */}
                 <div className="d-grid mt-5 px-3">
                   <button
@@ -160,7 +210,51 @@ function FrontDeskProfile() {
           </div>
         </div>
       </div>
-      {/* Pagination component removed as it's not applicable to a profile page */}
+
+      {/* Profile Update Modal */}
+      <div className={`modal fade ${isModalOpen ? 'show d-block' : ''}`} tabIndex="-1" style={{ backgroundColor: isModalOpen ? 'rgba(0, 0, 0, 0.5)' : 'transparent' }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Edit Profile</h5>
+              <button type="button" className="btn-close" onClick={() => setIsModalOpen(false)}></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleFormSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="name"
+                    name="name"
+                    value={formData.name || ''}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">Email</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    name="email"
+                    value={formData.email || ''}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+                {/* You can add more fields here if needed */}
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Close</button>
+                  <button type="submit" className="btn btn-primary">Save changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

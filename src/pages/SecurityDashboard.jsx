@@ -2,13 +2,85 @@ import { useState, useEffect, useRef } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import NavBar from "./securityDashboard/include/NavBar";
 import api from "../context/api";
-// import { IDLE_NAVIGATION } from "react-router-dom";
+import AddGuestModal from "./frontDeskDashboard/include/AddGuestModal";
+import { PlusCircle } from "lucide-react";
+import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
 
 function SecurityDashboard() {
   const [scanResult, setScanResult] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const printRef = useRef();
+
+  const [showAddGuest, setShowAddGuest] = useState(false);
+
+  // State variables for the AddGuestModal
+  const [name, setName] = useState("");
+  const [visitorType, setVisitorType] = useState("Individual");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [contact_number, setContact_number] = useState("");
+  const [emergency_contact, setEmergencyContact] = useState("");
+  const [special_requirements, setSpecialRequirements] = useState("");
+  const [photo, setPhoto] = useState("");
+  const [is_vip, setIs_vip] = useState(false);
+  const [is_blacklisted, setIs_blacklisted] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const openAddGuestModal = () => {
+    setShowAddGuest(true);
+  };
+  // Function to handle adding a new guest (connected to the API)
+  const handleAddGuest = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        name,
+        contact_number,
+        email,
+        address,
+        is_vip,
+        is_blacklisted,
+        emergency_contact,
+        special_requirements,
+        photo,
+        visitor_type: visitorType,
+      };
+
+      const response = await api.post("/security/visitors", payload);
+
+      if (response.status === 201) {
+        toast.success("New visitor registered successfully!");
+        setShowAddGuest(false);
+
+        // Reset form fields
+        setName("");
+        setVisitorType("Individual");
+        setEmail("");
+        setAddress("");
+        setContact_number("");
+        setEmergencyContact("");
+        setSpecialRequirements("");
+        setPhoto("");
+        setIs_vip(false);
+        setIs_blacklisted(false);
+
+      } else {
+        toast.error(response.data.message || "Failed to register visitor.");
+      }
+    } catch (error) {
+      console.error("Error creating new visitor:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to create visitor. Please check your network connection.";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner("reader", {
@@ -26,32 +98,46 @@ function SecurityDashboard() {
         console.warn(error);
       }
     );
-  }, []); 
+  }, []);
 
   const fetchUserProfile = async (code) => {
-  try {
-    const response = await api.get(`/security/visit/scan/${code}`);
-    setUserProfile(response.data);
+    try {
+      const response = await api.get(`/security/visit/scan/${code}`);
+      setUserProfile(response.data);
 
-    const modal = new window.bootstrap.Modal(
-      document.getElementById("printTagModal")
-    );
-    modal.show();
-  } catch (error) {
-    console.error("Scan Error:", error);
-    alert("No visitor record found for this code.");
-  }
-};
-
+      const modal = new window.bootstrap.Modal(
+        document.getElementById("printTagModal")
+      );
+      modal.show();
+    } catch (error) {
+      console.error("Scan Error:", error);
+       toast.error("No visitor record found for this code.");
+    }
+  };
 
   const handlePrint = () => {
-    const printContents = printRef.current.innerHTML;
-    const originalContents = document.body.innerHTML;
+     const element = printRef.current;
 
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents;
-    window.location.reload();
+     // Create a new window to print
+     const printWindow = window.open("", "", "height=600,width=800");
+     printWindow.document.write("<html><head><title>Visitor Badge</title>");
+     // Include Bootstrap CSS for styling in the print window
+     printWindow.document.write(
+       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+     );
+     printWindow.document.write("</head><body >");
+     printWindow.document.write('<div class="p-5">');
+     printWindow.document.write(element.outerHTML);
+     printWindow.document.write("</div>");
+     printWindow.document.write("</body></html>");
+     printWindow.document.close();
+
+     // Wait for the content to load and then print
+     printWindow.onload = function () {
+       printWindow.focus();
+       printWindow.print();
+       printWindow.close();
+     };
   };
 
   return (
@@ -77,16 +163,39 @@ function SecurityDashboard() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bold mb-0">Guest Confirmation</h2>
-              <i className="bi bi-plus-circle fs-1 text-primary p-2" style={{ cursor: "pointer" }}></i>
+              <button
+                onClick={openAddGuestModal}
+                className="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-circle"
+                style={{ width: "48px", height: "48px" }}
+              >
+                <PlusCircle
+                  size={24}
+                  className="text-white"
+                  style={{ cursor: "pointer" }}
+                />
+              </button>
+              {/* <i className="bi bi-plus-circle fs-1 text-primary p-2"></i> */}
             </div>
             <div className="d-flex align-items-center mt-2">
-              <p className="badge text-white" style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}>
-                Sydani Group {" "}
-                <span className="badge text-light p-1" style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}>
+              <p
+                className="badge text-white"
+                style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}
+              >
+                Sydani Group{" "}
+                <span
+                  className="badge text-light p-1"
+                  style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}
+                >
                   Company
                 </span>
               </p>
-              <div className="flex-grow-1 ms-2 mb-3" style={{ height: "2px", backgroundColor: "rgba(168, 172, 176, 0.8)" }}></div>
+              <div
+                className="flex-grow-1 ms-2 mb-3"
+                style={{
+                  height: "2px",
+                  backgroundColor: "rgba(168, 172, 176, 0.8)",
+                }}
+              ></div>
             </div>
           </div>
         </div>
@@ -103,24 +212,45 @@ function SecurityDashboard() {
             borderRadius: "10px",
             backgroundColor: "grey",
           }}
-        ></div> 
-         
-              <NavLink  className="mt-4"
-                to="/security-dashboard/generate-by-unique-code"
-              >
-                 <small>Enter Code Instead</small>
-              </NavLink>
-             
+        ></div>
+
+        <NavLink
+          className="mt-4"
+          to="/security-dashboard/generate-by-unique-code"
+        >
+          <small>Enter Code Instead</small>
+        </NavLink>
       </section>
 
       {/* MODAL */}
-      <div className="modal fade" id="printTagModal" tabIndex="-1" aria-hidden="true">
-        <div className="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-sm-down" style={{ maxWidth: "450px", marginLeft: "auto", marginRight: 0, height: "100vh" }}>
-          <div className="modal-content rounded-4 shadow-lg" style={{ border: "none" }}>
+      <div
+        className="modal fade"
+        id="printTagModal"
+        tabIndex="-1"
+        aria-hidden="true"
+      >
+        <div
+          className="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-sm-down"
+          style={{
+            maxWidth: "450px",
+            marginLeft: "auto",
+            marginRight: 0,
+            height: "100vh",
+          }}
+        >
+          <div
+            className="modal-content rounded-4 shadow-lg"
+            style={{ border: "none" }}
+          >
             <div className="modal-header border-0 d-print-none">
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
             </div>
-              {userProfile && (
+            {userProfile && (
               <div className="modal-body px-4" ref={printRef}>
                 <div className="text-center mb-4">
                   <img
@@ -206,6 +336,35 @@ function SecurityDashboard() {
           }
         }
       `}</style>
+
+      {/* Add Guest Modal */}
+      <AddGuestModal
+        show={showAddGuest}
+        onClose={() => setShowAddGuest(false)}
+        name={name}
+        visitorType={visitorType}
+        email={email}
+        address={address}
+        contact_number={contact_number}
+        emergency_contact={emergency_contact}
+        special_requirements={special_requirements}
+        is_vip={is_vip}
+        is_blacklisted={is_blacklisted}
+        photo={photo}
+        setName={setName}
+        setVisitorType={setVisitorType}
+        setEmail={setEmail}
+        setAddress={setAddress}
+        setContact_number={setContact_number}
+        setEmergencyContact={setEmergencyContact}
+        setSpecialRequirements={setSpecialRequirements}
+        setIs_vip={setIs_vip}
+        setIs_blacklisted={setIs_blacklisted}
+        setPhoto={setPhoto}
+        handleAddGuest={handleAddGuest}
+        loading={loading}
+        setLoading={setLoading}
+      />
     </div>
   );
 }

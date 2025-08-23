@@ -39,13 +39,28 @@ function GenerateByUniqueCode() {
   };
 
   const handlePrint = () => {
-    const printContents = printRef.current.innerHTML;
-    const originalContents = document.body.innerHTML;
+       const element = printRef.current;
 
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents;
-    window.location.reload();
+     // Create a new window to print
+     const printWindow = window.open("", "", "height=600,width=800");
+     printWindow.document.write("<html><head><title>Visitor Badge</title>");
+     // Include Bootstrap CSS for styling in the print window
+     printWindow.document.write(
+       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+     );
+     printWindow.document.write("</head><body >");
+     printWindow.document.write('<div class="p-5">');
+     printWindow.document.write(element.outerHTML);
+     printWindow.document.write("</div>");
+     printWindow.document.write("</body></html>");
+     printWindow.document.close();
+
+     // Wait for the content to load and then print
+     printWindow.onload = function () {
+       printWindow.focus();
+       printWindow.print();
+       printWindow.close();
+     };
   };
 
   return (
@@ -69,10 +84,7 @@ function GenerateByUniqueCode() {
           <div className="text-white shadow-sm" style={{ minHeight: "180px" }}>
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bod mb-0">Guest Confirmation</h2>
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+           
             </div>
             <div className="d-flex align-items-center mt-2">
               <p
@@ -128,7 +140,7 @@ function GenerateByUniqueCode() {
                 </div>
               </form>
             </div>
-          
+
 
             <NavLink className="mt-4 d-block" to="/security-dashboard">
               <small>Scan QR Instead</small>

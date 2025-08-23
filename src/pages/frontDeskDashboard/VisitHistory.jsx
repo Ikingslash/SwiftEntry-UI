@@ -140,10 +140,7 @@ const fetchHistory = async () => {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bod mb-0">History</h3>
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+              
             </div>
 
             <div className="d-flex align-items-center mt-2">

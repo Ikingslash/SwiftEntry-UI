@@ -152,7 +152,7 @@ export default function AddGuestModal({
                     name="is_vip"
                     checked={is_vip}
                     onChange={(e) => setIs_vip(e.target.checked)}
-                    required
+
                   />
                   <label className="form-check-label" htmlFor="is_vip">
                     Is VIP?
@@ -168,7 +168,7 @@ export default function AddGuestModal({
                     name="is_blacklisted"
                     checked={is_blacklisted}
                     onChange={(e) => setIs_blacklisted(e.target.checked)}
-                    required
+                   
                   />
                   <label className="form-check-label" htmlFor="is_blacklisted">
                     Is Blacklisted?

@@ -32,13 +32,7 @@ function ManageGuestsIndividual() {
               <h3 className="fw-bold mb-0">Manage Guest</h3>
 
               {/* Plus Icon */}
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{
-                  // border: "1px solid rgba(255, 255, 255, 0.2)", // Correct border styling
-                  cursor: "pointer",
-                }}
-              ></i>
+            
             </div>
 
             <div

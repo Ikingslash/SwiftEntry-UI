@@ -159,9 +159,9 @@ function NewGuestGroup() {
     });
 
 
-    if (formData.visit_time) {
-      formDataToSend.append("visit_time", formData.visit_time);
-    }
+    // if (formData.visit_time) {
+    //   formDataToSend.append("visit_time", formData.visit_time);
+    // }
 
     if (formData.photo) {
       formDataToSend.append("photo", formData.photo);

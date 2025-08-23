@@ -1,7 +1,7 @@
 import React from "react";
 
 function TabPreRegisteredVisitors({ groupedVisits, loading }) {
-  
+
   const sortedDates = Object.keys(groupedVisits || {}).sort(
     (a, b) => new Date(b) - new Date(a)
   );
@@ -31,9 +31,14 @@ function TabPreRegisteredVisitors({ groupedVisits, loading }) {
                 {sortedDates.map((date, index) => (
                   <React.Fragment key={index}>
                     <tr className="table">
-                      <td colSpan="7" className="py-4" style={{ backgroundColor: "#F5FAFE" }}>
-                        
-                        {date === new Date().toISOString().split("T")[0] ? "Today" : date}
+                      <td
+                        colSpan="7"
+                        className="py-4"
+                        style={{ backgroundColor: "#F5FAFE" }}
+                      >
+                        {date === new Date().toISOString().split("T")[0]
+                          ? "Today"
+                          : date}
                       </td>
                     </tr>
                     {groupedVisits[date].map((visit, idx) => (
@@ -52,11 +57,13 @@ function TabPreRegisteredVisitors({ groupedVisits, loading }) {
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
                           {/* Access host name from the 'staff' relationship */}
-                          {visit.staff?.name || "N/A"}
+                          {visit.host_name || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
                           {/* Format the check_in date for display */}
-                          {visit.check_in ? new Date(visit.check_in).toLocaleDateString() : "N/A"}
+                          {visit.check_in
+                            ? new Date(visit.check_in).toLocaleDateString()
+                            : "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
                           {visit.visitor?.special_requirements || "None"}

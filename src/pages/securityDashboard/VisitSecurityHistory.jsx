@@ -17,7 +17,7 @@ function VisitSecurityHistory() {
   const [currentPage, setCurrentPage] = useState(1); // State for current page
 
   // Define perPage here or pass it as a prop if it can be changed by the user
-  const perPage = 10; 
+  const perPage = 10;
 
   useEffect(() => {
     // Reset currentPage to 1 when filters or tabs change
@@ -96,10 +96,7 @@ function VisitSecurityHistory() {
               <h3 className="fw-bod mb-0">History</h3>
 
               {/* Plus Icon */}
-              <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i>
+          
             </div>
 
             {/* Badge & Line Row */}
