@@ -158,10 +158,20 @@ function NewGuestGroup() {
       }
     });
 
-
-    // if (formData.visit_time) {
-    //   formDataToSend.append("visit_time", formData.visit_time);
-    // }
+    if (formData.visit_time) {
+      const visitTime = new Date(formData.visit_time);
+      if (!isNaN(visitTime)) {
+        const formattedVisitTime = visitTime
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+        formDataToSend.append("visit_time", formattedVisitTime);
+      } else {
+        toast.error("Invalid visit time format.");
+        setLoading(false);
+        return;
+      }
+    }
 
     if (formData.photo) {
       formDataToSend.append("photo", formData.photo);

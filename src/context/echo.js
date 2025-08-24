@@ -8,7 +8,7 @@ const echo = new Echo({
   broadcaster: "pusher",
   key: import.meta.env.VITE_PUSHER_APP_KEY,
   cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-  // wsHost: import.meta.env.VITE_ECHO_HOST.replace(/^https?:\/\//, ""),
+  wsHost: import.meta.env.VITE_ECHO_HOST.replace(/^https?:\/\//, ""),
   wsPort: import.meta.env.VITE_ECHO_PORT,
   wssPort: import.meta.env.VITE_ECHO_PORT,
   forceTLS: import.meta.env.VITE_PUSHER_FORCE_TLS === "true",
