@@ -121,7 +121,7 @@ function Navbar() {
             {unreadCount > 0 && (
               <span
                 className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                style={{ fontSize: '0.7em' }}
+                style={{ fontSize: "0.7em" }}
               >
                 {unreadCount}
                 <span className="visually-hidden">unread messages</span>
@@ -145,7 +145,8 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                src={`http://127.0.0.1:8000/storage/${user.profile_picture}`}
+                
+                src={`https://vms.194.62.99.202.sslip.io${user.profile_picture}`}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"

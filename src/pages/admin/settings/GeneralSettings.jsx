@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PurposeModal from "../include/PurposeModal";
-import CardOption from "../include/CardOption";  
-import api from "../../../context/api"; 
+import CardOption from "../include/CardOption";
+import api from "../../../context/api";
 
 function GeneralSettings() {
   const [settings, setSettings] = useState({
@@ -399,7 +399,7 @@ function GeneralSettings() {
             </p>
           </div>
         </div>
-        <div className="col-md-8"> {/* Adjusted column width */}
+        <div className="col-md-8 my-5"> {/* Adjusted column width */}
           <div className="card shadow-sm p-4 rounded-4 border-0"> {/* Added rounded-4 border-0 */}
             <h6 className="mb-3 fw-semibold">Choose Language</h6>
 

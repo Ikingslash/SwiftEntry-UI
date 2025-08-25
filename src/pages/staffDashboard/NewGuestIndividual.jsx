@@ -641,10 +641,7 @@ export default function NewGuestIndividual() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={
-                          guestDetails.photo ||
-                          "http://127.0.0.1:8000/storage/images/user2.png"
-                        }
+                        src={`https://vms.194.62.99.202.sslip.io/${guestDetails.photo}`}
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"

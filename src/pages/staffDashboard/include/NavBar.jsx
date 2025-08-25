@@ -140,11 +140,7 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                src={
-                  user?.profile_picture
-                    ? `http://127.0.0.1:8000/storage/${user.profile_picture}`
-                    : "/default-avatar.png"
-                }
+                src={`https://vms.194.62.99.202.sslip.io${user.profile_picture}`}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"
