@@ -1,0 +1,44 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SYDANI_WEB_SSH_PRIVATE_KEY }}
+
+      - name: Add VPS to known hosts
+        run: ssh-keyscan -H 194.62.98.28 >> ~/.ssh/known_hosts
+
+      - name: Create deployment directory on server
+        run: ssh -o StrictHostKeyChecking=no root@194.62.98.28 'mkdir -p /var/www/vms-frontend'
+
+      - name: Change to correct working directory
+        run: cd $GITHUB_WORKSPACE
+
+      - name: Copy source code to server
+        run: |
+          rsync -avz --delete \
+            --exclude '.git/' \
+            --exclude '.env' \
+            --exclude 'deploy.sh' \
+            --exclude 'Dockerfile' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            ./ root@194.62.98.28:/var/www/vms-frontend
+
+      - name: Build and deploy on server
+        run: |
+          ssh -o StrictHostKeyChecking=no root@194.62.98.28 'cd /var/www/vms-frontend && bash ./deploy.sh'
