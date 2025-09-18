@@ -2,15 +2,15 @@ import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import api from "../../../context/api";
-import echo from '../../../context/echo';
+import echo from "../../../context/echo";
 import { useNotifications } from "../../../context/NotificationContext";
 
 function Navbar() {
-   const location = useLocation();
+  const location = useLocation();
   const { user, logout } = useAuth();
-    const { unreadCount, setUnreadCount, markAllAsRead } = useNotifications();
+  const { unreadCount, setUnreadCount, markAllAsRead } = useNotifications();
 
-      useEffect(() => {
+  useEffect(() => {
     if (location.pathname === "/notifications" && unreadCount > 0) {
       markAllAsRead(); // updates backend
       setUnreadCount(0); // instantly update UI
@@ -142,7 +142,7 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                src={`https://vms.194.62.99.202.sslip.io/storage/${user.profile_picture}`}
+                src={`https://app.theswiftentry.com/storage/${user.profile_picture}`}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"

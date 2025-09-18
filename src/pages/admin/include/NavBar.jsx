@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import { useNotifications } from '../../../context/NotificationContext';
-import React from 'react';
+import { useNotifications } from "../../../context/NotificationContext";
+import React from "react";
 
 function Navbar() {
   const location = useLocation();
@@ -145,8 +145,7 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                
-                src={`https://vms.194.62.99.202.sslip.io${user.profile_picture}`}
+                src={`https://app.theswiftentry.com${user.profile_picture}`}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"

@@ -1,7 +1,23 @@
 // MainDashboard.jsx
-import { PlusCircle, Users, CalendarCheck, Eye, BellRing, User, Clock } from 'lucide-react';
+import {
+  PlusCircle,
+  Users,
+  CalendarCheck,
+  Eye,
+  BellRing,
+  User,
+  Clock,
+} from "lucide-react";
 
-export default function MainDashboard({ user, summaryData, notifications, todaysGuests, openAddGuestModal, goToRecents, goToGuests }) {
+export default function MainDashboard({
+  user,
+  summaryData,
+  notifications,
+  todaysGuests,
+  openAddGuestModal,
+  goToRecents,
+  goToGuests,
+}) {
   return (
     <>
       <header
@@ -152,7 +168,7 @@ export default function MainDashboard({ user, summaryData, notifications, todays
                       {/* Conditional rendering for the guest image. */}
                       {guest.visitor?.photo ? (
                         <img
-                          src={`https://vms.194.62.99.202.sslip.io/${guest.visitor.photo}`}
+                          src={`https://app.theswiftentry.com/${guest.visitor.photo}`}
                           alt="Guest"
                           className="img-fluid rounded-circle"
                         />

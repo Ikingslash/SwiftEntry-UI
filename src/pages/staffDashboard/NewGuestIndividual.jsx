@@ -5,8 +5,6 @@ import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
 import { toast } from "react-toastify";
 
-
-
 export default function NewGuestIndividual() {
   const [formData, setFormData] = useState({
     name: "",
@@ -641,7 +639,7 @@ export default function NewGuestIndividual() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={`https://vms.194.62.99.202.sslip.io/${guestDetails.photo}`}
+                        src={`https://app.theswiftentry.com/${guestDetails.photo}`}
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"

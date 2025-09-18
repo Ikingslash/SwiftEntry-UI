@@ -1,11 +1,11 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://vms-api.85.9.202.212.nip.io/api",
+  baseURL: "https://api.theswiftentry.com/api",
   withCredentials: true, // Allows cookies & authentication
   headers: {
     "Content-Type": "application/json",
-    "Accept": "application/json",
+    Accept: "application/json",
     "X-Requested-With": "XMLHttpRequest",
   },
 });

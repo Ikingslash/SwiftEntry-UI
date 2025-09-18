@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       await api.get("/sanctum/csrf-cookie", {
-        baseURL: "https://vms-api.85.9.202.212.nip.io",
+        baseURL: "https://api.theswiftentry.com",
       });
 
       const endpoints = [

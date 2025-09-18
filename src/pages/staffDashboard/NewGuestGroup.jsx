@@ -3,7 +3,7 @@ import api from "../../context/api";
 import { requestForToken, onMessageListener } from "../../context/firebase";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 function NewGuestGroup() {
   const [formData, setFormData] = useState({
@@ -30,9 +30,8 @@ function NewGuestGroup() {
   const [guestDetails, setGuestDetails] = useState({});
   const [qrValue, setQrValue] = useState("");
   const [appUsers, setAppUsers] = useState([]);
-   const [visitPurposes, setVisitPurposes] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
   const printRef = useRef();
-
 
   // useEffect to handle Firebase messaging and token registration, AND to fetch users.
   useEffect(() => {
@@ -128,7 +127,6 @@ function NewGuestGroup() {
     }
   };
 
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -146,7 +144,6 @@ function NewGuestGroup() {
 
     const formDataToSend = new FormData();
 
-
     Object.entries(formData).forEach(([key, value]) => {
       if (
         key !== "photo" &&
@@ -157,7 +154,6 @@ function NewGuestGroup() {
         formDataToSend.append(key, value);
       }
     });
-
 
     if (formData.visit_time) {
       formDataToSend.append("visit_time", formData.visit_time);
@@ -180,25 +176,25 @@ function NewGuestGroup() {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
 
-       // After successful registration, trigger the backend to send a notification
-              // This is the call to the corrected backend route
-              try {
-                await api.post("/staff/notify-host", {
-                  host_id: formData.host_id,
-                  host_role: formData.host_role, // Now sending the role
-                  guest_name: formData.name,
-                  purpose: formData.purpose,
-                });
-                console.log("Notification trigger sent to backend.");
-                toast.success("Notification sent to host successfully.");
-              } catch (notificationError) {
-                console.error("Failed to trigger notification:", notificationError);
-                // Don't stop the main process, just log the error.
-                toast.error(
-                  "Failed to send notification. " +
-                    (notificationError.response?.data?.message || "Server error.")
-                );
-              }
+        // After successful registration, trigger the backend to send a notification
+        // This is the call to the corrected backend route
+        try {
+          await api.post("/staff/notify-host", {
+            host_id: formData.host_id,
+            host_role: formData.host_role, // Now sending the role
+            guest_name: formData.name,
+            purpose: formData.purpose,
+          });
+          console.log("Notification trigger sent to backend.");
+          toast.success("Notification sent to host successfully.");
+        } catch (notificationError) {
+          console.error("Failed to trigger notification:", notificationError);
+          // Don't stop the main process, just log the error.
+          toast.error(
+            "Failed to send notification. " +
+              (notificationError.response?.data?.message || "Server error.")
+          );
+        }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
@@ -227,7 +223,7 @@ function NewGuestGroup() {
           organization_name: "",
           group_size: "",
           visit_time: "",
-           host_name: "",
+          host_name: "",
           host_id: "",
           building: "",
           floor: "",
@@ -651,7 +647,7 @@ function NewGuestGroup() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={`https://vms.194.62.99.202.sslip.io/${guestDetails.photo}`} 
+                        src={`https://app.theswiftentry.com/${guestDetails.photo}`}
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"
