@@ -61,7 +61,7 @@ function NewGuestGroup() {
 
     // Fetch the list of all app users (staff, security, front desk)
     api
-      .get("/staff/app-users")
+      .get("/frontdesk-app-users")
       .then((response) => {
         // Assuming the response is an array of user names
         if (response.data && Array.isArray(response.data.users)) {
