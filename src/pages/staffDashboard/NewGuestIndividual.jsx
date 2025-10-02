@@ -80,7 +80,7 @@ export default function NewGuestIndividual() {
       });
     // Fetch the list of visit purposes from the backend
     api
-      .get("/front-desk/guests/settings/visit-purposes")
+      .get("/staff/settings/visit-purposes")
       .then((response) => {
         if (response.data && Array.isArray(response.data)) {
           setVisitPurposes(response.data);
