@@ -654,8 +654,8 @@ export default function RegisterNewGuestIndividual() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src="http://127.0.0.1:8000/storage/images/user2.png"
-                        alt="Guest"
+                        src={`https://api.theswiftentry.com${guestDetails.photo}`}
+                        alt="Visitor photo"
                         className="rounded-circle shadow"
                         width="100"
                         height="100"

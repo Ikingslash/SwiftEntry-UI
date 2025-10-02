@@ -685,16 +685,14 @@ function RegisterNewGuestGroup() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={
-                          guestDetails.photo ||
-                          "http://127.0.0.1:8000/storage/images/user2.png"
-                        }
-                        alt="Guest"
+                        src={`https://api.theswiftentry.com${guestDetails.photo}`}
+                        alt="Visitor photo"
                         className="rounded-circle shadow"
                         width="100"
                         height="100"
                         style={{ border: "4px solid #007bff" }}
                       />
+                    
                     </div>
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>

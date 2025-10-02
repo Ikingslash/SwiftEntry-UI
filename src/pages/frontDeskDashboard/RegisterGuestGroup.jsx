@@ -688,8 +688,8 @@ function RegisterGuestGroup() {
                     <div className="me-3">
                       {guestDetails.photo ? (
                         <img
-                          src={guestDetails.photo}
-                          alt="Guest"
+                          src={`https://api.theswiftentry.com${guestDetails.photo}`}
+                          alt="Visitor photo"
                           className="img-fluid rounded-circle border border-primary"
                           style={{
                             width: "120px",
