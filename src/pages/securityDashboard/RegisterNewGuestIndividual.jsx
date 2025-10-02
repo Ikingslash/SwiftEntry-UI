@@ -165,11 +165,15 @@ export default function RegisterNewGuestIndividual() {
         setLoading(false);
         return;
       }
-    } 
+    }
 
     if (formData.photo) {
       formDataToSend.append("photo", formData.photo);
     }
+
+    // Append host_id and host_role
+    formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_role", formData.host_role);
 
     try {
       const response = await api.post(
@@ -185,23 +189,26 @@ export default function RegisterNewGuestIndividual() {
       if (response.status === 200 || response.status === 201) {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
-
-        try {
-          await api.post("/staff/notify-host", {
-            host_id: formData.host_id,
-            host_role: formData.host_role, // Now sending the role
-            guest_name: formData.name,
-            purpose: formData.purpose,
-          });
-          console.log("Notification trigger sent to backend.");
-          toast.success("Notification sent to host successfully.");
-        } catch (notificationError) {
-          console.error("Failed to trigger notification:", notificationError);
-          // Don't stop the main process, just log the error.
-          toast.error(
-            "Failed to send notification. " +
-              (notificationError.response?.data?.message || "Server error.")
-          );
+        // Trigger notification to host
+        if (formData.host_id && formData.host_role) {
+          try {
+            await api.post("/genereal-notify-host", {
+              host_id: formData.host_id,
+              host_role: formData.host_role,
+              guest_name: formData.name,
+              purpose: formData.purpose,
+            });
+            console.log("Notification trigger sent to backend.");
+            toast.success("Notification sent to host successfully.");
+          } catch (notificationError) {
+            console.error("Failed to trigger notification:", notificationError);
+            toast.error(
+              "Failed to send host notification: " +
+                (notificationError.response?.data?.message || "Server error.")
+            );
+          }
+        } else {
+          console.warn("Host ID or Role missing, skipping host notification.");
         }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
