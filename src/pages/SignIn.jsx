@@ -89,7 +89,7 @@ function SignIn() {
               <img src="./image.png" width={180} className="py-4" alt="" />
             </div>
 
-            <h2 className="text-center mb-4 fw-bold">Sign Inn</h2>
+            <h2 className="text-center mb-4 fw-bold">Sign In</h2>
 
             {errorMessage && (
               <div className="alert alert-danger text-center">{errorMessage}</div>
