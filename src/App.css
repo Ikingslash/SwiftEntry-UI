@@ -1,9 +1,9 @@
-#root {
+/* #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-}
+} */
 
 .logo {
   height: 6em;
@@ -33,10 +33,26 @@
   }
 }
 
-.card {
-  padding: 2em;
+
+
+/* Hide the Google Translate top banner */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
 }
 
-.read-the-docs {
-  color: #888;
+body {
+  top: 0px !important;
+}
+
+/* Hide the "Powered by Google" logo and tooltip */
+.goog-logo-link,
+.goog-te-gadget {
+  display: none !important;
+}
+
+/* Prevent spacing issues after hiding banner */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-text-highlight {
+  display: none !important;
 }

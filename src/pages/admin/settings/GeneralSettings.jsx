@@ -25,6 +25,30 @@ function GeneralSettings() {
     fetchSettings();
   }, []);
 
+   useEffect(() => {
+     const applyLanguage = (lang) => {
+       const select = document.querySelector(".goog-te-combo");
+       if (select) {
+         select.value = lang;
+         select.dispatchEvent(new Event("change"));
+         localStorage.setItem("selectedLanguage", lang);
+       }
+     };
+
+     const savedLang = localStorage.getItem("selectedLanguage") || "en";
+
+     const interval = setInterval(() => {
+       const select = document.querySelector(".goog-te-combo");
+       if (select) {
+         applyLanguage(savedLang);
+         clearInterval(interval);
+       }
+     }, 1000);
+
+     return () => clearInterval(interval);
+   }, []);
+
+
   const fetchSettings = async () => {
     setLoading(true);
     setError(null);
@@ -118,6 +142,38 @@ function GeneralSettings() {
     }
   };
 
+ const changeLanguage = (lang) => {
+   const select = document.querySelector(".goog-te-combo");
+   if (select) {
+     select.value = lang;
+     select.dispatchEvent(new Event("change"));
+     localStorage.setItem("selectedLanguage", lang);
+   } else {
+     // If the widget isn’t ready yet, retry
+     const interval = setInterval(() => {
+       const s = document.querySelector(".goog-te-combo");
+       if (s) {
+         s.value = lang;
+         s.dispatchEvent(new Event("change"));
+         localStorage.setItem("selectedLanguage", lang);
+         clearInterval(interval);
+       }
+     }, 1000);
+   }
+ };
+
+
+    const languages = [
+      { code: "en", name: "English", flag: "🇬🇧" },
+      { code: "ha", name: "Hausa", flag: "🇳🇬" },
+      { code: "yo", name: "Yoruba", flag: "🇳🇬" },
+      { code: "ig", name: "Igbo", flag: "🇳🇬" },
+      { code: "ff", name: "Fulfulde", flag: "🌍" },
+      { code: "es", name: "Spanish", flag: "🇪🇸" },
+      { code: "fr", name: "French", flag: "🇫🇷" },
+      { code: "ar", name: "Arabic", flag: "🇸🇦" },
+    ];
+
   if (loading) {
     return <p className="text-center mt-5">Loading settings...</p>;
   }
@@ -144,7 +200,9 @@ function GeneralSettings() {
           </div>
         </div>
         <div className="col-md-8">
-          <div className="row d-flex my-3 g-3"> {/* Added g-3 for gap */}
+          <div className="row d-flex my-3 g-3">
+            {" "}
+            {/* Added g-3 for gap */}
             <CardOption
               title="Default"
               themeColor="#007bff" // Example blue
@@ -165,9 +223,10 @@ function GeneralSettings() {
             />
           </div>
 
-          <div className="card shadow-sm p-4 rounded-4 border-0"> {/* Added rounded-4 border-0 */}
+          <div className="card shadow-sm p-4 rounded-4 border-0">
+            {" "}
+            {/* Added rounded-4 border-0 */}
             <h6 className="mb-3 fw-semibold">Customize Primary Color</h6>
-
             <div className="row align-items-center">
               <div className="col-md-6 mb-2">
                 <input
@@ -175,7 +234,12 @@ function GeneralSettings() {
                   className="form-control"
                   placeholder="Enter Color Code (e.g. #007bff)"
                   value={settings.primary_color}
-                  onChange={(e) => setSettings(prev => ({...prev, primary_color: e.target.value}))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      primary_color: e.target.value,
+                    }))
+                  }
                 />
               </div>
 
@@ -183,7 +247,9 @@ function GeneralSettings() {
                 <button
                   type="button" // Explicitly set type to button
                   className="btn btn-primary w-100"
-                  onClick={() => handleUpdateSetting('primary_color', settings.primary_color)}
+                  onClick={() =>
+                    handleUpdateSetting("primary_color", settings.primary_color)
+                  }
                 >
                   Update
                 </button>
@@ -197,7 +263,9 @@ function GeneralSettings() {
 
       {/* Timezone */}
       <div className="row my-3">
-        <div className="col-md-4"> {/* Adjusted column width */}
+        <div className="col-md-4">
+          {" "}
+          {/* Adjusted column width */}
           <div className="p-3">
             <h5 className="mb-3">Time Zone Management</h5>
             <p>
@@ -209,21 +277,34 @@ function GeneralSettings() {
             </p>
           </div>
         </div>
-        <div className="col-md-8"> {/* Adjusted column width */}
-          <div className="card shadow-sm p-4 rounded-4 border-0"> {/* Added rounded-4 border-0 */}
+        <div className="col-md-8">
+          {" "}
+          {/* Adjusted column width */}
+          <div className="card shadow-sm p-4 rounded-4 border-0">
+            {" "}
+            {/* Added rounded-4 border-0 */}
             <h6 className="mb-3 fw-semibold">Time Zone</h6>
-
             <div className="row align-items-center">
               <div className="col-md-12 mb-2">
                 <select
                   className="form-select w-100"
                   value={settings.timezone}
-                  onChange={(e) => handleUpdateSetting('timezone', e.target.value)}
+                  onChange={(e) =>
+                    handleUpdateSetting("timezone", e.target.value)
+                  }
                 >
-                  <option value="GMT">Greenwich Mean Time (GMT) | UTC +0</option>
-                  <option value="CAT">Central Africa Time (CAT) | UTC +2</option>
-                  <option value="SAST">South Africa Standard Time (SAST) | UTC +2</option>
-                  <option value="EET">Egypt Standard Time (EET) | UTC +2</option>
+                  <option value="GMT">
+                    Greenwich Mean Time (GMT) | UTC +0
+                  </option>
+                  <option value="CAT">
+                    Central Africa Time (CAT) | UTC +2
+                  </option>
+                  <option value="SAST">
+                    South Africa Standard Time (SAST) | UTC +2
+                  </option>
+                  <option value="EET">
+                    Egypt Standard Time (EET) | UTC +2
+                  </option>
                   <option value="EAT">East Africa Time (EAT) | UTC +3</option>
                   <option value="WAT">West Africa Time (WAT) | UTC +1</option>
                 </select>
@@ -237,7 +318,9 @@ function GeneralSettings() {
 
       {/* Purpose of Visit */}
       <div className="row my-3">
-        <div className="col-md-4"> {/* Adjusted column width */}
+        <div className="col-md-4">
+          {" "}
+          {/* Adjusted column width */}
           <div className="p-3">
             <h5 className="mb-3">Purpose of Visit</h5>
             <p>
@@ -246,9 +329,15 @@ function GeneralSettings() {
             </p>
           </div>
         </div>
-        <div className="col-md-8"> {/* Adjusted column width */}
-          <div className="card shadow-sm rounded-4 border-0"> {/* Added rounded-4 border-0 */}
-            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4"> {/* Added rounded-top-4 */}
+        <div className="col-md-8">
+          {" "}
+          {/* Adjusted column width */}
+          <div className="card shadow-sm rounded-4 border-0">
+            {" "}
+            {/* Added rounded-4 border-0 */}
+            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
+              {" "}
+              {/* Added rounded-top-4 */}
               <strong>Edit Visit Purpose Details</strong>
               <button
                 type="button" // Explicitly set type to button
@@ -262,9 +351,13 @@ function GeneralSettings() {
                 Add New
               </button>
             </div>
-            <ul className="list-group list-group-flush"> {/* Used list-group for better styling */}
+            <ul className="list-group list-group-flush">
+              {" "}
+              {/* Used list-group for better styling */}
               {settings.visit_purposes.length === 0 ? (
-                <li className="list-group-item text-center text-muted py-3">No purposes defined.</li>
+                <li className="list-group-item text-center text-muted py-3">
+                  No purposes defined.
+                </li>
               ) : (
                 settings.visit_purposes.map((p, i) => (
                   <li
@@ -295,7 +388,9 @@ function GeneralSettings() {
 
       {/* Date & Time Format */}
       <div className="row my-3">
-        <div className="col-md-4"> {/* Adjusted column width */}
+        <div className="col-md-4">
+          {" "}
+          {/* Adjusted column width */}
           <div className="p-3">
             <h5 className="mb-3">Date & Time Format</h5>
             <p>
@@ -307,8 +402,12 @@ function GeneralSettings() {
             </p>
           </div>
         </div>
-        <div className="col-md-8"> {/* Adjusted column width */}
-          <div className="card shadow-sm p-4 rounded-4 border-0"> {/* Added rounded-4 border-0 */}
+        <div className="col-md-8">
+          {" "}
+          {/* Adjusted column width */}
+          <div className="card shadow-sm p-4 rounded-4 border-0">
+            {" "}
+            {/* Added rounded-4 border-0 */}
             <h6 className="mb-3 fw-semibold">Date Format</h6>
             <div className="row mb-3">
               <div className="col-md-6">
@@ -320,7 +419,9 @@ function GeneralSettings() {
                     id="mdy"
                     value="MM/DD/YYYY"
                     checked={settings.date_format === "MM/DD/YYYY"}
-                    onChange={(e) => handleUpdateSetting('date_format', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateSetting("date_format", e.target.value)
+                    }
                   />
                   <label className="form-check-label" htmlFor="mdy">
                     MM/DD/YYYY
@@ -336,7 +437,9 @@ function GeneralSettings() {
                     id="dmy"
                     value="DD/MM/YYYY"
                     checked={settings.date_format === "DD/MM/YYYY"}
-                    onChange={(e) => handleUpdateSetting('date_format', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateSetting("date_format", e.target.value)
+                    }
                   />
                   <label className="form-check-label" htmlFor="dmy">
                     DD/MM/YYYY
@@ -344,7 +447,6 @@ function GeneralSettings() {
                 </div>
               </div>
             </div>
-
             <h6 className="mb-3 fw-semibold">Time Format</h6>
             <div className="row">
               <div className="col-md-6">
@@ -356,7 +458,9 @@ function GeneralSettings() {
                     id="12hour"
                     value="12-hour"
                     checked={settings.time_format === "12-hour"}
-                    onChange={(e) => handleUpdateSetting('time_format', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateSetting("time_format", e.target.value)
+                    }
                   />
                   <label className="form-check-label" htmlFor="12hour">
                     12-Hour (AM/PM)
@@ -372,7 +476,9 @@ function GeneralSettings() {
                     id="24hour"
                     value="24-hour"
                     checked={settings.time_format === "24-hour"}
-                    onChange={(e) => handleUpdateSetting('time_format', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateSetting("time_format", e.target.value)
+                    }
                   />
                   <label className="form-check-label" htmlFor="24hour">
                     24-Hour
@@ -388,37 +494,52 @@ function GeneralSettings() {
 
       {/* Language Preference */}
       <div className="row my-3">
-        <div className="col-md-4"> {/* Adjusted column width */}
+        <div className="col-md-4">
+          {" "}
+          {/* Adjusted column width */}
           <div className="p-3">
             <h5 className="mb-3">Language Preference</h5>
             <p>
               {" "}
-              <small>
-                Choose preferred language for the interface.
-              </small>
+              <small>Choose preferred language for the interface.</small>
             </p>
           </div>
         </div>
-        <div className="col-md-8 my-5"> {/* Adjusted column width */}
-          <div className="card shadow-sm p-4 rounded-4 border-0"> {/* Added rounded-4 border-0 */}
+        <div className="col-md-8 my-5">
+          {" "}
+          {/* Adjusted column width */}
+          <div className="card shadow-sm p-4 rounded-4 border-0">
+            {" "}
+            {/* Added rounded-4 border-0 */}
             <h6 className="mb-3 fw-semibold">Choose Language</h6>
-
             <div className="row align-items-center">
               <div className="col-md-12 mb-2">
                 <select
                   className="form-select w-100"
                   value={settings.language_preference}
-                  onChange={(e) => handleUpdateSetting('language_preference', e.target.value)}
+                  onChange={(e) => {
+                    const selectedLang = languages.find(
+                      (lang) => lang.name === e.target.value
+                    );
+                    if (selectedLang) {
+                      changeLanguage(selectedLang.code);
+                      handleUpdateSetting(
+                        "language_preference",
+                        selectedLang.name
+                      );
+                    }
+                  }}
                 >
-                  <option value="English">English</option>
-                  <option value="French">French</option>
-                  <option value="Hindi">Hindi</option>
-                  <option value="Arabic">Arabic</option>
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.name}>
+                      {lang.flag} {lang.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
           </div>
-        </div>
+</div>
       </div>
 
       {/* Modal */}
