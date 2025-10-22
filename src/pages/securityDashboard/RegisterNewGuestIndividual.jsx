@@ -38,7 +38,7 @@ export default function RegisterNewGuestIndividual() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          console.log("FCM token:", fcmToken);
+          // console.log("FCM token:", fcmToken);
           toast.info("FCM token:", fcmToken);
 
           api
@@ -273,27 +273,31 @@ export default function RegisterNewGuestIndividual() {
   };
 
   const handlePrint = () => {
+    // Get the HTML content of the visit card
     const element = printRef.current;
-    if (element) {
-      const printWindow = window.open("", "", "height=600,width=800");
-      printWindow.document.write("<html><head><title>Visitor Badge</title>");
-      // Include Bootstrap CSS for styling in the printout
-      printWindow.document.write(
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-      );
-      printWindow.document.write("</head><body>");
-      printWindow.document.write(
-        '<div class="p-5">' + element.innerHTML + "</div>"
-      );
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
+
+    // Create a new window to print
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Visitor Badge</title>");
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write(
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+    );
+    printWindow.document.write("</head><body >");
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write("</div>");
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+
+    // Wait for the content to load and then print
+    printWindow.onload = function () {
       printWindow.focus();
       printWindow.print();
       printWindow.close();
-    } else {
-      toast.error("Error: Print content not found."); // Toast for print error
-    }
+    };
   };
+
 
   const downloadBadgeAsPDF = () => {
     const element = printRef.current;
@@ -654,7 +658,7 @@ export default function RegisterNewGuestIndividual() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={`https://api.theswiftentry.com${guestDetails.photo}`}
+                        src={`${guestDetails.photo}`}
                         alt="Visitor photo"
                         className="rounded-circle shadow"
                         width="100"

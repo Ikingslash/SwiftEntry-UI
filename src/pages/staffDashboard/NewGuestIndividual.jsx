@@ -38,9 +38,8 @@ export default function NewGuestIndividual() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          console.log("FCM token:", fcmToken);
+          //  console.log("FCM token:", fcmToken);
           toast.info("FCM token:", fcmToken);
-
           api
             .post("/staff/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
@@ -419,7 +418,7 @@ export default function NewGuestIndividual() {
                           value={user.id}
                           data-role={user.role}
                         >
-                          {user.name} ({user.role})
+                          {user.name}
                         </option>
                       ))}
                     </select>
@@ -645,7 +644,7 @@ export default function NewGuestIndividual() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={`https://app.theswiftentry.com/${guestDetails.photo}`}
+                        src={`${guestDetails.photo}`}
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"

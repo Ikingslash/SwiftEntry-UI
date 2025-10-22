@@ -39,7 +39,7 @@ function NewGuestGroup() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          console.log("FCM token:", fcmToken);
+          // console.log("FCM token:", fcmToken);
           toast.info("FCM token:", fcmToken);
 
           api
@@ -186,7 +186,7 @@ function NewGuestGroup() {
             await api.post("/genereal-notify-host", {
               host_id: formData.host_id,
               host_role: formData.host_role,
-              guest_name: formData.name,
+              guest_name: formData.group_leader_name,
               purpose: formData.purpose,
             });
             console.log("Notification trigger sent to backend.");
@@ -653,7 +653,7 @@ function NewGuestGroup() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={`https://app.theswiftentry.com/${guestDetails.photo}`}
+                        src={`${guestDetails.photo}`}
                         alt="Guest"
                         className="rounded-circle shadow"
                         width="100"

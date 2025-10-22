@@ -37,20 +37,31 @@ export default function RegisterGuestIndividual() {
   // useEffect to handle Firebase messaging and token registration, AND to fetch users.
   useEffect(() => {
     // Request permission and get the FCM token
-    requestForToken().catch((err) => {
-      console.error("An error occurred while retrieving token. ", err);
-      toast.error("Failed to retrieve FCM token: " + err.message); // More user-friendly error
-    });
-
-    // Set up the listener for incoming messages.
-    const unsubscribe = onMessageListener((payload) => {
-      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
-    });
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          api
+            .post("/save-fcm-token", { fcm_token: fcmToken })
+            .then((response) => {
+              console.log("FCM token saved on backend:", response.data);
+              toast.success("FCM token saved on backend:", response.data);
+            })
+            .catch((error) => {
+              console.error("Failed to save FCM token on backend:", error);
+              toast.error("Failed to save FCM token on backend:", error);
+            });
+        }
+      })
+      .catch((err) => {
+        console.error("An error occurred while retrieving token. ", err);
+        toast.error("Failed to retrieve FCM token:", err);
+      });
 
     // Fetch the list of all app users (staff, security, front desk)
     api
       .get("/frontdesk-app-users")
       .then((response) => {
+        // Assuming the response is an array of user names
         if (response.data && Array.isArray(response.data.users)) {
           setAppUsers(response.data.users);
         } else {
@@ -58,22 +69,17 @@ export default function RegisterGuestIndividual() {
             "API response for users is not an array:",
             response.data
           );
-          toast.error(
-            "API response for users is not an array: Please check the backend response."
-          );
+
+          toast.error("API response for users is not an array:", response.data);
         }
       })
       .catch((error) => {
         console.error("Failed to fetch app users:", error);
-        toast.error(
-          "Failed to fetch app users: " +
-            (error.response?.data?.message || "Server error.")
-        );
+        toast.error("Failed to fetch app users:", error);
       });
-
     // Fetch the list of visit purposes from the backend
     api
-      .get("/front-desk/guests/settings/visit-purposes") // Ensure this matches your api.php route
+      .get("/front-desk/guests/settings/visit-purposes")
       .then((response) => {
         if (response.data && Array.isArray(response.data)) {
           setVisitPurposes(response.data);
@@ -83,17 +89,20 @@ export default function RegisterGuestIndividual() {
             response.data
           );
           toast.error(
-            "API response for purposes is not an array: Please check the backend response."
+            "API response for purposes is not an array:",
+            response.data
           );
         }
       })
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
-        toast.error(
-          "Failed to fetch visit purposes: " +
-            (error.response?.data?.message || "Server error.")
-        );
+        toast.error("Failed to fetch visit purposes:", error);
       });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
 
     // Cleanup function to detach the listener when the component unmounts
     return () => unsubscribe();
@@ -274,26 +283,29 @@ export default function RegisterGuestIndividual() {
   };
 
   const handlePrint = () => {
+    // Get the HTML content of the visit card
     const element = printRef.current;
-    if (element) {
-      const printWindow = window.open("", "", "height=600,width=800");
-      printWindow.document.write("<html><head><title>Visitor Badge</title>");
-      // Include Bootstrap CSS for styling in the printout
-      printWindow.document.write(
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-      );
-      printWindow.document.write("</head><body>");
-      printWindow.document.write(
-        '<div class="p-5">' + element.innerHTML + "</div>"
-      );
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
+
+    // Create a new window to print
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Visitor Badge</title>");
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write(
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+    );
+    printWindow.document.write("</head><body >");
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write("</div>");
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+
+    // Wait for the content to load and then print
+    printWindow.onload = function () {
       printWindow.focus();
       printWindow.print();
       printWindow.close();
-    } else {
-      toast.error("Error: Print content not found.");
-    }
+    };
   };
 
   const downloadBadgeAsPDF = () => {
@@ -658,14 +670,12 @@ export default function RegisterGuestIndividual() {
                     <div className="me-3">
                       {guestDetails.photo ? (
                         <img
-                          src={`https://api.theswiftentry.com${guestDetails.photo}`}
-                          alt="Visitor photo"
-                          className="img-fluid rounded-circle border border-primary"
-                          style={{
-                            width: "120px",
-                            height: "120px",
-                            objectFit: "cover",
-                          }}
+                          src={`${guestDetails.photo}`}
+                          alt="Guest"
+                          className="rounded-circle shadow"
+                          width="100"
+                          height="100"
+                          style={{ border: "4px solid #007bff" }}
                         />
                       ) : (
                         <div

@@ -18,30 +18,30 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
     email: "",
     role: "",
     department: "",
-    password: "",  
+    password: "",
     photo: null,
-    status: true,  
+    status: true,
   });
 
- 
+
   useEffect(() => {
     fetchStaff();
-  }, [refreshKey, page]);  
+  }, [refreshKey, page]);
 
   const fetchStaff = async () => {
     setLoading(true);
     setError(null);
     try {
-     
+
       const response = await api.get(`admin/staff?page=${page}`);
-      
+
       setStaff(Array.isArray(response.data.staff) ? response.data.staff : []);
       setPagination(response.data.pagination);
     } catch (err) {
       console.error("Error fetching staff:", err.response?.data || err.message);
       setError("Failed to load staff. Please try again.");
-      setStaff([]); 
-      setPagination({});  
+      setStaff([]);
+      setPagination({});
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
         email: staffData.email,
         role: staffData.role,
         department: staffData.department,
-        password: "",  
+        password: "",
         photo: staffData.photo,
         status: staffData.status,
       });
@@ -80,7 +80,7 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
     e.preventDefault();
     try {
       const payload = { ...editFormData };
-      
+
       if (payload.password === "") {
         delete payload.password;
       }

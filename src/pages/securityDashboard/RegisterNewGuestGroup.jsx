@@ -40,7 +40,7 @@ function RegisterNewGuestGroup() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          console.log("FCM token:", fcmToken);
+          // console.log("FCM token:", fcmToken);
           toast.info("FCM token:", fcmToken);
 
           api
@@ -201,7 +201,7 @@ function RegisterNewGuestGroup() {
             await api.post("/genereal-notify-host", {
               host_id: formData.host_id,
               host_role: formData.host_role,
-              guest_name: formData.name,
+              guest_name: formData.group_leader_name,
               purpose: formData.purpose,
             });
             console.log("Notification trigger sent to backend.");
@@ -280,28 +280,32 @@ function RegisterNewGuestGroup() {
     }
   };
 
-  const handlePrint = () => {
-    const element = printRef.current;
-    if (element) {
-      const printWindow = window.open("", "", "height=600,width=800");
-      printWindow.document.write("<html><head><title>Visitor Badge</title>");
-      // Include Bootstrap CSS for styling in the printout
-      printWindow.document.write(
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-      );
-      printWindow.document.write("</head><body>");
-      printWindow.document.write(
-        '<div class="p-5">' + element.innerHTML + "</div>"
-      );
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    } else {
-      toast.error("Error: Print content not found."); // Toast for print error
-    }
-  };
+   const handlePrint = () => {
+     // Get the HTML content of the visit card
+     const element = printRef.current;
+
+     // Create a new window to print
+     const printWindow = window.open("", "", "height=600,width=800");
+     printWindow.document.write("<html><head><title>Visitor Badge</title>");
+     // Include Bootstrap CSS for styling in the print window
+     printWindow.document.write(
+       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+     );
+     printWindow.document.write("</head><body >");
+     printWindow.document.write('<div class="p-5">');
+     printWindow.document.write(element.outerHTML);
+     printWindow.document.write("</div>");
+     printWindow.document.write("</body></html>");
+     printWindow.document.close();
+
+     // Wait for the content to load and then print
+     printWindow.onload = function () {
+       printWindow.focus();
+       printWindow.print();
+       printWindow.close();
+     };
+   };
+
 
   const downloadBadgeAsPDF = () => {
     const element = printRef.current;
@@ -685,14 +689,14 @@ function RegisterNewGuestGroup() {
                   <div className="card-body d-flex">
                     <div className="me-3">
                       <img
-                        src={`https://api.theswiftentry.com${guestDetails.photo}`}
+                        src={`${guestDetails.photo}`}
                         alt="Visitor photo"
                         className="rounded-circle shadow"
                         width="100"
                         height="100"
                         style={{ border: "4px solid #007bff" }}
                       />
-                    
+
                     </div>
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
