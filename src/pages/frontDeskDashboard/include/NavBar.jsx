@@ -134,7 +134,7 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                src={`https://app.theswiftentry.com${user.profile_picture}`}
+                src={`${user.profile_picture}`}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"
