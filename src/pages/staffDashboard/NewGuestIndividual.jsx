@@ -38,23 +38,23 @@ export default function NewGuestIndividual() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          //  console.log("FCM token:", fcmToken);
-          toast.info("FCM token:", fcmToken);
+           console.log("FCM token:", fcmToken);
+          // toast.info("FCM token:", fcmToken);
           api
             .post("/staff/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
               console.log("FCM token saved on backend:", response.data);
-              toast.success("FCM token saved on backend:", response.data);
+              // toast.success("FCM token saved on backend:", response.data);
             })
             .catch((error) => {
               console.error("Failed to save FCM token on backend:", error);
-              toast.error("Failed to save FCM token on backend:", error);
+              // toast.error("Failed to save FCM token on backend:", error);
             });
         }
       })
       .catch((err) => {
         console.error("An error occurred while retrieving token. ", err);
-        toast.error("Failed to retrieve FCM token:", err);
+        // toast.error("Failed to retrieve FCM token:", err);
       });
 
     // Fetch the list of all app users (staff, security, front desk)
@@ -70,12 +70,12 @@ export default function NewGuestIndividual() {
             response.data
           );
 
-          toast.error("API response for users is not an array:", response.data);
+          // toast.error("API response for users is not an array:", response.data);
         }
       })
       .catch((error) => {
         console.error("Failed to fetch app users:", error);
-        toast.error("Failed to fetch app users:", error);
+        // toast.error("Failed to fetch app users:", error);
       });
     // Fetch the list of visit purposes from the backend
     api
@@ -88,15 +88,15 @@ export default function NewGuestIndividual() {
             "API response for purposes is not an array:",
             response.data
           );
-          toast.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
+          // toast.error(
+          //   "API response for purposes is not an array:",
+          //   response.data
+          // );
         }
       })
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
-        toast.error("Failed to fetch visit purposes:", error);
+        // toast.error("Failed to fetch visit purposes:", error);
       });
 
     // Set up the listener for incoming messages.
@@ -201,10 +201,7 @@ export default function NewGuestIndividual() {
                   toast.success("Notification sent to host successfully.");
                 } catch (notificationError) {
                   console.error("Failed to trigger notification:", notificationError);
-                  toast.error(
-                    "Failed to send host notification: " +
-                      (notificationError.response?.data?.message || "Server error.")
-                  );
+
                 }
               } else {
                 console.warn("Host ID or Role missing, skipping host notification.");
@@ -257,9 +254,9 @@ export default function NewGuestIndividual() {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error(
-          "Error: " + (response.data.message || "Something went wrong")
-        );
+        // toast.error(
+        //   "Error: " + (response.data.message || "Something went wrong")
+        // );
       }
     } catch (error) {
       console.error("Error:", error);

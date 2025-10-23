@@ -39,23 +39,23 @@ export default function RegisterNewGuestIndividual() {
       .then((fcmToken) => {
         if (fcmToken) {
           // console.log("FCM token:", fcmToken);
-          toast.info("FCM token:", fcmToken);
+          // toast.info("FCM token:", fcmToken);
 
           api
             .post("/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
               console.log("FCM token saved on backend:", response.data);
-              toast.success("FCM token saved on backend:", response.data);
+              // toast.success("FCM token saved on backend:", response.data);
             })
             .catch((error) => {
               console.error("Failed to save FCM token on backend:", error);
-              toast.error("Failed to save FCM token on backend:", error);
+              // toast.error("Failed to save FCM token on backend:", error);
             });
         }
       })
       .catch((err) => {
         console.error("An error occurred while retrieving token. ", err);
-        toast.error("Failed to retrieve FCM token:", err);
+        // toast.error("Failed to retrieve FCM token:", err);
       });
 
     // Fetch the list of all app users (staff, security, front desk)
@@ -71,12 +71,12 @@ export default function RegisterNewGuestIndividual() {
             response.data
           );
 
-          toast.error("API response for users is not an array:", response.data);
+          // toast.error("API response for users is not an array:", response.data);
         }
       })
       .catch((error) => {
         console.error("Failed to fetch app users:", error);
-        toast.error("Failed to fetch app users:", error);
+        // toast.error("Failed to fetch app users:", error);
       });
     // Fetch the list of visit purposes from the backend
     api
@@ -89,10 +89,10 @@ export default function RegisterNewGuestIndividual() {
             "API response for purposes is not an array:",
             response.data
           );
-          toast.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
+          // toast.error(
+          //   "API response for purposes is not an array:",
+          //   response.data
+          // );
         }
       })
       .catch((error) => {
