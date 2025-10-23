@@ -1,24 +1,19 @@
-// import { defineConfig } from 'vite'
-// import react from '@vitejs/plugin-react'
-
-// // https://vite.dev/config/
-// export default defineConfig({
-//   plugins: [react()],
-
-// })
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-// import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   plugins: [
     react(),
-    // tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      outDir: "dist", // ✅ ensure it uses your real build folder
+      workbox: {
+        globDirectory: "dist", // ✅ correct directory for Vite builds
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"], // updated pattern
+        globIgnores: ["**/node_modules/**/*", "sw.js", "workbox-*.js"],
+      },
       manifest: {
         name: "MICRO COVERAGE",
         short_name: "MicroCoverage",
@@ -30,26 +25,14 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "../image.png",
+            src: "/image.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "../image.png",
+            src: "/image.png",
             sizes: "512x512",
             type: "image/png",
-          },
-        ],
-      },
-      workbox: {
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/your-api-domain\.com\/.*$/,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              expiration: { maxEntries: 50, maxAgeSeconds: 86400 },
-            },
           },
         ],
       },
@@ -57,8 +40,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // eslint-disable-next-line no-undef
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  server: {
+    host: "0.0.0.0",
+    port: 5173,
   },
 });
