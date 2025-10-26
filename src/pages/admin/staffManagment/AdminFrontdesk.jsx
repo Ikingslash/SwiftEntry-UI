@@ -1,8 +1,9 @@
 import { useState } from "react";
 import api from "../../../context/api";
 import NavBar from "../include/NavBar";
-import ManageFrontdeskTable from "./ManageFrontdeskTable";
-import { toast } from "react-toastify";
+import ManageFrontdeskTable from "./ManageFrontdeskTable"; 
+import { ToastContainer, toast } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 
 function AdminFrontdesk() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -66,6 +67,32 @@ function AdminFrontdesk() {
     }
   };
 
+     const showValidationErrors = (error) => {
+      if (error.response && error.response.status === 422) {
+        let validationErrors = error.response.data.errors || error.response.data;
+
+        if (typeof validationErrors === "string") {
+          toast.error(validationErrors);
+          return;
+        }
+
+        Object.values(validationErrors).forEach((messages) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => toast.error(msg));
+          } else if (typeof messages === "string") {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    };
+
+
   const handleAddNewStaff = async (e) => {
     e.preventDefault();
     setFormErrors({});
@@ -93,25 +120,10 @@ function AdminFrontdesk() {
       handleAddModalClose();
       triggerRefresh();
       toast.success("Front desk staff added successfully!");
-    } catch (err) {
-      console.error("Error adding frontdesk:", err.response?.data || err.message);
-
-      if (err.response && err.response.status === 422 && err.response.data.errors) {
-        setFormErrors(err.response.data.errors);
-
-        const errorMessages = Object.values(err.response.data.errors)
-          .flat()
-          .map((msg) => `- ${msg}`)
-          .join("\n");
-
-        toast.error(
-          `Failed to add front desk staff:\n${errorMessages}`,
-          { autoClose: 5000, style: { whiteSpace: "pre-line" } }
-        );
-      } else {
-        toast.error("Failed to add front desk staff. Please check server logs.");
-      }
-    } finally {
+    } catch (error) {
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
+    } finally{
       setIsSubmitting(false);
     }
   };
@@ -119,6 +131,7 @@ function AdminFrontdesk() {
   return (
     <div>
       <NavBar />
+        <ToastContainer position="top-right" autoClose={5000} />
       <header
         id="home"
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"

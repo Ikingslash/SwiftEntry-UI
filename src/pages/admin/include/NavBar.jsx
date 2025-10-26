@@ -246,7 +246,7 @@ function Navbar() {
                       ? "text-primary bg-white fw-bold"
                       : "text-dark bg-white"
                   }`}
-                  to="/admin-dashboard/profile"
+                  to="/admin-dashboard/settings"
                 >
                   Settings
                 </NavLink>

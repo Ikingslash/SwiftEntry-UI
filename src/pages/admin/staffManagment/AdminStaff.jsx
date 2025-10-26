@@ -1,8 +1,9 @@
 import { useState } from "react";
 import NavBar from "../include/NavBar";
 import ManageStaffTable from "./ManageStaffTable";
-import api from "../../../context/api";
-import { toast } from "react-toastify";
+import api from "../../../context/api"; 
+import { ToastContainer, toast } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 
 function AdminStaff() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -64,6 +65,32 @@ function AdminStaff() {
     }
   };
 
+     const showValidationErrors = (error) => {
+      if (error.response && error.response.status === 422) {
+        let validationErrors = error.response.data.errors || error.response.data;
+
+        if (typeof validationErrors === "string") {
+          toast.error(validationErrors);
+          return;
+        }
+
+        Object.values(validationErrors).forEach((messages) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => toast.error(msg));
+          } else if (typeof messages === "string") {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    };
+
+
   const handleAddNewStaff = async (e) => {
     e.preventDefault();
     setFormErrors({});
@@ -83,23 +110,9 @@ function AdminStaff() {
       handleAddModalClose();
       triggerRefresh();
       toast.success("Staff added successfully!");
-    } catch (err) {
-      console.error("Error adding staff:", err.response?.data || err.message);
-      if (
-        err.response &&
-        err.response.status === 422 &&
-        err.response.data.errors
-      ) {
-        setFormErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors)
-          .flat()
-          .join(", ");
-        toast.error("Validation failed: " + errorMessages);
-      } else {
-        toast.error(
-          "Failed to add staff: " + (err.response?.data?.message || err.message)
-        );
-      }
+    }  catch (error) {
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setIsSubmitting(false);
     }
@@ -108,7 +121,7 @@ function AdminStaff() {
   return (
     <div>
       <NavBar />
-
+      <ToastContainer position="top-right" autoClose={5000} />
       {/* Header */}
       <header
         id="home"

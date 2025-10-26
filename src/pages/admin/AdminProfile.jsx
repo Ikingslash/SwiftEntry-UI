@@ -15,7 +15,7 @@ export default function AdminProfile() {
   const fetchProfileData = async () => {
     try {
       const response = await api.get("/admin/profile");
-      setProfileData(response.data);
+      setProfileData(response.data.profile);
       toast.success("Profile loaded successfully!");
     } catch (error) {
       console.error("Error fetching profile data:", error);
@@ -42,10 +42,10 @@ export default function AdminProfile() {
       toast.error("Notification preferences loaded successfully!");
     }
   };
-  
+
   // Placeholder image for when a profile picture isn't available
   const defaultProfilePicture = "https://placehold.co/100x100";
-  
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
@@ -67,11 +67,15 @@ export default function AdminProfile() {
                 <div className="text-center pt-3">
                   <h3 className="fw-bold">Profile</h3>
                 </div>
-                
+
                 {/* Profile Picture and Staff Badge */}
                 <div className="text-center mt-4">
                   <img
-                    src={profileData?.profile_picture || defaultProfilePicture}
+                     src={
+            profileData.photo
+              ? `${profileData.photo}`
+              : "/default-avatar.png"
+          }
                     alt="Profile"
                     className="rounded-circle mb-3"
                     style={{ width: "120px", height: "120px", objectFit: "cover" }}
@@ -89,27 +93,23 @@ export default function AdminProfile() {
                   <ul className="list-group list-group-flush">
                     <li className="list-group-item d-flex justify-content-between align-items-center p-3">
                       <span className="text-muted fw-bold">Name</span>
-                      <span>{profileData?.name}</span>
+                      <span>{profileData?.fullName}</span>
                     </li>
                     <li className="list-group-item d-flex justify-content-between align-items-center p-3">
                       <span className="text-muted fw-bold">Company Email</span>
                       <span>{profileData?.email}</span>
                     </li>
                     <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Position</span>
-                      <span>{profileData?.position}</span>
+                      <span className="text-muted fw-bold">Department</span>
+                      <span>{profileData?.department}</span>
                     </li>
                     <li className="list-group-item d-flex justify-content-between align-items-center p-3">
                       <span className="text-muted fw-bold">Company</span>
                       <span>{profileData?.company_name}</span>
                     </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Employee ID</span>
-                      <span>{profileData?.employee_id}</span>
-                    </li>
                   </ul>
                 </div>
-                
+
                 {/* Log Out Button */}
                 <div className="d-grid mt-5 px-3">
                   <button onClick={handleLogout} className="btn btn-danger btn-lg rounded-pill fw-bold">

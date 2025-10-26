@@ -2,7 +2,8 @@ import { useState } from "react";
 import api from "../../../context/api"; // Axios instance
 import NavBar from "../include/NavBar";
 import ManageSecurityTable from "./ManageSecurityTable";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 
 function AdminSecurity() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -73,6 +74,32 @@ function AdminSecurity() {
     }
   };
 
+     const showValidationErrors = (error) => {
+      if (error.response && error.response.status === 422) {
+        let validationErrors = error.response.data.errors || error.response.data;
+
+        if (typeof validationErrors === "string") {
+          toast.error(validationErrors);
+          return;
+        }
+
+        Object.values(validationErrors).forEach((messages) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => toast.error(msg));
+          } else if (typeof messages === "string") {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    };
+
+
   const handleAddNewStaff = async (e) => {
     e.preventDefault();
     setFormErrors({});
@@ -102,28 +129,9 @@ function AdminSecurity() {
       handleAddModalClose();
       triggerRefresh();
       toast.success("Security added successfully!");
-    } catch (err) {
-      console.error(
-        "Error adding security:",
-        err.response?.data || err.message
-      );
-
-      if (
-        err.response &&
-        err.response.status === 422 &&
-        err.response.data.errors
-      ) {
-        setFormErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors)
-          .flat()
-          .map((msg) => `• ${msg}`)
-          .join("\n");
-        toast.error("Validation failed:\n" + errorMessages);
-      } else {
-        toast.error(
-          "Failed to add staff: " + (err.response?.data?.message || err.message)
-        );
-      }
+    } catch (error) {
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setIsSubmitting(false);
     }
@@ -132,6 +140,7 @@ function AdminSecurity() {
   return (
     <div>
       <NavBar />
+        <ToastContainer position="top-right" autoClose={5000} />
       <header
         id="home"
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"

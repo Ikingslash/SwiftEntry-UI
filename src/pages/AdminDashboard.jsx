@@ -157,10 +157,10 @@ function SecurityFrontDeskDashboard() {
               <h3 className="fw-bold mb-0">
                 Welcome Back, {user?.name || "Admin"}
               </h3>
-              <i
+              {/* <i
                 className="bi bi-plus-circle fs-1 text-primary p-2"
                 style={{ cursor: "pointer" }}
-              ></i>
+              ></i> */}
             </div>
 
             <div className="d-flex align-items-center  mt-2">
