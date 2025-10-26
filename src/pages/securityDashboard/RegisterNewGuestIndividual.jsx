@@ -38,24 +38,20 @@ export default function RegisterNewGuestIndividual() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          // console.log("FCM token:", fcmToken);
-          // toast.info("FCM token:", fcmToken);
+          console.log("FCM token:", fcmToken);
 
           api
             .post("/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
               console.log("FCM token saved on backend:", response.data);
-              // toast.success("FCM token saved on backend:", response.data);
             })
             .catch((error) => {
               console.error("Failed to save FCM token on backend:", error);
-              // toast.error("Failed to save FCM token on backend:", error);
             });
         }
       })
       .catch((err) => {
         console.error("An error occurred while retrieving token. ", err);
-        // toast.error("Failed to retrieve FCM token:", err);
       });
 
     // Fetch the list of all app users (staff, security, front desk)
@@ -70,13 +66,10 @@ export default function RegisterNewGuestIndividual() {
             "API response for users is not an array:",
             response.data
           );
-
-          // toast.error("API response for users is not an array:", response.data);
         }
       })
       .catch((error) => {
         console.error("Failed to fetch app users:", error);
-        // toast.error("Failed to fetch app users:", error);
       });
     // Fetch the list of visit purposes from the backend
     api
@@ -89,15 +82,10 @@ export default function RegisterNewGuestIndividual() {
             "API response for purposes is not an array:",
             response.data
           );
-          // toast.error(
-          //   "API response for purposes is not an array:",
-          //   response.data
-          // );
         }
       })
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
-        toast.error("Failed to fetch visit purposes:", error);
       });
 
     // Set up the listener for incoming messages.
@@ -134,6 +122,32 @@ export default function RegisterNewGuestIndividual() {
     }
   };
 
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
+
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
+      }
+
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong. Please try again."
+      );
+    }
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -161,7 +175,7 @@ export default function RegisterNewGuestIndividual() {
           .replace("T", " ");
         formDataToSend.append("visit_time", formattedVisitTime);
       } else {
-        toast.error("Invalid visit time format."); // Changed alert to toast
+        toast.error("Invalid visit time format.");
         setLoading(false);
         return;
       }
@@ -201,11 +215,9 @@ export default function RegisterNewGuestIndividual() {
             console.log("Notification trigger sent to backend.");
             toast.success("Notification sent to host successfully.");
           } catch (notificationError) {
-            console.error("Failed to trigger notification:", notificationError);
-            toast.error(
-              "Failed to send host notification: " +
-                (notificationError.response?.data?.message || "Server error.")
-            );
+            console.error("Failed to trigger notification:" +
+                (notificationError.response?.data?.message || "Server error.") , notificationError);
+
           }
         } else {
           console.warn("Host ID or Role missing, skipping host notification.");
@@ -256,17 +268,14 @@ export default function RegisterNewGuestIndividual() {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error(
+        console.error(
           "Error: " + (response.data.message || "Something went wrong")
-        ); // Changed alert to toast
+        );
+        toast.error("Failed to register guest.");
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error(
-        // Changed alert to toast
-        "Failed to register guest. " +
-          (error.response?.data?.message || "Server error.")
-      );
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setLoading(false);
     }

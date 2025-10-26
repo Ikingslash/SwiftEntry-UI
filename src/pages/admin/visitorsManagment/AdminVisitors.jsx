@@ -136,12 +136,12 @@ function AdminVisitors() {
           </ul>
 
           {/* Add New Visitor Button */}
-          <button
+          {/* <button
             className="btn btn-primary rounded-3 ms-auto"
             onClick={() => setShowModal(true)}
           >
             + Add New Visitor
-          </button>
+          </button> */}
         </div>
       </div>
 

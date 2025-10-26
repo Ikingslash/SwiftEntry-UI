@@ -18,12 +18,22 @@ export default function Dashboard() {
   const [todaysGuests, setTodaysGuests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [showAddGuest, setShowAddGuest] = useState(false);
-
+   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState('');
   const [visitorType, setVisitorType] = useState('Individual');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [photo, setPhoto] = useState('');
   const [contact_number, setContact_number] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+    const [formData, setFormData] = useState({
+      name: "",
+      visitorType: "Individual",
+      email: "",
+      address: "",
+      contact_number: "",
+      photo: "",
+    });
 
   const fetchDashboardData = async () => {
     try {
@@ -37,9 +47,9 @@ export default function Dashboard() {
       setRecents(recentsRes.data.recents.visits);
       setTodaysGuests(todaysGuestsRes.data.guests);
       setNotifications(recentsRes.data.recents.notifications.slice(0, 3));
-       toast.success("Page loaded successfully!");
+       console.log("Page loaded successfully!");
     } catch (error) {
-      toast.error("Failed to load dashboard data.");
+      console.error("Failed to load dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -51,7 +61,7 @@ export default function Dashboard() {
       const response = await api.get(`/staff/dashboard/recents?per_page=20`);
       setRecents(response.data.recents.visits);
     } catch {
-      toast.error("Failed to load recent activities.");
+      console.error("Failed to load recent activities.");
     } finally {
       setLoading(false);
     }
@@ -63,24 +73,62 @@ export default function Dashboard() {
       const response = await api.get(`/staff/dashboard/todays-guests?per_page=20`);
       setTodaysGuests(response.data.guests);
     } catch {
-      toast.error("Failed to load today's guests.");
+      console.error("Failed to load today's guests.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddGuest = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/staff/guests/add', { name, visitorType, email, address,contact_number });
-      toast.success("New visitor added successfully!");
-      setShowAddGuest(false);
-      setName(''); setVisitorType('Individual'); setEmail(''); setAddress(''); setContact_number('');
-      fetchDashboardData();
-    } catch {
-      toast.error("Failed to add new visitor.");
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, photo: file }));
+      setSelectedImage(URL.createObjectURL(file));
     }
   };
+
+const handleAddGuest = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name || name);
+    formDataToSend.append("visitorType", formData.visitorType || visitorType);
+    formDataToSend.append("email", formData.email || email);
+    formDataToSend.append("address", formData.address || address);
+    formDataToSend.append(
+      "contact_number",
+      formData.contact_number || contact_number
+    );
+    if (formData.photo) {
+      formDataToSend.append("photo", formData.photo);
+    }
+
+    await api.post("/staff/guests/add", formDataToSend, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    toast.success(
+      "New visitor added successfully and a mail has been sent to the visitor."
+    );
+    setShowAddGuest(false);
+    setName("");
+    setVisitorType("Individual");
+    setEmail("");
+    setAddress("");
+    setContact_number("");
+    setSelectedImage(null);
+    fetchDashboardData();
+  } catch (error) {
+    toast.error("Failed to add new visitor.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   useEffect(() => {
     if (currentPage === 'dashboard') fetchDashboardData();
@@ -118,10 +166,15 @@ export default function Dashboard() {
         show={showAddGuest}
         onClose={() => setShowAddGuest(false)}
         name={name}
+        photo={photo}
+        handleImageChange={handleImageChange}
+        selectedImage={selectedImage}
+        contact_number={contact_number}
         visitorType={visitorType}
         email={email}
         address={address}
         setName={setName}
+        isSubmitting={isSubmitting}
         setVisitorType={setVisitorType}
         setEmail={setEmail}
         setAddress={setAddress}

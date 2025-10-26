@@ -61,9 +61,9 @@ function AdminVisit() {
             </button>
           </li>
         </ul>
-        <a href="#" className=" ms-3">
+        {/* <a href="#" className=" ms-3">
           See More
-        </a>
+        </a> */}
       </div>
       {/* Content */}
       <div className="mt-5">

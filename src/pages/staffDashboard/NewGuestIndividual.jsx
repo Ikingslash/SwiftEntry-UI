@@ -38,23 +38,19 @@ export default function NewGuestIndividual() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-           console.log("FCM token:", fcmToken);
-          // toast.info("FCM token:", fcmToken);
+          console.log("FCM token:", fcmToken);
           api
             .post("/staff/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
-              console.log("FCM token saved on backend:", response.data);
-              // toast.success("FCM token saved on backend:", response.data);
+              // console.log("FCM token saved on backend:", response.data);
             })
             .catch((error) => {
               console.error("Failed to save FCM token on backend:", error);
-              // toast.error("Failed to save FCM token on backend:", error);
             });
         }
       })
       .catch((err) => {
         console.error("An error occurred while retrieving token. ", err);
-        // toast.error("Failed to retrieve FCM token:", err);
       });
 
     // Fetch the list of all app users (staff, security, front desk)
@@ -69,13 +65,10 @@ export default function NewGuestIndividual() {
             "API response for users is not an array:",
             response.data
           );
-
-          // toast.error("API response for users is not an array:", response.data);
         }
       })
       .catch((error) => {
         console.error("Failed to fetch app users:", error);
-        // toast.error("Failed to fetch app users:", error);
       });
     // Fetch the list of visit purposes from the backend
     api
@@ -88,15 +81,10 @@ export default function NewGuestIndividual() {
             "API response for purposes is not an array:",
             response.data
           );
-          // toast.error(
-          //   "API response for purposes is not an array:",
-          //   response.data
-          // );
         }
       })
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
-        // toast.error("Failed to fetch visit purposes:", error);
       });
 
     // Set up the listener for incoming messages.
@@ -132,6 +120,31 @@ export default function NewGuestIndividual() {
       setSelectedImage(URL.createObjectURL(file));
     }
   };
+
+    const showValidationErrors = (error) => {
+      if (error.response && error.response.status === 422) {
+        let validationErrors = error.response.data.errors || error.response.data;
+
+        if (typeof validationErrors === "string") {
+          toast.error(validationErrors);
+          return;
+        }
+
+        Object.values(validationErrors).forEach((messages) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => toast.error(msg));
+          } else if (typeof messages === "string") {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -188,24 +201,23 @@ export default function NewGuestIndividual() {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
 
-       // Trigger notification to host
-              if (formData.host_id && formData.host_role) {
-                try {
-                  await api.post("/genereal-notify-host", {
-                    host_id: formData.host_id,
-                    host_role: formData.host_role,
-                    guest_name: formData.name,
-                    purpose: formData.purpose,
-                  });
-                  console.log("Notification trigger sent to backend.");
-                  toast.success("Notification sent to host successfully.");
-                } catch (notificationError) {
-                  console.error("Failed to trigger notification:", notificationError);
-
-                }
-              } else {
-                console.warn("Host ID or Role missing, skipping host notification.");
-              }
+        // Trigger notification to host
+        if (formData.host_id && formData.host_role) {
+          try {
+            await api.post("/genereal-notify-host", {
+              host_id: formData.host_id,
+              host_role: formData.host_role,
+              guest_name: formData.name,
+              purpose: formData.purpose,
+            });
+            console.log("Notification trigger sent to backend.");
+            toast.success("Notification sent to host successfully.");
+          } catch (notificationError) {
+            console.error("Failed to trigger notification:", notificationError);
+          }
+        } else {
+          console.warn("Host ID or Role missing, skipping host notification.");
+        }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
@@ -254,16 +266,11 @@ export default function NewGuestIndividual() {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        // toast.error(
-        //   "Error: " + (response.data.message || "Something went wrong")
-        // );
+        console.error("Unexpected response:", response);
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error(
-        "Failed to register guest. " +
-          (error.response?.data?.message || "Server error.")
-      );
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -497,7 +504,7 @@ export default function NewGuestIndividual() {
                   <h5 className="fw-bold">Additional Information</h5>
                   <div className=" mt-4">
                     <label className="form-label d-block">
-                      Add Photo (Optional)
+                      Add Photo
                     </label>
                     <input
                       type="file"
@@ -540,7 +547,7 @@ export default function NewGuestIndividual() {
                 </div>
                 <div className="mb-4">
                   <label className="form-label">
-                    Special Requirements (Optional)
+                    Special Requirements
                   </label>
                   <select
                     className="form-select"
@@ -561,7 +568,7 @@ export default function NewGuestIndividual() {
                 </div>
                 <div className="my-3">
                   <label className="form-label">
-                    Emergency Contact (Optional)
+                    Emergency Contact
                   </label>
                   <input
                     type="tel"

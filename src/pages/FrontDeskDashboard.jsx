@@ -3,7 +3,7 @@ import NavBar from "./frontDeskDashboard/include/NavBar";
 import TabIncoming from "./frontDeskDashboard/include/TabIncoming";
 import TabOutgoing from "./frontDeskDashboard/include/TabOutgoing";
 import AddGuestModal from "./frontDeskDashboard/include/AddGuestModal";
-import api from "../context/api"; // Assuming your api context is here
+import api from "../context/api";
 import { PlusCircle } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,7 +12,7 @@ function FrontDeskDashboard() {
   const [activeTab, setActiveTab] = useState("incoming");
   const [showFilters, setShowFilters] = useState(false);
   const [showAddGuest, setShowAddGuest] = useState(false);
-const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [filters, setFilters] = useState({
     group: false,
     individual: false,
@@ -20,8 +20,9 @@ const [refreshKey, setRefreshKey] = useState(0);
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State variables for the AddGuestModal
+  // AddGuestModal states
   const [name, setName] = useState("");
   const [visitorType, setVisitorType] = useState("Individual");
   const [email, setEmail] = useState("");
@@ -29,13 +30,50 @@ const [refreshKey, setRefreshKey] = useState(0);
   const [contact_number, setContact_number] = useState("");
   const [emergency_contact, setEmergencyContact] = useState("");
   const [special_requirements, setSpecialRequirements] = useState("");
-  const [photo, setPhoto] = useState("");
+  const [photo, setPhoto] = useState(null);
   const [is_vip, setIs_vip] = useState(false);
   const [is_blacklisted, setIs_blacklisted] = useState(false);
-
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  // Function to handle filter checkbox changes
+  // ✅ Image handler (works perfectly with preview)
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      setSelectedImage(URL.createObjectURL(file));
+    } else {
+      setPhoto(null);
+      setSelectedImage(null);
+    }
+  };
+
+   const showValidationErrors = (error) => {
+      if (error.response && error.response.status === 422) {
+        let validationErrors = error.response.data.errors || error.response.data;
+
+        if (typeof validationErrors === "string") {
+          toast.error(validationErrors);
+          return;
+        }
+
+        Object.values(validationErrors).forEach((messages) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => toast.error(msg));
+          } else if (typeof messages === "string") {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    };
+
+  // Filter handling
   const handleFilterChange = (filterType) => {
     setFilters((prev) => ({
       ...prev,
@@ -43,40 +81,59 @@ const [refreshKey, setRefreshKey] = useState(0);
     }));
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
+  const handleSearchChange = (e) => setSearchQuery(e.target.value);
+  const applyFilters = () => setShowFilters(false);
+  const openAddGuestModal = () => setShowAddGuest(true);
 
-  const applyFilters = () => {
-    setShowFilters(false);
-  };
-
-  const openAddGuestModal = () => {
-    setShowAddGuest(true);
-  };
-
-  // Function to handle adding a new guest (connected to the API)
+  // ✅ Handle Add Guest
   const handleAddGuest = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const payload = {
-        name,
-        contact_number,
-        email,
-        address,
-        is_vip,
-        is_blacklisted,
-        emergency_contact,
-        special_requirements,
-        photo,
-        visitor_type: visitorType,
-      };
+    setIsSubmitting(true);
 
-      const response = await api.post("/front-desk/guests/visitors", payload);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("contact_number", contact_number);
+      formData.append("email", email);
+      formData.append("address", address);
+      formData.append("is_vip", is_vip ? 1 : 0);
+      formData.append("is_blacklisted", is_blacklisted ? 1 : 0);
+      formData.append("emergency_contact", emergency_contact);
+      formData.append("special_requirements", special_requirements);
+      formData.append("visitor_type", visitorType);
+
+      // ✅ Append photo if selected
+      if (photo) {
+        formData.append("photo", photo);
+      }
+
+      const response = await api.post("/front-desk/guests/visitors", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (response.status === 201) {
+
         toast.success("New visitor registered successfully!");
+
+
+       console.log(
+         "[FrontDeskDashboard] Incrementing refreshKey in 300ms to trigger list reload"
+       );
+       setTimeout(() => {
+         setRefreshKey((prev) => {
+           const next = prev + 1;
+           console.log(
+             "[FrontDeskDashboard] refreshKey updated:",
+             prev,
+             "->",
+             next
+           );
+           return next;
+         });
+       }, 300);
+
+       setSearchQuery("");
         setShowAddGuest(false);
 
         // Reset form fields
@@ -87,29 +144,24 @@ const [refreshKey, setRefreshKey] = useState(0);
         setContact_number("");
         setEmergencyContact("");
         setSpecialRequirements("");
-        setPhoto("");
+        setPhoto(null);
         setIs_vip(false);
         setIs_blacklisted(false);
+        setSelectedImage(null);
 
-        // TODO: refresh incoming list if needed
-         setRefreshKey((prev) => prev + 1);
       } else {
         toast.error(response.data.message || "Failed to register visitor.");
       }
     } catch (error) {
-      console.error("Error creating new visitor:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to create visitor. Please check your network connection.";
-      toast.error(errorMessage);
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
-  useEffect(() => {
-    // Fetch initial data if needed
-    // For example, you can fetch the list of guests or any other data here
-  }, []);
+
+  useEffect(() => {}, []);
 
   return (
     <div>
@@ -127,17 +179,13 @@ const [refreshKey, setRefreshKey] = useState(0);
           borderBottomRightRadius: "3%",
         }}
       >
-        {/* Left Content */}
         <div className="container">
           <div
             className="text-white shadow-sm"
             style={{ backgroundColor: "#053561", minHeight: "180px" }}
           >
-            {/* Row for Welcome Text & Plus Icon */}
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bod mb-0">Guest Confirmation</h2>
-
-              {/* Plus Icon with onClick handler to open the modal */}
               <button
                 onClick={openAddGuestModal}
                 className="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-circle"
@@ -146,10 +194,7 @@ const [refreshKey, setRefreshKey] = useState(0);
                 <PlusCircle size={24} className="text-white" />
               </button>
             </div>
-
-            {/* Badge & Line Row */}
-            <div className="d-flex align-items-center  mt-2">
-              {/* Badge */}
+            <div className="d-flex align-items-center mt-2">
               <p
                 className="badge text-white"
                 style={{
@@ -166,8 +211,6 @@ const [refreshKey, setRefreshKey] = useState(0);
                   Company
                 </span>
               </p>
-
-              {/* Extending Line */}
               <div
                 className="flex-grow-1 ms-2 mb-3"
                 style={{
@@ -180,13 +223,11 @@ const [refreshKey, setRefreshKey] = useState(0);
         </div>
       </header>
 
-      {/* Tabs Navigation (Positioned Below Header) */}
-      <div className=" container mt-5">
+      {/* Tabs */}
+      <div className="container mt-5">
         <ul
           className="nav nav-tabs container d-flex align-items-center justify-content-between"
-          style={{
-            border: "none",
-          }}
+          style={{ border: "none" }}
         >
           <div className="d-flex">
             <li className="nav-item">
@@ -235,7 +276,7 @@ const [refreshKey, setRefreshKey] = useState(0);
             </li>
           </div>
 
-          {/* Search Bar with Settings Icon */}
+          {/* Search + Filters */}
           <div className="d-flex align-items-center position-relative">
             <div className="position-relative me-2">
               <input
@@ -248,6 +289,7 @@ const [refreshKey, setRefreshKey] = useState(0);
                   width: "400px",
                   border: "1px solid #ced4da",
                 }}
+                autoComplete="off"
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
@@ -264,7 +306,6 @@ const [refreshKey, setRefreshKey] = useState(0);
               ></i>
             </div>
 
-            {/* Filter Dropdown */}
             {showFilters && (
               <div
                 className="position-absolute bg-white rounded shadow-sm p-3"
@@ -277,7 +318,6 @@ const [refreshKey, setRefreshKey] = useState(0);
                 }}
               >
                 <h6 className="mb-3 fw-bold text-secondary">Filter by:</h6>
-
                 <div className="form-check mb-2">
                   <input
                     className="form-check-input"
@@ -290,7 +330,6 @@ const [refreshKey, setRefreshKey] = useState(0);
                     Group
                   </label>
                 </div>
-
                 <div className="form-check mb-2">
                   <input
                     className="form-check-input"
@@ -306,7 +345,6 @@ const [refreshKey, setRefreshKey] = useState(0);
                     Individual
                   </label>
                 </div>
-
                 <div className="form-check mb-3">
                   <input
                     className="form-check-input"
@@ -319,7 +357,6 @@ const [refreshKey, setRefreshKey] = useState(0);
                     Pending
                   </label>
                 </div>
-
                 <button
                   className="btn btn-primary w-100"
                   onClick={applyFilters}
@@ -336,17 +373,22 @@ const [refreshKey, setRefreshKey] = useState(0);
           </div>
         </ul>
       </div>
+
       {/* Tab Content */}
       <div className="container mt-5">
         {activeTab === "incoming" && (
           <TabIncoming
             filters={filters}
             searchQuery={searchQuery}
-            refreshKey={refreshKey} // 🔑 pass down
+            refreshKey={refreshKey}
           />
         )}
         {activeTab === "outgoing" && (
-          <TabOutgoing filters={filters} searchQuery={searchQuery} refreshKey={refreshKey} />
+          <TabOutgoing
+            filters={filters}
+            searchQuery={searchQuery}
+            refreshKey={refreshKey}
+          />
         )}
       </div>
 
@@ -377,6 +419,9 @@ const [refreshKey, setRefreshKey] = useState(0);
         handleAddGuest={handleAddGuest}
         loading={loading}
         setLoading={setLoading}
+        selectedImage={selectedImage}
+        isSubmitting={isSubmitting}
+        handleImageChange={handleImageChange}
       />
     </div>
   );

@@ -2,6 +2,8 @@ import { useState } from "react";
 import NavBar from "./include/NavBar";
 import RegisterNewGuestIndividual from "./RegisterNewGuestIndividual";
 import RegisterNewGuestGroup from "./RegisterNewGuestGroup";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function RegisterNewGuest() {
   const [activeTab, setActiveTab] = useState("individual");
@@ -9,6 +11,7 @@ function RegisterNewGuest() {
   return (
     <div>
       <NavBar />
+       <ToastContainer position="top-right" autoClose={5000} />
       <header
         id="home"
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"

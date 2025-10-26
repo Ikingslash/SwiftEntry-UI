@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function SignIn() {
   const navigate = useNavigate();
@@ -36,12 +37,14 @@ function SignIn() {
 
 
   return (
-    <div
-      className="container-fluid d-flex align-items-center justify-content-center vh-100 p-0"
-      style={{ backgroundColor: "#F5FAFE", overflow: "hidden" }}
-    >
-      <div className="row w-100 h-100 d-flex align-items-center justify-content-center g-0">
-        {/* Left Section (Video Background) */}
+    <>
+      <ToastContainer position="top-right" autoClose={5000} />
+      <div
+        className="container-fluid d-flex align-items-center justify-content-center vh-100 p-0"
+        style={{ backgroundColor: "#F5FAFE", overflow: "hidden" }}
+      >
+        <div className="row w-100 h-100 d-flex align-items-center justify-content-center g-0">
+          {/* Left Section (Video Background) */}
         <div
           className="col-lg-5  offset-md-1  d-none d-lg-block position-relative p-0"
           style={{
@@ -57,7 +60,7 @@ function SignIn() {
             className="w-100 h-100 object-fit-cover p-4 rounded-5"
             style={{ objectFit: "cover" }}
           >
-            <source src="./video1.mp4" type="video/mp4" />
+            <source src="./video3.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           <div
@@ -158,7 +161,8 @@ function SignIn() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

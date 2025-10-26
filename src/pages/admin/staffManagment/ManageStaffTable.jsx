@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import api from "../../../context/api"; // Assuming your Axios instance
-// No need for date-fns here unless you have date fields for staff like last login
+import api from "../../../context/api";
+import { toast } from "react-toastify";
 
 function ManageStaffTable({ refreshKey, triggerRefresh }) {
   const [staff, setStaff] = useState([]); // Stores staff data
@@ -64,7 +64,7 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
       setShowEditModal(true);
     } catch (err) {
       console.error("Error fetching staff details for edit:", err.response?.data || err.message);
-      alert("Failed to load staff details for editing.");
+      toast.error("Failed to load staff details for editing.");
     }
   };
 
@@ -89,10 +89,10 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
       console.log("Staff updated:", response.data);
       setShowEditModal(false);
       triggerRefresh(); // Refresh the table
-      alert("Staff updated successfully!");
+      toast.success("Staff updated successfully!");
     } catch (err) {
-      console.error("Error updating staff:", err.response?.data || err.message);
-      alert("Failed to update staff: " + (err.response?.data?.message || JSON.stringify(err.response?.data?.errors) || err.message));
+      console.error("Error updating staff:", err.response?.data || err.message || JSON.stringify(err.response?.data?.errors));
+      toast.error("Failed to update staff: ");
     }
   };
 
@@ -107,10 +107,10 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
         const response = await api.post(`admin/staff/${staffId}/${action}`);
         console.log(`Staff ${action}d:`, response.data);
         triggerRefresh();
-        alert(response.data.message);
+        toast.success(response.data.message);
       } catch (err) {
         console.error(`Error ${action}ing staff:`, err.response?.data || err.message);
-        alert(`Failed to ${action} staff: ` + (err.response?.data?.message || err.message));
+        toast.error(`Failed to ${action} staff: ` + (err.response?.data?.message || err.message));
       }
     }
   };
@@ -121,10 +121,10 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
         const response = await api.delete(`admin/staff/${staffId}`);
         console.log("Staff deleted:", response.data);
         triggerRefresh();
-        alert(response.data.message);
+        toast.success(response.data.message);
       } catch (err) {
         console.error("Error deleting staff:", err.response?.data || err.message);
-        alert("Failed to delete staff: " + (err.response?.data?.message || err.message));
+        toast.error("Failed to delete staff: " + (err.response?.data?.message || err.message));
       }
     }
   };
@@ -136,7 +136,7 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
       setShowViewModal(true);
     } catch (err) {
       console.error("Error fetching staff details for view:", err.response?.data || err.message);
-      alert("Failed to load staff details.");
+      toast.error("Failed to load staff details.");
     }
   };
 
@@ -187,7 +187,7 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
               <th>Name</th>
               <th>Role</th>
               <th>Department</th>
-              <th>Email</th> {/* Added Email for clarity */}
+              <th>Email</th>
               <th>Status</th>
               <th className="text-center">Action</th>
             </tr>
@@ -195,11 +195,15 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
           <tbody>
             {staff.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted py-4">No staff found.</td>
+                <td colSpan="6" className="text-center text-muted py-4">
+                  No staff found.
+                </td>
               </tr>
             ) : (
               staff.map((s, idx) => (
-                <tr key={s.id || idx}> {/* Use s.id for unique key */}
+                <tr key={s.id || idx}>
+                  {" "}
+                  {/* Use s.id for unique key */}
                   <td>{s.name}</td>
                   <td>{s.role}</td>
                   <td>{s.department}</td>
@@ -240,10 +244,14 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
                         </li>
                         <li>
                           <button
-                            className={`dropdown-item ${s.status ? 'text-warning' : 'text-success'}`}
-                            onClick={() => handleDeactivateActivate(s.id, s.status)}
+                            className={`dropdown-item ${
+                              s.status ? "text-warning" : "text-success"
+                            }`}
+                            onClick={() =>
+                              handleDeactivateActivate(s.id, s.status)
+                            }
                           >
-                            {s.status ? 'Deactivate' : 'Activate'}
+                            {s.status ? "Deactivate" : "Activate"}
                           </button>
                         </li>
                         <li>
@@ -284,7 +292,6 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
           Next
         </button>
       </div>
-
 
       {/* Edit Staff Modal */}
       {showEditModal && selectedStaff && (
@@ -410,142 +417,162 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
                           value={editFormData.department}
                           onChange={handleEditFormChange}
                           required
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <label className="form-label">New Password (leave blank to keep current)</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            name="password"
-                            value={editFormData.password}
-                            onChange={handleEditFormChange}
-                            placeholder="Enter new password"
-                          />
-                        </div>
-                        <div className="mb-3 form-check">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="staffStatus"
-                            name="status"
-                            checked={editFormData.status}
-                            onChange={handleEditFormChange}
-                          />
-                          <label className="form-check-label" htmlFor="staffStatus">
-                            Active
-                          </label>
-                        </div>
+                        />
                       </div>
-                      <div className="mt-4 text-center">
-                        <button type="submit" className="btn btn-primary w-50">
-                          Update
-                        </button>
+                      <div className="mb-3">
+                        <label className="form-label">
+                          New Password (leave blank to keep current)
+                        </label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          name="password"
+                          value={editFormData.password}
+                          onChange={handleEditFormChange}
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div className="mb-3 form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="staffStatus"
+                          name="status"
+                          checked={editFormData.status}
+                          onChange={handleEditFormChange}
+                        />
+                        <label
+                          className="form-check-label"
+                          htmlFor="staffStatus"
+                        >
+                          Active
+                        </label>
                       </div>
                     </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* View Staff Details Modal */}
-        {showViewModal && selectedStaff && (
-          <div
-            className="modal fade show d-block"
-            tabIndex="-1"
-            role="dialog"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-            onClick={closeModal}
-          >
-            <div
-              className="modal-dialog modal-lg py-4"
-              style={{
-                position: "fixed",
-                top: 0,
-                right: 0,
-                width: "50%",
-                maxWidth: "40%",
-                height: "100vh",
-                overflowY: "auto",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="modal-content p-3">
-                <div className="modal-header">
-                  <h5 className="modal-title">Staff Information</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={closeModal}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3 container">
-                    <div className="col-12 text-center mb-3">
-                      <img
-                        src={selectedStaff.photo || "../images/user.png"}
-                        alt="Staff"
-                        className="rounded-circle"
-                        width="100"
-                        height="100"
-                        style={{objectFit: 'cover'}}
-                      />
+                    <div className="mt-4 text-center">
+                      <button type="submit" className="btn btn-primary w-50">
+                        Update
+                      </button>
                     </div>
-                    <div className="col-md-6">
-                      <p className="fw-bold"><small>Full Name:</small></p>
-                    </div>
-                    <div className="col-md-6">
-                      <small>{selectedStaff.name}</small>
-                    </div>
-                    <hr className="w-100" />
-
-                    <div className="col-md-6">
-                      <p className="fw-bold"><small>Email:</small></p>
-                    </div>
-                    <div className="col-md-6">
-                      <small>{selectedStaff.email}</small>
-                    </div>
-                    <hr className="w-100" />
-
-                    <div className="col-md-6">
-                      <p className="fw-bold"><small>Job Role:</small></p>
-                    </div>
-                    <div className="col-md-6">
-                      <small>{selectedStaff.role}</small>
-                    </div>
-                    <hr className="w-100" />
-
-                    <div className="col-md-6">
-                      <p className="fw-bold"><small>Department:</small></p>
-                    </div>
-                    <div className="col-md-6">
-                      <small>{selectedStaff.department}</small>
-                    </div>
-                    <hr className="w-100" />
-
-                    <div className="col-md-6">
-                      <p className="fw-bold"><small>Status:</small></p>
-                    </div>
-                    <div className="col-md-6">
-                      <small>{selectedStaff.status ? "Active" : "Inactive"}</small>
-                    </div>
-                    <hr className="w-100" />
-                    {/* You might add last login, created_at, etc. if available */}
                   </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Staff Details Modal */}
+      {showViewModal && selectedStaff && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={closeModal}
+        >
+          <div
+            className="modal-dialog modal-lg py-4"
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              width: "50%",
+              maxWidth: "40%",
+              height: "100vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content p-3">
+              <div className="modal-header">
+                <h5 className="modal-title">Staff Information</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeModal}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3 container">
+                  <div className="col-12 text-center mb-3">
+                    <img
+                      src={
+                        `${selectedStaff.profile_picture}` ||
+                        "../images/user.png"
+                      }
+                      alt="Staff"
+                      className="rounded-circle"
+                      width="100"
+                      height="100"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <p className="fw-bold">
+                      <small>Full Name:</small>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{selectedStaff.name}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6">
+                    <p className="fw-bold">
+                      <small>Email:</small>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{selectedStaff.email}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6">
+                    <p className="fw-bold">
+                      <small>Job Role:</small>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{selectedStaff.role}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6">
+                    <p className="fw-bold">
+                      <small>Department:</small>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <small>{selectedStaff.department}</small>
+                  </div>
+                  <hr className="w-100" />
+
+                  <div className="col-md-6">
+                    <p className="fw-bold">
+                      <small>Status:</small>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <small>
+                      {selectedStaff.status ? "Active" : "Inactive"}
+                    </small>
+                  </div>
+                  <hr className="w-100" />
+                  {/* You might add last login, created_at, etc. if available */}
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal Backdrops */}
-        {(showEditModal || showViewModal) && (
-          <div className="modal-backdrop fade show"></div>
-        )}
-      </div>
-    );
+      {/* Modal Backdrops */}
+      {(showEditModal || showViewModal) && (
+        <div className="modal-backdrop fade show"></div>
+      )}
+    </div>
+  );
   }
 
 export default ManageStaffTable;

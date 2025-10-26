@@ -1,0 +1,257 @@
+export default function AddGuestModal({
+  show,
+  onClose,
+  name,
+  visitorType,
+  email,
+  address,
+  contact_number,
+  emergency_contact,
+  special_requirements,
+  is_vip,
+  is_blacklisted,
+  photo,
+  setName,
+  setVisitorType,
+  setEmail,
+  setAddress,
+  setContact_number,
+  setEmergencyContact,
+  setSpecialRequirements,
+  setIs_vip,
+  setIs_blacklisted,
+  setPhoto,
+  handleAddGuest,
+  selectedImage,
+  handleImageChange,
+  isSubmitting,
+  loading,
+}) {
+  const modalClasses = show ? "modal d-block" : "modal";
+  const modalStyle = {
+    display: show ? "block" : "none",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  };
+
+  return (
+    <div
+      className={modalClasses}
+      style={modalStyle}
+      tabIndex="-1"
+      role="dialog"
+    >
+      <div className="modal-dialog modal-dialog-centered" role="document">
+        <div className="modal-content rounded-4">
+          <div className="modal-header d-flex justify-content-between align-items-center border-0 pb-0">
+            <h5 className="modal-title fw-bold">Create New Visitor</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={onClose}
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div className="modal-body pt-2">
+            <form onSubmit={handleAddGuest} encType="multipart/form-data">
+              {/* ✅ PHOTO UPLOAD */}
+              <div className="mt-4">
+                <label className="form-label d-block">Add Photo</label>
+                <input
+                  type="file"
+                  className="d-none"
+                  id="fileUpload"
+                  accept="image/*"
+                  name="photo"
+                  onChange={handleImageChange}
+                />
+                <label htmlFor="fileUpload" className="d-inline-block">
+                  <div
+                    className="rounded-circle border d-flex justify-content-center align-items-center"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      backgroundColor: "#f8f9fa",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {selectedImage ? (
+                      <img
+                        src={selectedImage}
+                        alt="Uploaded"
+                        className="rounded-circle"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <i
+                        className="bi bi-camera"
+                        style={{ fontSize: "24px" }}
+                      ></i>
+                    )}
+                  </div>
+                </label>
+              </div>
+
+              {/* ✅ VISITOR DETAILS */}
+              <div className="mb-3">
+                <label className="form-label text-muted small">
+                  Visitor's Name
+                </label>
+                <input
+                  type="text"
+                  className="form-control rounded-pill px-3 py-2"
+                  placeholder="Enter Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label text-muted small">
+                  Visitor Type
+                </label>
+                <select
+                  className="form-select rounded-pill px-3 py-2"
+                  value={visitorType}
+                  onChange={(e) => setVisitorType(e.target.value)}
+                  required
+                >
+                  <option value="Individual">Individual</option>
+                  <option value="Group">Group</option>
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label text-muted small">Email</label>
+                <input
+                  type="email"
+                  className="form-control rounded-pill px-3 py-2"
+                  placeholder="Enter Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label text-muted small">Contact</label>
+                <input
+                  type="tel"
+                  className="form-control rounded-pill px-3 py-2"
+                  placeholder="Enter Phone Number"
+                  value={contact_number}
+                  onChange={(e) => setContact_number(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="address" className="form-label">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  className="form-control rounded-4 px-3 py-2"
+                  placeholder="Enter Address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="emergency_contact" className="form-label">
+                  Emergency Contact
+                </label>
+                <input
+                  type="text"
+                  className="form-control rounded-pill"
+                  id="emergency_contact"
+                  name="emergency_contact"
+                  value={emergency_contact}
+                  onChange={(e) => setEmergencyContact(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="special_requirements" className="form-label">
+                  Special Requirements
+                </label>
+                <input
+                  type="text"
+                  className="form-control rounded-pill"
+                  id="special_requirements"
+                  name="special_requirements"
+                  value={special_requirements}
+                  onChange={(e) => setSpecialRequirements(e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* ✅ SWITCHES */}
+              <div className="mb-3">
+                <div className="form-check form-switch mt-3">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="is_vip"
+                    name="is_vip"
+                    checked={is_vip}
+                    onChange={(e) => setIs_vip(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="is_vip">
+                    Is VIP?
+                  </label>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="form-check form-switch mt-3">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="is_blacklisted"
+                    name="is_blacklisted"
+                    checked={is_blacklisted}
+                    onChange={(e) => setIs_blacklisted(e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="is_blacklisted">
+                    Is Blacklisted?
+                  </label>
+                </div>
+              </div>
+
+              {/* ✅ SUBMIT BUTTON */}
+              <div className="d-grid gap-2 mt-4">
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg rounded-pill fw-bold"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Creating...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

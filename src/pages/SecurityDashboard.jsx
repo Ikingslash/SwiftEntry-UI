@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import NavBar from "./securityDashboard/include/NavBar";
 import api from "../context/api";
-import AddGuestModal from "./frontDeskDashboard/include/AddGuestModal";
+import AddGuestModal from "./securityDashboard/include/AddGuestModal";
 import { PlusCircle } from "lucide-react";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import { NavLink } from "react-router-dom";
 
 function SecurityDashboard() {
@@ -25,34 +26,81 @@ function SecurityDashboard() {
   const [photo, setPhoto] = useState("");
   const [is_vip, setIs_vip] = useState(false);
   const [is_blacklisted, setIs_blacklisted] = useState(false);
-
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const openAddGuestModal = () => {
     setShowAddGuest(true);
   };
+  // ✅ Image handler (works perfectly with preview)
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      setSelectedImage(URL.createObjectURL(file));
+    } else {
+      setPhoto(null);
+      setSelectedImage(null);
+    }
+  };
+
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
+
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
+      }
+
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong. Please try again."
+      );
+    }
+  };
+
   // Function to handle adding a new guest (connected to the API)
+  // ✅ Handle Add Guest
   const handleAddGuest = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const payload = {
-        name,
-        contact_number,
-        email,
-        address,
-        is_vip,
-        is_blacklisted,
-        emergency_contact,
-        special_requirements,
-        photo,
-        visitor_type: visitorType,
-      };
+    setIsSubmitting(true);
 
-      const response = await api.post("/security/visitors", payload);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("contact_number", contact_number);
+      formData.append("email", email);
+      formData.append("address", address);
+      formData.append("is_vip", is_vip ? 1 : 0);
+      formData.append("is_blacklisted", is_blacklisted ? 1 : 0);
+      formData.append("emergency_contact", emergency_contact);
+      formData.append("special_requirements", special_requirements);
+      formData.append("visitor_type", visitorType);
+
+      // ✅ Append photo if selected
+      if (photo) {
+        formData.append("photo", photo);
+      }
+
+      const response = await api.post("/security/visitors", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (response.status === 201) {
         toast.success("New visitor registered successfully!");
+
         setShowAddGuest(false);
 
         // Reset form fields
@@ -63,24 +111,21 @@ function SecurityDashboard() {
         setContact_number("");
         setEmergencyContact("");
         setSpecialRequirements("");
-        setPhoto("");
+        setPhoto(null);
         setIs_vip(false);
         setIs_blacklisted(false);
-
+        setSelectedImage(null);
       } else {
         toast.error(response.data.message || "Failed to register visitor.");
       }
     } catch (error) {
-      console.error("Error creating new visitor:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to create visitor. Please check your network connection.";
-      toast.error(errorMessage);
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner("reader", {
@@ -111,39 +156,39 @@ function SecurityDashboard() {
       modal.show();
     } catch (error) {
       console.error("Scan Error:", error);
-       toast.error("No visitor record found for this code.");
+      toast.error("No visitor record found for this code.");
     }
   };
 
   const handlePrint = () => {
-     const element = printRef.current;
+    const element = printRef.current;
 
-     // Create a new window to print
-     const printWindow = window.open("", "", "height=600,width=800");
-     printWindow.document.write("<html><head><title>Visitor Badge</title>");
-     // Include Bootstrap CSS for styling in the print window
-     printWindow.document.write(
-       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-     );
-     printWindow.document.write("</head><body >");
-     printWindow.document.write('<div class="p-5">');
-     printWindow.document.write(element.outerHTML);
-     printWindow.document.write("</div>");
-     printWindow.document.write("</body></html>");
-     printWindow.document.close();
+    // Create a new window to print
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Visitor Badge</title>");
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write(
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+    );
+    printWindow.document.write("</head><body >");
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write("</div>");
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
 
-     // Wait for the content to load and then print
-     printWindow.onload = function () {
-       printWindow.focus();
-       printWindow.print();
-       printWindow.close();
-     };
+    // Wait for the content to load and then print
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
   };
 
   return (
     <div>
       <NavBar />
-
+      <ToastContainer position="top-right" autoClose={5000} />
       <header
         className="text-white text-center position-relative px-4"
         style={{
@@ -254,7 +299,7 @@ function SecurityDashboard() {
               <div className="modal-body px-4" ref={printRef}>
                 <div className="text-center mb-4">
                   <img
-                    src="./images/user.png"
+                    src={`${userProfile.photo}`}
                     alt="User"
                     className="rounded-circle shadow"
                     style={{
@@ -338,6 +383,7 @@ function SecurityDashboard() {
       `}</style>
 
       {/* Add Guest Modal */}
+      {/* Add Guest Modal */}
       <AddGuestModal
         show={showAddGuest}
         onClose={() => setShowAddGuest(false)}
@@ -364,6 +410,9 @@ function SecurityDashboard() {
         handleAddGuest={handleAddGuest}
         loading={loading}
         setLoading={setLoading}
+        selectedImage={selectedImage}
+        isSubmitting={isSubmitting}
+        handleImageChange={handleImageChange}
       />
     </div>
   );

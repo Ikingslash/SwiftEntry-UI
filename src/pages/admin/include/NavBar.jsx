@@ -65,7 +65,7 @@ function Navbar() {
                 Visitors
               </NavLink>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
                   location.pathname === "/admin-dashboard/staffs"
@@ -76,7 +76,68 @@ function Navbar() {
               >
                 Staffs
               </NavLink>
+            </li> */}
+
+            {/* Staff Management Dropdown */}
+            <li className="nav-item dropdown">
+              <a
+                className={`nav-link dropdown-toggle px-3 ${
+                  [
+                    "/admin-dashboard/staffs",
+                    "/admin-dashboard/frontdesk",
+                    "/admin-dashboard/security",
+                  ].includes(location.pathname)
+                    ? "text-white fw-bold"
+                    : "text-white-50"
+                }`}
+                href="#"
+                id="staffDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Staff Management
+              </a>
+              <ul className="dropdown-menu">
+                <li>
+                  <NavLink
+                    className={`dropdown-item ${
+                      location.pathname === "/admin-dashboard/staffs"
+                        ? "fw-bold text-light"
+                        : ""
+                    }`}
+                    to="/admin-dashboard/staffs"
+                  >
+                    Staff
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    className={`dropdown-item ${
+                      location.pathname === "/admin-dashboard/frontdesk"
+                        ? "fw-bold text-light "
+                        : ""
+                    }`}
+                    to="/admin-dashboard/frontdesk"
+                  >
+                    Frontdesk
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    className={`dropdown-item ${
+                      location.pathname === "/admin-dashboard/security"
+                        ? "fw-bold text-light"
+                        : ""
+                    }`}
+                    to="/admin-dashboard/security"
+                  >
+                    Security
+                  </NavLink>
+                </li>
+              </ul>
             </li>
+
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
@@ -145,7 +206,7 @@ function Navbar() {
             >
               <span className="fw-semibold">{user?.name}</span>
               <img
-                src={`https://app.theswiftentry.com${user.profile_picture}`}
+                src={`${user.profile_picture}` || "../images/user.png"}
                 alt="Profile"
                 className="rounded-circle border"
                 width="40"
@@ -210,8 +271,3 @@ function Navbar() {
 }
 
 export default Navbar;
-
-
-
-
-

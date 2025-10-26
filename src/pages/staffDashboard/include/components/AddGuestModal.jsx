@@ -2,6 +2,9 @@ export default function AddGuestModal({
   show,
   onClose,
   name,
+  selectedImage,
+  handleImageChange,
+  photo,
   visitorType,
   email,
   address,
@@ -11,26 +14,81 @@ export default function AddGuestModal({
   setEmail,
   setAddress,
   setContact_number,
-  handleAddGuest
+  handleAddGuest,
+  isSubmitting,
 }) {
-  const modalClasses = show ? 'modal d-block' : 'modal';
+  const modalClasses = show ? "modal d-block" : "modal";
   const modalStyle = {
-    display: show ? 'block' : 'none',
-    backgroundColor: 'rgba(0,0,0,0.5)'
+    display: show ? "block" : "none",
+    backgroundColor: "rgba(0,0,0,0.5)",
   };
 
   return (
-    <div className={modalClasses} style={modalStyle} tabIndex="-1" role="dialog">
+    <div
+      className={modalClasses}
+      style={modalStyle}
+      tabIndex="-1"
+      role="dialog"
+    >
       <div className="modal-dialog modal-dialog-centered" role="document">
         <div className="modal-content rounded-4">
           <div className="modal-header d-flex justify-content-between align-items-center border-0 pb-0">
             <h5 className="modal-title fw-bold">Create New Visitor</h5>
-            <button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={onClose}
+              aria-label="Close"
+            ></button>
           </div>
           <div className="modal-body pt-2">
             <form onSubmit={handleAddGuest}>
+              <div className=" my-3">
+                <label className="form-label d-block">
+                  Add Photo (Optional)
+                </label>
+                <input
+                  type="file"
+                  className="d-none"
+                  id="fileUpload"
+                  accept="image/*"
+                  name="photo"
+                  onChange={handleImageChange}
+                />
+                <label htmlFor="fileUpload" className="d-inline-block">
+                  <div
+                    className="rounded-circle border d-flex justify-content-center align-items-center"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      backgroundColor: "#f8f9fa",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {selectedImage ? (
+                      <img
+                        src={selectedImage}
+                        alt="Uploaded"
+                        className="rounded-circle"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <i
+                        className="bi bi-camera"
+                        style={{ fontSize: "24px" }}
+                      ></i>
+                    )}
+                  </div>
+                </label>
+              </div>
               <div className="mb-3">
-                <label className="form-label text-muted small">Visitors Name</label>
+                <label className="form-label text-muted small">
+                  Visitors Name
+                </label>
                 <input
                   type="text"
                   className="form-control rounded-pill px-3 py-2"
@@ -49,11 +107,13 @@ export default function AddGuestModal({
                   required
                 >
                   <option>Individual</option>
-                  <option>Group</option> 
+                  <option>Group</option>
                 </select>
               </div>
               <div className="mb-3">
-                <label className="form-label text-muted small">Email Address</label>
+                <label className="form-label text-muted small">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   className="form-control rounded-pill px-3 py-2"
@@ -86,8 +146,23 @@ export default function AddGuestModal({
                 />
               </div>
               <div className="d-grid gap-2 mt-4">
-                <button type="submit" className="btn btn-primary btn-lg rounded-pill fw-bold">
-                  Create
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg rounded-pill fw-bold"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Create...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
                 </button>
               </div>
             </form>

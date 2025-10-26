@@ -33,6 +33,7 @@ function AnalyticalAndReport() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState("pdf"); // Default export format
   const [showFilterModal, setShowFilterModal] = useState(false); // State for filter modal
+  const [isExporting, setIsExporting] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState({
     timePeriod: 'daily', // 'daily', 'weekly', 'monthly'
@@ -83,33 +84,45 @@ function AnalyticalAndReport() {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append('format', exportFormat);
-      // Pass current active filters to the export endpoint
-      queryParams.append('filter', activeFilters.timePeriod);
-      if (activeFilters.vip) queryParams.append('vip', true);
-      if (activeFilters.blacklist) queryParams.append('blacklist', true);
-      if (activeFilters.walkins) queryParams.append('walkins', true);
-      if (activeFilters.preregistered) queryParams.append('preregistered', true);
+const handleExport = async () => {
+  setIsExporting(true);
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append("format", exportFormat);
+    queryParams.append("filter", activeFilters.timePeriod || "daily");
 
-      window.open(`/api/admin/analytics/export?${queryParams.toString()}`, '_blank');
+    if (activeFilters.vip) queryParams.append("vip", true);
+    if (activeFilters.blacklist) queryParams.append("blacklist", true);
+    if (activeFilters.walkins) queryParams.append("walkins", true);
+    if (activeFilters.preregistered) queryParams.append("preregistered", true);
+
+    // ✅ FIXED: Ensure you call the correct backend route (with full path)
+    window.open(
+      `${
+        import.meta.env.VITE_API_BASE_URL || ""
+      }/api/admin/analytics/export?${queryParams.toString()}`,
+      "_blank"
+    );
+
+      // give small delay before closing modal
+    setTimeout(() => {
+      setIsExporting(false);
       setShowExportModal(false);
       alert(`Exporting report as ${exportFormat.toUpperCase()}...`);
-    } catch (err) {
-      console.error("Error exporting report:", err.response?.data || err.message);
-      alert("Failed to export report. Please try again.");
-    }
-  };
+    }, 1200);
+  } catch (err) {
+    console.error("Error exporting report:", err.response?.data || err.message);
+    alert("Failed to export report. Please try again.");
+  }
+};
 
   const handleFilterChange = (filterType, value) => {
     // This function updates the activeFilters state.
     // The useEffect hook, which depends on activeFilters, will then trigger fetchAnalyticsData.
-    if (filterType === 'timePeriod') {
-      setActiveFilters(prev => ({ ...prev, timePeriod: value }));
+    if (filterType === "timePeriod") {
+      setActiveFilters((prev) => ({ ...prev, timePeriod: value }));
     } else {
-      setActiveFilters(prev => ({
+      setActiveFilters((prev) => ({
         ...prev,
         [filterType]: !prev[filterType]
       }));
@@ -122,6 +135,8 @@ function AnalyticalAndReport() {
     fetchAnalyticsData();
     setShowFilterModal(false);
   };
+
+  
 
   if (loading) {
     return <p className="text-center mt-5">Loading analytics data...</p>;
@@ -146,7 +161,7 @@ function AnalyticalAndReport() {
           borderBottomRightRadius: "3%",
         }}
       >
-         <div className="container">
+        <div className="container">
           <div
             className="text-white shadow-sm"
             style={{ backgroundColor: "#053561", minHeight: "180px" }}
@@ -197,49 +212,56 @@ function AnalyticalAndReport() {
           <div className="col-lg-3 col-md-6 col-sm-12">
             <div className="card shadow-sm p-3 text-center rounded-4 border-0">
               <h6 className="text-muted">Total Visitors Today</h6>
-              <h3 className="fw-bold text-primary">{analyticsData.total_visitors_today}</h3>
+              <h3 className="fw-bold text-primary">
+                {analyticsData.total_visitors_today}
+              </h3>
             </div>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
             <div className="card shadow-sm p-3 text-center rounded-4 border-0">
               <h6 className="text-muted">Checked In Today</h6>
-              <h3 className="fw-bold text-success">{analyticsData.checked_in_today}</h3>
+              <h3 className="fw-bold text-success">
+                {analyticsData.checked_in_today}
+              </h3>
             </div>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
             <div className="card shadow-sm p-3 text-center rounded-4 border-0">
               <h6 className="text-muted">Checked Out Today</h6>
-              <h3 className="fw-bold text-info">{analyticsData.checked_out_today}</h3>
+              <h3 className="fw-bold text-info">
+                {analyticsData.checked_out_today}
+              </h3>
             </div>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
             <div className="card shadow-sm p-3 text-center rounded-4 border-0">
               <h6 className="text-muted">Pending Today</h6>
-              <h3 className="fw-bold text-warning">{analyticsData.pending_today}</h3>
+              <h3 className="fw-bold text-warning">
+                {analyticsData.pending_today}
+              </h3>
             </div>
           </div>
         </div>
       </div>
 
-
       {/* Charts Section */}
       <div className="container mt-5">
         {/* Filter and Export Buttons (moved here as per screenshot) */}
         <div className="d-flex align-items-center justify-content-between mb-3">
-            <button
-                type="button" // Explicitly set type to button
-                className="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2"
-                onClick={() => setShowFilterModal(true)}
-            >
-                <i className="bi bi-sliders2"></i> Apply Filters
-            </button>
-            <button
-                type="button" // Explicitly set type to button
-                className="btn btn-primary rounded-pill d-flex align-items-center gap-2"
-                onClick={() => setShowExportModal(true)}
-            >
-                <i className="bi bi-box-arrow-up"></i> Export Report
-            </button>
+          <button
+            type="button" // Explicitly set type to button
+            className="btn btn-outline-secondary rounded-pill d-flex align-items-center gap-2"
+            onClick={() => setShowFilterModal(true)}
+          >
+            <i className="bi bi-sliders2"></i> Apply Filters
+          </button>
+          <button
+            type="button" // Explicitly set type to button
+            className="btn btn-primary rounded-pill d-flex align-items-center gap-2"
+            onClick={() => setShowExportModal(true)}
+          >
+            <i className="bi bi-box-arrow-up"></i> Export Report
+          </button>
         </div>
 
         <div className="row p-3">
@@ -249,7 +271,12 @@ function AnalyticalAndReport() {
             <h5 className="mb-3">Visitors Tariff</h5>
             <div className="card p-2 shadow-sm rounded-4 border-0">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={analyticsData.visits_chart_data.map(d => ({ ...d, date: new Date(d.date).toLocaleDateString() }))}>
+                <LineChart
+                  data={analyticsData.visits_chart_data.map((d) => ({
+                    ...d,
+                    date: new Date(d.date).toLocaleDateString(),
+                  }))}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -333,12 +360,17 @@ function AnalyticalAndReport() {
             <h5 className="mb-3">Most Visited Staff</h5>
             <div className="card p-4 shadow-sm rounded-4 border-0">
               {analyticsData.most_visited_staff.length === 0 ? (
-                <p className="text-center text-muted">No data for most visited staff.</p>
+                <p className="text-center text-muted">
+                  No data for most visited staff.
+                </p>
               ) : (
                 analyticsData.most_visited_staff.map((staff, index) => (
                   <div key={`staff-${index}`} className="mb-3">
                     <p className="mb-1 fw-bold">{staff.name}</p>
-                    <div className="progress" style={{ height: "8px", borderRadius: "5px" }}>
+                    <div
+                      className="progress"
+                      style={{ height: "8px", borderRadius: "5px" }}
+                    >
                       <div
                         className="progress-bar"
                         role="progressbar"
@@ -352,7 +384,9 @@ function AnalyticalAndReport() {
                         aria-valuemax="100"
                       ></div>
                     </div>
-                    <p className="mt-1 text-end text-muted small">{staff.visits_count} visits</p>
+                    <p className="mt-1 text-end text-muted small">
+                      {staff.visits_count} visits
+                    </p>
                   </div>
                 ))
               )}
@@ -362,7 +396,12 @@ function AnalyticalAndReport() {
             <h5 className="mt-5 mb-3">Peak Visitors Hour</h5>
             <div className="card p-2 shadow-sm rounded-4 border-0">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={analyticsData.peak_visitor_hours.map(d => ({ ...d, hour: `${d.hour}:00` }))}>
+                <LineChart
+                  data={analyticsData.peak_visitor_hours.map((d) => ({
+                    ...d,
+                    hour: `${d.hour}:00`,
+                  }))}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
                   <YAxis />
@@ -384,10 +423,15 @@ function AnalyticalAndReport() {
             <div className="card p-2 shadow-sm rounded-4 border-0">
               <div className="row p-4 g-3">
                 {analyticsData.most_frequent_visitors.length === 0 ? (
-                  <p className="text-center text-muted">No data for most frequent visitors.</p>
+                  <p className="text-center text-muted">
+                    No data for most frequent visitors.
+                  </p>
                 ) : (
                   analyticsData.most_frequent_visitors.map((visitor, index) => (
-                    <div className="col-md-4 col-sm-6" key={`frequent-visitor-${index}`}>
+                    <div
+                      className="col-md-4 col-sm-6"
+                      key={`frequent-visitor-${index}`}
+                    >
                       <div className="card bg-light text-center p-3 rounded-3 border">
                         {/* Profile Image */}
                         <div className="d-flex justify-content-center">
@@ -400,7 +444,10 @@ function AnalyticalAndReport() {
                             }}
                           >
                             <img
-                              src={visitor.visitor_photo || "https://placehold.co/90x90/e0e0e0/000000?text=User"} // Use actual photo or placeholder
+                              src={
+                                visitor.visitor_photo ||
+                                "https://placehold.co/90x90/e0e0e0/000000?text=User"
+                              } // Use actual photo or placeholder
                               className="rounded-circle"
                               style={{
                                 width: "90%",
@@ -408,7 +455,11 @@ function AnalyticalAndReport() {
                                 objectFit: "cover",
                               }}
                               alt={visitor.visitor_name}
-                              onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/90x90/e0e0e0/000000?text=User"; }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src =
+                                  "https://placehold.co/90x90/e0e0e0/000000?text=User";
+                              }}
                             />
                           </div>
                         </div>
@@ -442,7 +493,7 @@ function AnalyticalAndReport() {
           tabIndex="-1"
           role="dialog"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-          onClick={() => setShowExportModal(false)}
+          onClick={() => !isExporting && setShowExportModal(false)}
         >
           <div
             className="modal-dialog modal-dialog-centered"
@@ -454,7 +505,8 @@ function AnalyticalAndReport() {
                 <button
                   type="button" // Explicitly set type to button
                   className="btn-close"
-                  onClick={() => setShowExportModal(false)}
+                  onClick={() => !isExporting && setShowExportModal(false)}
+                  disabled={isExporting}
                 ></button>
               </div>
               <div className="modal-body">
@@ -467,6 +519,7 @@ function AnalyticalAndReport() {
                     value="pdf"
                     checked={exportFormat === "pdf"}
                     onChange={(e) => setExportFormat(e.target.value)}
+                    disabled={isExporting}
                   />
                   <label className="form-check-label" htmlFor="exportPdf">
                     PDF
@@ -481,6 +534,7 @@ function AnalyticalAndReport() {
                     value="csv"
                     checked={exportFormat === "csv"}
                     onChange={(e) => setExportFormat(e.target.value)}
+                    disabled={isExporting}
                   />
                   <label className="form-check-label" htmlFor="exportCsv">
                     CSV
@@ -495,17 +549,27 @@ function AnalyticalAndReport() {
                     value="excel"
                     checked={exportFormat === "excel"}
                     onChange={(e) => setExportFormat(e.target.value)}
+                    disabled={isExporting}
                   />
                   <label className="form-check-label" htmlFor="exportExcel">
                     Excel
                   </label>
                 </div>
+                {isExporting && (
+                  <div className="text-center my-3">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-2 mb-0 text-muted">Generating report...</p>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button
                   type="button" // Explicitly set type to button
                   className="btn btn-secondary"
                   onClick={() => setShowExportModal(false)}
+                  disabled={isExporting}
                 >
                   Cancel
                 </button>
@@ -513,8 +577,20 @@ function AnalyticalAndReport() {
                   type="button" // Explicitly set type to button
                   className="btn btn-primary"
                   onClick={handleExport}
+                  disabled={isExporting}
                 >
-                  Export
+                  {isExporting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Exporting...
+                    </>
+                  ) : (
+                    "Export"
+                  )}
                 </button>
               </div>
             </div>
@@ -549,22 +625,34 @@ function AnalyticalAndReport() {
                 <div className="d-flex gap-2 mb-4">
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.timePeriod === 'daily' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('timePeriod', 'daily')}
+                    className={`btn btn-sm ${
+                      activeFilters.timePeriod === "daily"
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("timePeriod", "daily")}
                   >
                     Daily
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.timePeriod === 'weekly' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('timePeriod', 'weekly')}
+                    className={`btn btn-sm ${
+                      activeFilters.timePeriod === "weekly"
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("timePeriod", "weekly")}
                   >
                     Weekly
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.timePeriod === 'monthly' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('timePeriod', 'monthly')}
+                    className={`btn btn-sm ${
+                      activeFilters.timePeriod === "monthly"
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("timePeriod", "monthly")}
                   >
                     Monthly
                   </button>
@@ -574,29 +662,43 @@ function AnalyticalAndReport() {
                 <div className="d-flex flex-wrap gap-2">
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.vip ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('vip')}
+                    className={`btn btn-sm ${
+                      activeFilters.vip ? "btn-primary" : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("vip")}
                   >
                     VIP
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.blacklist ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('blacklist')}
+                    className={`btn btn-sm ${
+                      activeFilters.blacklist
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("blacklist")}
                   >
                     Blacklist
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.walkins ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('walkins')}
+                    className={`btn btn-sm ${
+                      activeFilters.walkins
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("walkins")}
                   >
                     Walk-ins
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${activeFilters.preregistered ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => handleFilterChange('preregistered')}
+                    className={`btn btn-sm ${
+                      activeFilters.preregistered
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => handleFilterChange("preregistered")}
                   >
                     Pre-Registered
                   </button>

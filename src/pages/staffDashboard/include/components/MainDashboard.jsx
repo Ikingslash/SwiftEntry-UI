@@ -168,7 +168,7 @@ export default function MainDashboard({
                       {/* Conditional rendering for the guest image. */}
                       {guest.visitor?.photo ? (
                         <img
-                          src={`https://app.theswiftentry.com/${guest.visitor.photo}`}
+                          src={`${guest.visitor.photo}`}
                           alt="Guest"
                           className="img-fluid rounded-circle"
                         />

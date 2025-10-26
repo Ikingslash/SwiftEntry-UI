@@ -12,6 +12,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 function SecurityFrontDeskDashboard() {
   const { user, token } = useAuth();
@@ -22,6 +24,11 @@ function SecurityFrontDeskDashboard() {
   const [checkedOutToday, setCheckedOutToday] = useState(0);
   const [pendingToday, setPendingToday] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [priorityAlerts, setPriorityAlerts] = useState([]);
+  const [latestUpdates, setLatestUpdates] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [updatesLoading, setUpdatesLoading] = useState(false);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -37,21 +44,20 @@ function SecurityFrontDeskDashboard() {
           },
         });
 
-        console.log("API Response:", response.data); // Debugging log
+        console.log("API Response:", response.data);
 
-        // Update states with data from the API response
         // Map the visits_chart_data to match recharts' expected dataKey 'visitors'
-        const formattedChartData = response.data.visits_chart_data.map(item => ({
-          date: item.date,
-          visitors: item.visitors_count // Match the dataKey in Line component
-        }));
+        const formattedChartData =
+          (response.data.visits_chart_data || []).map((item) => ({
+            date: item.date,
+            visitors: item.visitors_count,
+          })) || [];
         setVisitsChartData(formattedChartData);
 
         setTotalVisitorsToday(response.data.total_visitors_today);
         setCheckedInToday(response.data.checked_in_today);
         setCheckedOutToday(response.data.checked_out_today);
         setPendingToday(response.data.pending_today);
-
       } catch (error) {
         console.error(
           "Error fetching analytics:",
@@ -69,13 +75,61 @@ function SecurityFrontDeskDashboard() {
     };
 
     fetchAnalytics();
-  }, [view, token]); // Re-fetch when view or token changes
+  }, [view, token]);
+
+  // Fetch small set of priority alerts (top 3) for the dashboard
+  useEffect(() => {
+    const fetchPriorityAlerts = async () => {
+      if (!token) return;
+      setAlertsLoading(true);
+      try {
+        const response = await api.get("/admin/alerts/priority/quick", {
+          params: { top: 3 },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPriorityAlerts(response.data.alerts || []);
+      } catch (error) {
+        console.error("Failed to fetch alerts:", error);
+        toast.error("Failed to load priority alerts.");
+      } finally {
+        setAlertsLoading(false);
+      }
+    };
+    fetchPriorityAlerts();
+  }, [token]);
+
+  // Fetch latest visitors (small list for dashboard)
+  useEffect(() => {
+    const fetchLatestUpdates = async () => {
+      if (!token) return;
+      setUpdatesLoading(true);
+      try {
+        const response = await api.get("/admin/updates/latest", {
+          params: { per_page: 3 },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setLatestUpdates(response.data.visitors || []);
+      } catch (error) {
+        console.error("Failed to fetch latest visitors:", error);
+        toast.error("Failed to load latest updates.");
+      } finally {
+        setUpdatesLoading(false);
+      }
+    };
+    fetchLatestUpdates();
+  }, [token]);
+
+  // Build image helper: return visitor photo or default
+  const visitorImage = (photo) => {
+    if (!photo) return "./images/user1.png";
+    // if photo is a full URL keep it, otherwise try to use the storage base
+    if (photo.startsWith("http") || photo.startsWith("/")) return photo;
+    return photo;
+  };
 
   return (
     <div>
       <NavBar />
-
-      {/* Hero Section */}
       <header
         id="#"
         className="text-white text-center position-relative px-4"
@@ -90,7 +144,6 @@ function SecurityFrontDeskDashboard() {
           paddingBottom: "180px",
         }}
       >
-        {/* Left Content */}
         <div className="container mt-3">
           <div
             className="text-white p-4 shadow-sm text-center"
@@ -100,38 +153,30 @@ function SecurityFrontDeskDashboard() {
               borderRadius: "10px",
             }}
           >
-            {/* Welcome Text & Plus Icon */}
             <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Welcome Back, {user?.name || "Admin"}</h3>
-
-              {/* Plus Icon */}
+              <h3 className="fw-bold mb-0">
+                Welcome Back, {user?.name || "Admin"}
+              </h3>
               <i
                 className="bi bi-plus-circle fs-1 text-primary p-2"
                 style={{ cursor: "pointer" }}
               ></i>
             </div>
 
-            {/* Badge & Line Row */}
             <div className="d-flex align-items-center  mt-2">
-              {/* Badge */}
               <p
                 className="badge text-white"
-                style={{
-                  backgroundColor: "rgba(57, 118, 175, 0.8)",
-                }}
+                style={{ backgroundColor: "rgba(57, 118, 175, 0.8)" }}
               >
                 Sydani Group{" "}
                 <span
                   className="badge text-light"
-                  style={{
-                    backgroundColor: "rgba(5, 53, 97, 0.8)",
-                  }}
+                  style={{ backgroundColor: "rgba(5, 53, 97, 0.8)" }}
                 >
                   Company
                 </span>
               </p>
 
-              {/* Extending Line */}
               <div
                 className="flex-grow-1 ms-3"
                 style={{
@@ -143,13 +188,11 @@ function SecurityFrontDeskDashboard() {
           </div>
         </div>
 
-        {/* Core Values Section - Cards on Top of Header */}
         <div
           className="container position-absolute start-50 translate-middle-x w-100 px-3"
           style={{ bottom: "-80px" }}
         >
           <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 justify-content-center">
-            {/* Total Visitors */}
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
                 <div className="p-2 rounded-3 bg-success-subtle">
@@ -162,7 +205,6 @@ function SecurityFrontDeskDashboard() {
               </div>
             </div>
 
-            {/* Checked In */}
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
                 <div className="p-2 rounded-3 bg-info-subtle">
@@ -175,7 +217,6 @@ function SecurityFrontDeskDashboard() {
               </div>
             </div>
 
-            {/* Checked Out */}
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
                 <div className="p-2 rounded-3 bg-warning-subtle">
@@ -187,11 +228,11 @@ function SecurityFrontDeskDashboard() {
                 </div>
               </div>
             </div>
-            {/* Pending Guest */}
+
             <div className="col">
               <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
                 <div className="p-2 rounded-3 bg-primary-subtle">
-                  <i className="bi bi-hourglass fs-2 text-primary"></i> {/* Changed icon for pending */}
+                  <i className="bi bi-hourglass fs-2 text-primary"></i>
                 </div>
                 <div className="ms-auto  text-start">
                   <h6 className="mb-1 text-muted">Pending</h6>
@@ -203,16 +244,13 @@ function SecurityFrontDeskDashboard() {
         </div>
       </header>
 
-      {/* Main Content Section */}
       <section
         id="notifications"
         className="p-5"
         style={{ padding: "100px 0 50px 0" }}
       >
         <div className="row m-3" style={{ padding: "100px 0 20px 0" }}>
-          {/* Left Column - Recent */}
           <div className="col-md-6 pe-3 mt-5">
-            {/* Line Chart */}
             <div className="card p-4">
               <div className="text-center">
                 <select
@@ -239,7 +277,7 @@ function SecurityFrontDeskDashboard() {
                     <Legend />
                     <Line
                       type="monotone"
-                      dataKey="visitors" // This dataKey must match the key in your `visitsChartData` objects
+                      dataKey="visitors"
                       stroke="#007bff"
                       strokeWidth={2}
                     />
@@ -248,75 +286,103 @@ function SecurityFrontDeskDashboard() {
               )}
             </div>
           </div>
-          {/* Right Column - Today's Guests & Latest Updates */}
+
           <div className="col-md-6">
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="lead">Priority Alerts</h6>
+              {/* See all links to paginated alerts page (you should create a route/page or handle accordingly) */}
+
+              <Link to="/admin-dashboard/alerts" className="text-primary">
+                See all
+              </Link>
             </div>
 
-            {/* Guest Cards (3 in a Row) - Placeholder Data */} 
             <div className="row g-3">
-              {[
-                { name: "Adamu Johnson", time: "10:30 AM", status: "online", img: "./images/user1.png" },
-                { name: "Joy Chukwudinma", time: "2:05 AM", status: "offline", img: "./images/user1.png" },
-                { name: "Oluwaseun Isaya", time: "3:45 PM", status: "online", img: "./images/user1.png" },
-              ].map((guest, index) => (
-                <div
-                  key={index}
-                  className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
-                >
-                  <div className="card mt-3 p-2 shadow-sm rounded-3">
-                    <img src={guest.img} alt="Guest"/>
-                    <p className="mt-2 mb-1 fw-bold">{guest.name}</p>
-                    <small className="text-muted">
-                      {" "}
-                      <span
-                        className={`ms-2 ${
-                          guest.status === "online"
-                            ? "text-success me-3"
-                            : "text-danger me-3"
-                        }`}
+              {alertsLoading ? (
+                <div className="col-12 text-center">Loading...</div>
+              ) : priorityAlerts.length === 0 ? (
+                <div className="col-12 text-muted">No priority alerts</div>
+              ) : (
+                priorityAlerts.map((guest, index) => (
+                  <div
+                    key={guest.id ?? index}
+                    className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
+                  >
+                    <div className="card mt-3 p-2 shadow-sm rounded-3">
+                      <img
+                        src={visitorImage(guest.visitor_photo)}
+                        alt="Guest"
+                        style={{
+                          width: "100%",
+                          height: 120,
+                          objectFit: "cover",
+                        }}
+                      />
+                      <p
+                        className="mt-2 mb-1 fw-bold"
+                        style={{ minHeight: 30 }}
                       >
-                        ●
-                      </span>
-                       {guest.time}
-                    </small>
+                        {guest.visitor_name || "Unknown"}
+                      </p>
+                      <small className="text-muted">
+                        <span
+                          className={`ms-2 ${
+                            guest.status === "online"
+                              ? "text-success me-3"
+                              : "text-danger me-3"
+                          }`}
+                        >
+                          ●
+                        </span>
+                        {guest.check_in
+                          ? new Date(guest.check_in).toLocaleString()
+                          : "No time"}
+                      </small>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
-            {/* Notification Cards - Placeholder Data */}
             <div className="d-flex justify-content-between align-items-center mt-5">
               <p className="lead">Latest Updates</p>
-              <a href="#" className="text-primary">
+              <Link to="/admin-dashboard/updates" className="text-primary">
                 See all
-              </a>
+              </Link>
             </div>
-            {[...Array(3)].map((_, index) => (
-              <div key={index} className="col-12">
-                <div className="card p-3 shadow-sm d-flex flex-row align-items-center mb-3">
-                  <img
-                    src="./images/clock.png"
-                    alt="Logo"
-                    className="me-3"
-                    width="40"
-                    height="40"
-                  />
-                  <div>
-                    <p className="mb-1 text-dark">
-                      Reminder Title: You have 3 Guest arriving today
-                    </p>
-                    <small className="text-muted">Today | 2 min ago</small>
+
+            {updatesLoading ? (
+              <p>Loading updates...</p>
+            ) : latestUpdates.length === 0 ? (
+              <p className="text-muted">No recent visitors</p>
+            ) : (
+              latestUpdates.map((u, idx) => (
+                <div key={u.id ?? idx} className="col-12">
+                  <div className="card p-3 shadow-sm d-flex flex-row align-items-center mb-3">
+                    <img
+                      src={visitorImage(u.photo)}
+                      alt="Logo"
+                      className="me-3"
+                      width="40"
+                      height="40"
+                      style={{ objectFit: "cover" }}
+                    />
+                    <div>
+                      <p className="mb-1 text-dark">{u.name}</p>
+                      <small className="text-muted">
+                        {new Date(u.created_at).toLocaleString()}
+                      </small>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>
     </div>
   );
 }
+
 
 export default SecurityFrontDeskDashboard;

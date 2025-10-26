@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
@@ -53,6 +53,7 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
   const [pagination, setPagination] = useState({});
   const [selectedVisitForModal, setSelectedVisitForModal] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const printRef = useRef();
 
   // The base URL for the storage. Replace this with your actual Laravel storage URL.
   const LARAVEL_APP_STORAGE_URL = "YOUR_LARAVEL_APP_STORAGE_URL";
@@ -102,27 +103,32 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
     setSelectedVisitForModal(visit);
   };
 
-  const handlePrint = () => {
-    const modalContent = document.getElementById('printTagModal');
-    if (modalContent) {
-      const modalBodyContent = modalContent.querySelector('.modal-body').innerHTML;
-      const originalBody = document.body.innerHTML;
+   const handlePrint = () => {
+     // Get the HTML content of the visit card
+     const element = printRef.current;
 
-      const printWindow = window.open('', '', 'height=600,width=800');
-      printWindow.document.write('<html><head><title>Visitor Tag</title>');
-      printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write('<div class="container p-5">' + modalBodyContent + '</div>');
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    } else {
-      console.error("Print modal not found.");
-      toast.error("Print modal not found.', error");
-    }
-  };
+     // Create a new window to print
+     const printWindow = window.open("", "", "height=600,width=800");
+     printWindow.document.write("<html><head><title>Visitor Badge</title>");
+     // Include Bootstrap CSS for styling in the print window
+     printWindow.document.write(
+       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+     );
+     printWindow.document.write("</head><body >");
+     printWindow.document.write('<div class="p-5">');
+     printWindow.document.write(element.outerHTML);
+     printWindow.document.write("</div>");
+     printWindow.document.write("</body></html>");
+     printWindow.document.close();
+
+     // Wait for the content to load and then print
+     printWindow.onload = function () {
+       printWindow.focus();
+       printWindow.print();
+       printWindow.close();
+     };
+   };
+
 
   return (
     <div>
@@ -138,16 +144,22 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                 <div className="card shadow p-3 rounded-4">
                   <div className="d-flex align-items-center mb-3">
                     <img
-                      src={visit.visitor_photo ? `${LARAVEL_APP_STORAGE_URL}/${visit.visitor_photo}` : './images/user.png'}
+                      src={
+                        visit.visitor_photo
+                          ? `${LARAVEL_APP_STORAGE_URL}/${visit.visitor_photo}`
+                          : "./images/user.png"
+                      }
                       alt="User"
                       className="rounded-circle me-3"
                       width="40"
                       height="40"
-                      style={{ objectFit: 'cover' }}
+                      style={{ objectFit: "cover" }}
                     />
                     <div>
                       <p className="mb-0">{visit.visitor_name}</p>
-                      <small className="text-muted">{visit.visitor_email}</small>
+                      <small className="text-muted">
+                        {visit.visitor_email}
+                      </small>
                     </div>
                     {visit.is_verified && (
                       <span
@@ -184,7 +196,7 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                           <small>{visit.check_in_time}</small>{" "}
                         </p>
                       </div>
-                       <div className="col-3">
+                      <div className="col-3">
                         <small className="">Time Checked Out</small>
                         <p className="mb-0 text-muted">
                           <small>{visit.check_out_time}</small>{" "}
@@ -235,7 +247,10 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
             ))}
           </div>
           {pagination.last_page > 1 && (
-            <Pagination pagination={pagination} handlePageChange={handlePageChange} />
+            <Pagination
+              pagination={pagination}
+              handlePageChange={handlePageChange}
+            />
           )}
         </>
       )}
@@ -271,15 +286,15 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="row g-3 container px-5">
+                <div ref={printRef} className="row g-3 container px-5">
                   <div className="col-12">
                     <img
-                      src={selectedVisitForModal.visitor_photo ? `${LARAVEL_APP_STORAGE_URL}/${selectedVisitForModal.visitor_photo}` : './images/user.png'}
+                      src={`${selectedVisitForModal.visitor_photo}`}
                       alt="User"
                       className="rounded-circle mb-3"
                       width="80"
                       height="80"
-                      style={{ objectFit: 'cover' }}
+                      style={{ objectFit: "cover" }}
                     />
                   </div>
                   <div className="col-md-6">
@@ -306,7 +321,7 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                   <div className="col-md-6">
                     <small>{selectedVisitForModal.check_in_time}</small>
                   </div>
-                   <hr className="w-100" />
+                  <hr className="w-100" />
                   <div className="col-md-6">
                     <small className="fw-bold">Time Checked Out</small>
                   </div>
@@ -325,7 +340,9 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                     <small className="fw-bold">Contact Info</small>
                   </div>
                   <div className="col-md-6">
-                    <small>{selectedVisitForModal.visitor_contact_number}</small>
+                    <small>
+                      {selectedVisitForModal.visitor_contact_number}
+                    </small>
                   </div>
                   <hr className="w-100" />
                   <div className="col-md-6">
@@ -343,7 +360,11 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                   </div>
                   <hr className="w-100" />
                   <div className="col-12 text-center">
-                    <button type="button" className="btn btn-primary w-50" onClick={handlePrint}>
+                    <button
+                      type="button"
+                      className="btn btn-primary w-50"
+                      onClick={handlePrint}
+                    >
                       Print Tag
                     </button>
                   </div>
@@ -353,7 +374,6 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { requestForToken, onMessageListener } from "../../context/firebase";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
 import { toast } from "react-toastify";
+// import showValidationErrors from "./include/components/showValidationErrors";
 
 function NewGuestGroup() {
   const [formData, setFormData] = useState({
@@ -33,6 +34,8 @@ function NewGuestGroup() {
   const [visitPurposes, setVisitPurposes] = useState([]);
   const printRef = useRef();
 
+
+
   // useEffect to handle Firebase messaging and token registration, AND to fetch users.
   useEffect(() => {
     // Request permission and get the FCM token
@@ -40,23 +43,19 @@ function NewGuestGroup() {
       .then((fcmToken) => {
         if (fcmToken) {
           console.log("FCM token:", fcmToken);
-          // toast.info("FCM token:", fcmToken);
 
           api
             .post("/save-fcm-token", { fcm_token: fcmToken })
             .then((response) => {
-              console.log("FCM token saved on backend:", response.data);
-              // toast.success("FCM token saved on backend:", response.data);
+              // console.log("FCM token saved on backend:", response.data);
             })
             .catch((error) => {
               console.error("Failed to save FCM token on backend:", error);
-              // toast.error("Failed to save FCM token on backend:", error);
             });
         }
       })
       .catch((err) => {
         console.error("An error occurred while retrieving token. ", err);
-        // toast.error("Failed to retrieve FCM token:", err);
       });
 
     // Fetch the list of all app users (staff, security, front desk)
@@ -71,13 +70,10 @@ function NewGuestGroup() {
             "API response for users is not an array:",
             response.data
           );
-
-          // toast.error("API response for users is not an array:", response.data);
         }
       })
       .catch((error) => {
         console.error("Failed to fetch app users:", error);
-        // toast.error("Failed to fetch app users:", error);
       });
     // Fetch the list of visit purposes from the backend
     api
@@ -90,15 +86,10 @@ function NewGuestGroup() {
             "API response for purposes is not an array:",
             response.data
           );
-          toast.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
         }
       })
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
-        // toast.error("Failed to fetch visit purposes:", error);
       });
 
     // Set up the listener for incoming messages.
@@ -135,6 +126,33 @@ function NewGuestGroup() {
         photo: file,
       }));
       setSelectedImage(URL.createObjectURL(file));
+    }
+  };
+
+
+
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
+
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
+      }
+
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong. Please try again."
+      );
     }
   };
 
@@ -193,10 +211,6 @@ function NewGuestGroup() {
             toast.success("Notification sent to host successfully.");
           } catch (notificationError) {
             console.error("Failed to trigger notification:", notificationError);
-            // toast.error(
-            //   "Failed to send host notification: " +
-            //     (notificationError.response?.data?.message || "Server error.")
-            // );
           }
         } else {
           console.warn("Host ID or Role missing, skipping host notification.");
@@ -249,16 +263,14 @@ function NewGuestGroup() {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        // toast.error(
-        //   "Error: " + (response.data.message || "Something went wrong")
-        // );
+        toast.error("Unexpected response:", response.data.message || response);
+        console.error(
+          "Error: " + (response.data.message || "Something went wrong")
+        );
       }
     } catch (error) {
-      console.error("Error:", error);
-      // toast.error(
-      //   "Failed to register guest. " +
-      //     (error.response?.data?.message || "Server error.")
-      // );
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -491,7 +503,7 @@ function NewGuestGroup() {
                   <h5 className="fw-bold">Additional Information</h5>
                   <div className=" mt-4">
                     <label className="form-label d-block">
-                      Add Photo (Optional)
+                      Add Photo
                     </label>
                     <input
                       type="file"
@@ -545,7 +557,7 @@ function NewGuestGroup() {
                 </div>
                 <div className="mb-4">
                   <label className="form-label">
-                    Special Requirements (Optional)
+                    Special Requirements
                   </label>
                   <select
                     className="form-select"
@@ -564,7 +576,7 @@ function NewGuestGroup() {
                 </div>
                 <div className="my-3">
                   <label className="form-label">
-                    Emergency Contact (Optional)
+                    Emergency Contact
                   </label>
                   <input
                     type="tel"

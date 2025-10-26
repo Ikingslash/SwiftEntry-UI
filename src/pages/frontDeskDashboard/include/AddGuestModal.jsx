@@ -25,6 +25,9 @@ export default function AddGuestModal({
   setIs_blacklisted,
   setPhoto,
   handleAddGuest,
+  selectedImage,
+  handleImageChange,
+  isSubmitting,
   loading,
 }) {
   const modalClasses = show ? "modal d-block" : "modal";
@@ -51,11 +54,55 @@ export default function AddGuestModal({
               aria-label="Close"
             ></button>
           </div>
+
           <div className="modal-body pt-2">
-            <form onSubmit={handleAddGuest}>
+            <form onSubmit={handleAddGuest} encType="multipart/form-data">
+              {/* ✅ PHOTO UPLOAD */}
+              <div className="mt-4">
+                <label className="form-label d-block">Add Photo</label>
+                <input
+                  type="file"
+                  className="d-none"
+                  id="fileUpload"
+                  accept="image/*"
+                  name="photo"
+                  onChange={handleImageChange}
+                />
+                <label htmlFor="fileUpload" className="d-inline-block">
+                  <div
+                    className="rounded-circle border d-flex justify-content-center align-items-center"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      backgroundColor: "#f8f9fa",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {selectedImage ? (
+                      <img
+                        src={selectedImage}
+                        alt="Uploaded"
+                        className="rounded-circle"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <i
+                        className="bi bi-camera"
+                        style={{ fontSize: "24px" }}
+                      ></i>
+                    )}
+                  </div>
+                </label>
+              </div>
+
+              {/* ✅ VISITOR DETAILS */}
               <div className="mb-3">
                 <label className="form-label text-muted small">
-                  Visitors Name
+                  Visitor's Name
                 </label>
                 <input
                   type="text"
@@ -66,6 +113,7 @@ export default function AddGuestModal({
                   required
                 />
               </div>
+
               <div className="mb-3">
                 <label className="form-label text-muted small">
                   Visitor Type
@@ -80,6 +128,7 @@ export default function AddGuestModal({
                   <option value="Group">Group</option>
                 </select>
               </div>
+
               <div className="mb-3">
                 <label className="form-label text-muted small">Email</label>
                 <input
@@ -91,10 +140,11 @@ export default function AddGuestModal({
                   required
                 />
               </div>
+
               <div className="mb-3">
-                <label className="form-label text-muted small">contact</label>
+                <label className="form-label text-muted small">Contact</label>
                 <input
-                  type="tel" // Use type="tel" for phone numbers
+                  type="tel"
                   className="form-control rounded-pill px-3 py-2"
                   placeholder="Enter Phone Number"
                   value={contact_number}
@@ -102,6 +152,7 @@ export default function AddGuestModal({
                   required
                 />
               </div>
+
               <div className="mb-3">
                 <label htmlFor="address" className="form-label">
                   Address
@@ -115,6 +166,7 @@ export default function AddGuestModal({
                   required
                 />
               </div>
+
               <div className="mb-3">
                 <label htmlFor="emergency_contact" className="form-label">
                   Emergency Contact
@@ -129,6 +181,7 @@ export default function AddGuestModal({
                   required
                 />
               </div>
+
               <div className="mb-3">
                 <label htmlFor="special_requirements" className="form-label">
                   Special Requirements
@@ -143,6 +196,8 @@ export default function AddGuestModal({
                   required
                 />
               </div>
+
+              {/* ✅ SWITCHES */}
               <div className="mb-3">
                 <div className="form-check form-switch mt-3">
                   <input
@@ -152,13 +207,13 @@ export default function AddGuestModal({
                     name="is_vip"
                     checked={is_vip}
                     onChange={(e) => setIs_vip(e.target.checked)}
-
                   />
                   <label className="form-check-label" htmlFor="is_vip">
                     Is VIP?
                   </label>
                 </div>
               </div>
+
               <div className="col-md-6">
                 <div className="form-check form-switch mt-3">
                   <input
@@ -168,19 +223,32 @@ export default function AddGuestModal({
                     name="is_blacklisted"
                     checked={is_blacklisted}
                     onChange={(e) => setIs_blacklisted(e.target.checked)}
-                   
                   />
                   <label className="form-check-label" htmlFor="is_blacklisted">
                     Is Blacklisted?
                   </label>
                 </div>
               </div>
+
+              {/* ✅ SUBMIT BUTTON */}
               <div className="d-grid gap-2 mt-4">
                 <button
                   type="submit"
                   className="btn btn-primary btn-lg rounded-pill fw-bold"
+                  disabled={isSubmitting}
                 >
-                  Create
+                  {isSubmitting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Creating...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
                 </button>
               </div>
             </form>

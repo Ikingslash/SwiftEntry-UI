@@ -44,11 +44,14 @@ import AdminLayout from "./layout/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminVisitors from "./pages/admin/visitorsManagment/AdminVisitors";
 import AdminStaff from "./pages/admin/staffManagment/AdminStaff";
+import AdminFrontdesk from "./pages/admin/staffManagment/AdminFrontdesk";
+import AdminSecurity from "./pages/admin/staffManagment/AdminSecurity";
 import AnalyticalAndReport from "./pages/admin/analytical_report/AnalyticalAndReport";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminNotifications from "./pages/admin/AdminNotifications";
-
+import AdminPriorityAlerts from "./pages/admin/AdminPriorityAlerts";
+import AdminLatestUpdates from "./pages/admin/AdminLatestUpdates";
 
 function App() {
  return (
@@ -78,10 +81,7 @@ function App() {
              <Route path="manage-guest" element={<ManageGuestsIndividual />} />
              <Route path="notifications" element={<Notifications />} />
              <Route path="profile" element={<Profile />} />
-              <Route
-               path="staff-settings"
-               element={<StaffSettings />}
-             />
+             <Route path="staff-settings" element={<StaffSettings />} />
            </Route>
 
            <Route
@@ -114,6 +114,8 @@ function App() {
              <Route index element={<AdminDashboard />} />
              <Route path="visitors" element={<AdminVisitors />} />
              <Route path="staffs" element={<AdminStaff />} />
+             <Route path="frontdesk" element={<AdminFrontdesk />} />
+             <Route path="security" element={<AdminSecurity />} />
              <Route
                path="analytical-report"
                element={<AnalyticalAndReport />}
@@ -121,6 +123,8 @@ function App() {
              <Route path="settings" element={<AdminSettings />} />
              <Route path="profile" element={<AdminProfile />} />
              <Route path="notifications" element={<AdminNotifications />} />
+             <Route path="alerts" element={<AdminPriorityAlerts />} />
+             <Route path="updates" element={<AdminLatestUpdates />} />
            </Route>
 
            <Route
@@ -141,16 +145,12 @@ function App() {
              <Route path="history" element={<VisitSecurityHistory />} />
              <Route path="notifications" element={<SecurityNotifications />} />
              <Route path="profile" element={<SecurityProfile />} />
-             <Route
-               path="security-settings"
-               element={<SecuritySettings />}
-             />
+             <Route path="security-settings" element={<SecuritySettings />} />
            </Route>
-
          </Routes>
        </NotificationProvider>
      </AuthProvider>
-     <ToastContainer />
+     <ToastContainer position="top-right" autoClose={5000} />
    </div>
  );
 }

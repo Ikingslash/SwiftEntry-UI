@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
@@ -55,56 +55,86 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
   const [selectedVisitForModal, setSelectedVisitForModal] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [toast, setToast] = useState({ message: '', type: '' });
+    const printRef = useRef();
 
-  // The base URL for the storage. Replace this with your actual Laravel storage URL.
-  const LARAVEL_APP_STORAGE_URL = "YOUR_LARAVEL_APP_STORAGE_URL";
 
-  // UseEffect to fetch data whenever filters, search query, or page changes
-  useEffect(() => {
+useEffect(() => {
+  console.log("[TabIncoming] Refresh triggered with refreshKey:", refreshKey);
+  fetchIncomingVisits();
+}, [refreshKey]);
+
+
+useEffect(() => {
+  const delay = setTimeout(() => {
     fetchIncomingVisits();
-  }, [filters, searchQuery, currentPage, refreshKey]);
+  }, 800);
+  return () => clearTimeout(delay);
+}, [filters, searchQuery, currentPage]);
 
 
 
-  const fetchIncomingVisits = async () => {
-    setLoading(true);
-    try {
-      // Determine visitor_type based on filters
-      let visitorTypeParam = 'all';
-      if (filters.group && !filters.individual) {
-        visitorTypeParam = 'group';
-      } else if (filters.individual && !filters.group) {
-        visitorTypeParam = 'individual';
-      }
-
-      // Determine status_filter based on filters. Pending will filter for pre-registered visits.
-      let statusFilterParam =
-        "scheduled_visit, pre_registered_visit, Walk_In";
-      if (filters.pending) {
-        statusFilterParam = 'pre_registered_visit';
-      }
-
-      // Make API call with dynamic parameters
-      const response = await api.get('/front-desk/guests/incoming', {
-        params: {
-          visitor_type: visitorTypeParam,
-          status_filter: statusFilterParam,
-          search: searchQuery,
-          per_page: 10,
-          page: currentPage, // Use the currentPage state for pagination
-        },
-      });
-      setIncomingVisits(response.data.visits || []);
-      setPagination(response.data.pagination || {});
-    } catch (error) {
-      console.error("Error fetching incoming visits:", error);
-      setIncomingVisits([]);
-      toast.error('Failed to fetch incoming visits. Please try again.', 'error');
-    } finally {
-      setLoading(false);
+const fetchIncomingVisits = async () => {
+  setLoading(true);
+  try {
+    // Determine visitor_type based on filters
+    let visitorTypeParam = "all";
+    if (filters.group && !filters.individual) {
+      visitorTypeParam = "group";
+    } else if (filters.individual && !filters.group) {
+      visitorTypeParam = "individual";
     }
-  };
 
+    // Determine status_filter based on filters. Pending will filter for pre-registered visits.
+    let statusFilterParam = "scheduled_visit, pre_registered_visit, Walk_In";
+    if (filters.pending) {
+      statusFilterParam = "pre_registered_visit";
+    }
+
+    // Debug log
+    console.log("[TabIncoming] Fetching incoming visits with params:", {
+      visitor_type: visitorTypeParam,
+      status_filter: statusFilterParam,
+      search: searchQuery,
+      per_page: 10,
+      page: currentPage,
+      refreshKey,
+    });
+
+    // Make API call with dynamic parameters + cache-buster
+    const response = await api.get("/front-desk/guests/incoming", {
+      params: {
+        visitor_type: visitorTypeParam,
+        status_filter: statusFilterParam,
+        search: searchQuery,
+        per_page: 10,
+        page: currentPage,
+        // cache busting param to force fresh server response
+        _t: Date.now(),
+        // include refreshKey for transparency (optional)
+        refresh: refreshKey,
+      },
+      // ensure proxies / intermediate caches don't give stale responses
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+
+    setIncomingVisits(response.data.visits || []);
+    setPagination(response.data.pagination || {});
+    console.log(
+      "[TabIncoming] fetchIncomingVisits success: items=",
+      (response.data.visits || []).length
+    );
+  } catch (error) {
+    console.error("Error fetching incoming visits:", error);
+    setIncomingVisits([]);
+    toast.error("Failed to fetch incoming visits. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
@@ -113,27 +143,33 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
     setSelectedVisitForModal(visit);
   };
 
-  const handlePrint = () => {
-    const modalContent = document.getElementById('printTagModal');
-    if (modalContent) {
-      const modalBodyContent = modalContent.querySelector('.modal-body').innerHTML;
-      const originalBody = document.body.innerHTML;
+    const handlePrint = () => {
+      // Get the HTML content of the visit card
+      const element = printRef.current;
 
-      const printWindow = window.open('', '', 'height=600,width=800');
-      printWindow.document.write('<html><head><title>Visitor Tag</title>');
-      printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write('<div class="container p-5">' + modalBodyContent + '</div>');
-      printWindow.document.write('</body></html>');
+      // Create a new window to print
+      const printWindow = window.open("", "", "height=600,width=800");
+      printWindow.document.write("<html><head><title>Visitor Badge</title>");
+      // Include Bootstrap CSS for styling in the print window
+      printWindow.document.write(
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+      );
+      printWindow.document.write("</head><body >");
+      printWindow.document.write('<div class="p-5">');
+      printWindow.document.write(element.outerHTML);
+      printWindow.document.write("</div>");
+      printWindow.document.write("</body></html>");
       printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    } else {
-      console.error("Print modal not found.");
-      toast.error('Print modal not found.', 'error');
-    }
-  };
+
+      // Wait for the content to load and then print
+      printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
+    };
+
+
 
   return (
     <div>
@@ -149,16 +185,18 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
                 <div className="card shadow p-3 rounded-4">
                   <div className="d-flex align-items-center mb-3">
                     <img
-                      src={visit.visitor_photo ? `${LARAVEL_APP_STORAGE_URL}/${visit.visitor_photo}` : './images/user.png'}
+                      src={`${visit.visitor_photo}`}
                       alt="User"
                       className="rounded-circle me-3"
                       width="40"
                       height="40"
-                      style={{ objectFit: 'cover' }}
+                      style={{ objectFit: "cover" }}
                     />
                     <div>
                       <p className="mb-0">{visit.visitor_name}</p>
-                      <small className="text-muted">{visit.visitor_email}</small>
+                      <small className="text-muted">
+                        {visit.visitor_email}
+                      </small>
                     </div>
                     {visit.is_verified && (
                       <span
@@ -219,9 +257,7 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
                         <small className="text-muted">Contact Info</small>
                         <p className="mb-0">
                           <small>{visit.visitor_contact_number}</small>
-                          <a href="#" className="text-primary ms-4">
-                            <small>See more →</small>
-                          </a>
+                         
                         </p>
                       </div>
                       <button
@@ -239,51 +275,54 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
             ))}
           </div>
           {pagination.last_page > 1 && (
-            <Pagination pagination={pagination} handlePageChange={handlePageChange} />
+            <Pagination
+              pagination={pagination}
+              handlePageChange={handlePageChange}
+            />
           )}
         </>
       )}
 
       {/* Modal - same as previous version */}
-      {selectedVisitForModal && (
+      <div
+        className="modal fade"
+        id="printTagModal"
+        tabIndex="-1"
+        aria-hidden="true"
+      >
         <div
-          className="modal fade"
-          id="printTagModal"
-          tabIndex="-1"
-          aria-hidden="true"
+          className="modal-dialog modal-lg py-4"
+          style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            width: "50%",
+            maxWidth: "40%",
+            height: "100vh",
+            overflowY: "auto",
+          }}
         >
-          <div
-            className="modal-dialog modal-lg py-4"
-            style={{
-              position: "fixed",
-              top: 0,
-              right: 0,
-              width: "50%",
-              maxWidth: "40%",
-              height: "100vh",
-              overflowY: "auto",
-            }}
-          >
-            <div className="modal-content">
-              <div className="modal-header">
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                  onClick={() => setSelectedVisitForModal(null)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row g-3 container px-5">
+          <div className="modal-content">
+            <div className="modal-header">
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                onClick={() => setSelectedVisitForModal(null)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {selectedVisitForModal ? (
+                <div ref={printRef} className="row g-3 container px-5">
                   <div className="col-12">
                     <img
-                      src={selectedVisitForModal.visitor_photo ? `${LARAVEL_APP_STORAGE_URL}/${selectedVisitForModal.visitor_photo}` : './images/user.png'}
+                      src={`${selectedVisitForModal.visitor_photo}`}
                       alt="User"
                       className="rounded-circle mb-3"
                       width="80"
                       height="80"
-                      style={{ objectFit: 'cover' }}
+                      style={{ objectFit: "cover" }}
                     />
                   </div>
                   <div className="col-md-6">
@@ -322,7 +361,9 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
                     <small className="fw-bold">Contact Info</small>
                   </div>
                   <div className="col-md-6">
-                    <small>{selectedVisitForModal.visitor_contact_number}</small>
+                    <small>
+                      {selectedVisitForModal.visitor_contact_number}
+                    </small>
                   </div>
                   <hr className="w-100" />
                   <div className="col-md-6">
@@ -340,17 +381,22 @@ function TabIncoming({ filters, searchQuery, refreshKey }) {
                   </div>
                   <hr className="w-100" />
                   <div className="col-12 text-center">
-                    <button type="button" className="btn btn-primary w-50" onClick={handlePrint}>
+                    <button
+                      type="button"
+                      className="btn btn-primary w-50"
+                      onClick={handlePrint}
+                    >
                       Print Tag
                     </button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <p className="text-center text-muted">No visitor selected</p>
+              )}
             </div>
           </div>
         </div>
-      )}
-
+      </div>
     </div>
   );
 }
