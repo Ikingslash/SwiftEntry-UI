@@ -8,7 +8,17 @@ import "./App.css";
 import { registerSW } from "virtual:pwa-register";
 
 
-registerSW();
+registerSW({
+  onNeedRefresh() {
+    if (confirm("New content available. Reload?")) {
+      window.location.reload();
+    }
+  },
+  onOfflineReady() {
+    console.log("App ready to work offline");
+  },
+});
+
 
 
 
