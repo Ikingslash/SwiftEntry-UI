@@ -91,50 +91,65 @@ export const AuthProvider = ({ children }) => {
        navigate("/login");
   };
 
-
+const updateUser = (newUserData) => {
+  setUser(newUserData);
+  localStorage.setItem("user", JSON.stringify(newUserData));
+};
 // NEW FUNCTIONS FOR PASSWORD RESET FLOW
 
-  const forgotPassword = async (email) => {
-    setResetFlowData({ email: null, resetToken: null, userRole: null });
+ const forgotPassword = async (email) => {
+   setResetFlowData({ email: null, resetToken: null, userRole: null });
 
-    console.log("API Base URL:", api.defaults.baseURL);
+   const roles = ["admin", "staff", "security", "front_desk"];
+   let userRole = null;
+   let mailFailed = false;
 
-    const roles = ['admin', 'staff', 'security', 'front_desk'];
-    let userRole = null;
+   try {
+     for (const role of roles) {
+       const path = AUTH_PATHS[role].forgot;
+       try {
+         const response = await api.post(path, { email });
 
-    try {
-      for (const role of roles) {
-        const path = AUTH_PATHS[role].forgot;
-        try {
-          const response = await api.post(path, { email });
-
-          if (response.status === 200) {
-            // Assume the first 200 response is the correct account handler
-            userRole = role;
-            break; // Stop and use this role
+         if (response.status >= 200 && response.status < 300) {
+           userRole = role;
+           console.log("Matched role:", role);
+           break;
+         }
+       } catch (error) {
+         if (error.response?.status === 500) {
+             console.error(`Mail sending failed for ${role} path:`, error.response?.data || error.message);
+             mailFailed = true;
+          } else {
+            // Expected errors: 404/401 (user not found in this role's table)
+            console.warn(`Forgot password check failed for ${role}:`, error.response?.data || error.message);
           }
-        } catch (error) {
-          console.warn(`Forgot password check failed for ${role}:`, error.response?.data || error.message);
-        }
+       }
+     }
+
+      if (mailFailed) {
+        // A hard failure occurred (e.g., mail server down) - this MUST be reported to the user as a failure.
+        toast.error(
+          "Failed to send verification email. Please contact support."
+        );
+        return false;
       }
 
-      if (userRole) {
-         // Store email and determined role for the next step (VerifyAccount)
-         setResetFlowData({ email: email, resetToken: null, userRole: userRole });
-         toast.success("Verification code sent to email.");
-         return true;
-      } else {
-        toast.success("If the email is registered, a verification code has been sent.");
-        setResetFlowData({ email: email, resetToken: null, userRole: 'admin' }); // Default to admin for routing, will fail if wrong
+     if (userRole) {
+       setResetFlowData({ email: email, resetToken: null, userRole: userRole });
+       toast.success("Verification code sent to your email.");
+       return true;
+     } else {
+       toast.info("If this email is registered, a code has been sent.");
+        setResetFlowData({ email: email, resetToken: null, userRole: "admin" });
         return true;
-      }
+     }
+   } catch (error) {
+     console.error("Forgot Password failed:", error);
+     toast.error("An error occurred. Please try again.");
+     return false;
+   }
+ };
 
-    } catch (error) {
-      console.error("Forgot Password failed:", error);
-      toast.error("An error occurred during verification request.");
-      return false;
-    }
-  };
 
   const verifyOtp = async (otp) => {
     const { email, userRole } = resetFlowData;
@@ -163,39 +178,43 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const resetPassword = async (password, password_confirmation) => {
-    const { email, resetToken, userRole } = resetFlowData;
-    if (!email || !resetToken || !userRole) {
-      toast.error("Password reset process failed. Please restart.");
-      navigate('/forgot-password');
-      return false;
-    }
+ const resetPassword = async (email, resetToken, password, confirmPassword) => {
+   // Note: userRole is pulled from resetFlowData in state
+   const { userRole } = resetFlowData;
 
-    try {
-      const path = AUTH_PATHS[userRole].reset;
-      // Note: Backend resetPassword route for Security uses PUT, others use POST
-      const method = userRole === 'security' ? api.put : api.post;
+   if (!email || !resetToken || !userRole) {
+     toast.error("Password reset process failed. Please restart.");
+     navigate("/forgot-password");
+     return false;
+   }
 
-      const response = await method(path, {
-        email,
-        reset_token: resetToken,
-        password,
-        password_confirmation,
-      });
+   try {
+     const path = AUTH_PATHS[userRole].reset;
+     // Note: Backend resetPassword route for Security uses PUT, others use POST
+     const method = userRole === "security" ? api.put : api.post;
 
-      if (response.data.message) {
-        // Clear all reset flow data upon success
-        setResetFlowData({ email: null, resetToken: null, userRole: null });
-        toast.success("Password successfully reset! Please sign in.");
-        return true;
-      }
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || "Failed to reset password. Token may have expired.";
-      toast.error(errorMessage);
-      console.error("Password reset failed:", error);
-      return false;
-    }
-  };
+     const response = await method(path, {
+       email,
+       reset_token: resetToken,
+       password,
+       password_confirmation: confirmPassword,
+     });
+
+     if (response.data.message) {
+       // Clear all reset flow data upon success
+       setResetFlowData({ email: null, resetToken: null, userRole: null });
+       toast.success("Password successfully reset! Please sign in.");
+       return true;
+     }
+   } catch (error) {
+     const errorMessage =
+       error.response?.data?.error ||
+       "Failed to reset password. Token may have expired.";
+     toast.error(errorMessage);
+     console.error("Password reset failed:", error);
+     return false;
+   }
+ };
   // END: NEW FUNCTIONS
 
   return (
@@ -205,6 +224,7 @@ export const AuthProvider = ({ children }) => {
         token,
         role,
         login,
+        updateUser,
         logout,
         loading,
         forgotPassword, // Add new functions

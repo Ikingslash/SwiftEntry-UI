@@ -99,22 +99,24 @@ function RegisterGuestGroup() {
     return () => unsubscribe();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value, selectedOptions } = e.target;
-    // Special handling for the host selection to also get the ID and Role
-    if (name === "host_id") {
-      const selectedHostName = selectedOptions[0]?.text.split("(")[0].trim(); // Trim name like in individual registration
-      const selectedHostRole = selectedOptions[0]?.dataset.role;
-      setFormData({
-        ...formData,
-        host_id: value,
-        host_name: selectedHostName, // Keep host_name for display
-        host_role: selectedHostRole,
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
+
+const handleChange = (e) => {
+  const { name, value, selectedOptions } = e.target;
+  if (name === "host_id") {
+    const [role, id] = value.split("-");
+    const selectedHostName = selectedOptions[0]?.text.trim();
+    setFormData({
+      ...formData,
+      host_id: id,
+      host_role: role,
+      host_name: selectedHostName,
+    });
+  } else {
+    setFormData({ ...formData, [name]: value });
+  }
+};
+
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -456,18 +458,21 @@ function RegisterGuestGroup() {
                       className="form-select rounded-pill"
                       id="host_id"
                       name="host_id"
-                      value={formData.host_id}
+                      value={`${formData.host_role || ""}-${
+                        formData.host_id || ""
+                      }`}
                       onChange={handleChange}
                       required
                     >
                       <option value="">Select a host</option>
-                      {appUsers.map((user) => (
+                      {appUsers.map((user, index) => (
                         <option
-                          key={user.role + "-" + user.id}
-                          value={user.id}
+                          key={`${user.role || "unknown"}-${user.id || index}`}
+                          value={`${user.role}-${user.id}`}
                           data-role={user.role}
+                          data-id={user.id}
                         >
-                          {user.name} ({user.role})
+                          {user.name}
                         </option>
                       ))}
                     </select>

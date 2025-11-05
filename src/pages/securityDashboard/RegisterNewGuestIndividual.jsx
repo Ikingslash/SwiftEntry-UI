@@ -97,22 +97,24 @@ export default function RegisterNewGuestIndividual() {
     return () => unsubscribe();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value, selectedOptions } = e.target;
-    // Special handling for the host selection to also get the ID
-    if (name === "host_id") {
-      const selectedHostName = selectedOptions[0]?.text;
-      const selectedHostRole = selectedOptions[0]?.dataset.role;
-      setFormData({
-        ...formData,
-        host_id: value,
-        host_name: selectedHostName, // Keep host_name for display
-        host_role: selectedHostRole,
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
+
+const handleChange = (e) => {
+  const { name, value, selectedOptions } = e.target;
+  if (name === "host_id") {
+    const [role, id] = value.split("-");
+    const selectedHostName = selectedOptions[0]?.text.trim();
+    setFormData({
+      ...formData,
+      host_id: id,
+      host_role: role,
+      host_name: selectedHostName,
+    });
+  } else {
+    setFormData({ ...formData, [name]: value });
+  }
+};
+
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -421,24 +423,28 @@ export default function RegisterNewGuestIndividual() {
                     <label className="form-label">Host Name</label>
                     <select
                       className="form-select rounded-pill"
+                      id="host_id"
                       name="host_id"
-                      value={formData.host_id}
+                      value={`${formData.host_role || ""}-${
+                        formData.host_id || ""
+                      }`}
                       onChange={handleChange}
                       required
                     >
                       <option value="">Select a host</option>
-                      {appUsers.map((user) => (
-                        // We now use a composite key for uniqueness
+                      {appUsers.map((user, index) => (
                         <option
-                          key={user.role + "-" + user.id}
-                          value={user.id}
+                          key={`${user.role || "unknown"}-${user.id || index}`}
+                          value={`${user.role}-${user.id}`}
                           data-role={user.role}
+                          data-id={user.id}
                         >
-                          {user.name} ({user.role})
+                          {user.name}
                         </option>
                       ))}
                     </select>
                   </div>
+
                   <div className="row">
                     <div className="col-md-6">
                       <div className="my-3">

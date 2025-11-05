@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { IoPencil } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import api from "../../context/api";
 import { useAuth } from "../../context/AuthContext";
 import NavBar from "./include/NavBar";
@@ -74,6 +75,7 @@ function StaffSettings() {
   return (
     <div>
       <NavBar />
+      <ToastContainer position="top-right" autoClose={5000} />
       <header
         id="home"
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
@@ -140,7 +142,10 @@ function StaffSettings() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="password_confirmation" className="form-label">
+                    <label
+                      htmlFor="password_confirmation"
+                      className="form-label"
+                    >
                       Confirm Password
                     </label>
                     <input

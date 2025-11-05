@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; //
-import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext.jsx";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -10,9 +11,9 @@ function ResetPassword() {
   const navigate = useNavigate();
   const { resetPassword, resetFlowData } = useAuth();
 
-  // Redirect if resetToken is missing
+
   useEffect(() => {
-    if (!resetFlowData.resetToken) {
+    if (!resetFlowData.resetToken || !resetFlowData.email) {
       toast.error("Verification failed. Please restart the process.");
       navigate("/forgot-password");
     }
@@ -26,6 +27,7 @@ function ResetPassword() {
       return;
     }
 
+    // Backend requires min 8 characters, so this check is good
     if (password.length < 8) {
       toast.error("Password must be at least 8 characters.");
       return;
@@ -33,16 +35,31 @@ function ResetPassword() {
 
     setIsLoading(true);
 
-    // Call the unified context function
-    const success = await resetPassword(password, confirmPassword);
+    // Extract required data from flow state
+    const email = resetFlowData.email;
+    const resetToken = resetFlowData.resetToken;
+
+    // Call the context function, passing all data required by the backend:
+    // email, token, new password, and confirmation password
+    const success = await resetPassword(
+      email,
+      resetToken,
+      password,
+      confirmPassword
+    );
 
     setIsLoading(false);
 
     if (success) {
-      navigate("/password-success");
+      // You should have a dedicated success page component or use a modal/toast here
+      toast.success("Password reset successfully! Redirecting to login...");
+
       setTimeout(() => {
         navigate("/"); // Redirect to login after success alert
       }, 3000);
+    } else {
+      // If the API call fails (e.g., 401 invalid token), the error toast
+      // will be handled by the resetPassword context function.
     }
   };
 
@@ -62,7 +79,7 @@ function ResetPassword() {
           </Link>
         </div>
       </nav>
-
+       <ToastContainer position="top-right" autoClose={5000} />
       {/* Main Section */}
       <div className="container mt-3 vh-100 ">
         <div className="row text-center justify-content-center">
@@ -126,4 +143,3 @@ function ResetPassword() {
 }
 
 export default ResetPassword;
-

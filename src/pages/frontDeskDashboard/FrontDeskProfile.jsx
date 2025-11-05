@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../context/api";
 import NavBar from "./include/NavBar";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { IoPencil } from 'react-icons/io5';
@@ -10,7 +11,7 @@ import { IoPencil } from 'react-icons/io5';
 
 function FrontDeskProfile() {
   const navigate = useNavigate();
-  const { logout } = useAuth(); // Assume AuthContext provides 'user' and 'logout'
+  const { logout, updateUser } = useAuth(); // Assume AuthContext provides 'user' and 'logout'
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,9 +78,18 @@ function FrontDeskProfile() {
       try {
         // Send the updated data to the backend
         const response = await api.put("/front-desk/update-profile", formData);
-        setProfileData(response.data); // Update the profile data state
-        setIsModalOpen(false); // Close the modal
-        toast.success("Profile updated successfully!");
+         // Get the updated profile data from backend
+             const updatedData = response.data;
+
+             // Update both local and global states
+             setProfileData(updatedData);
+             updateUser(updatedData);
+
+             // Close modal
+             setIsModalOpen(false);
+
+             // Success message
+             toast.success("Profile updated successfully!");
       } catch (error) {
         console.error("Error updating profile:", error);
         toast.error("Failed to update profile. Please try again.");
@@ -103,6 +113,7 @@ function FrontDeskProfile() {
   return (
     <>
       <NavBar />
+       <ToastContainer position="top-right" autoClose={5000} />
       <div
         className="container-fluid py-5"
         style={{ backgroundColor: "#F5FAFE", minHeight: "100vh" }}

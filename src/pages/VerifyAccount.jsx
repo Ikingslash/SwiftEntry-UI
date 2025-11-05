@@ -1,13 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; //
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
+const OTP_EXPIRY_SECONDS = 600;
 
 function VerifyAccount() {
   const navigate = useNavigate();
-  const { verifyOtp, resetFlowData } = useAuth(); // Get function and state
+  const { verifyOtp, resetFlowData, forgotPassword } = useAuth();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
+  const [isResendEnabled, setIsResendEnabled] = useState(false);
 
   // Redirect if email/role data is missing from the previous step
   useEffect(() => {
@@ -17,6 +23,55 @@ function VerifyAccount() {
       navigate("/forgot-password");
     }
   }, [resetFlowData, navigate]);
+
+  useEffect(() => {
+    // Stop the timer and enable resend if time runs out
+    if (timeLeft === 0) {
+      setIsResendEnabled(true);
+      return;
+    }
+
+    // Set up the interval
+    const timerId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    // Clean up the interval when the component unmounts or timeLeft changes to 0
+    return () => clearInterval(timerId);
+  }, [timeLeft]);
+
+  // Helper function to format seconds into MM:SS
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    // Pad single-digit numbers with a leading zero
+    const formattedMinutes = String(minutes).padStart(2, "0");
+    const formattedSeconds = String(remainingSeconds).padStart(2, "0");
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+  };
+
+  // Handles resending the OTP
+  const handleResendCode = async (e) => {
+    e.preventDefault();
+    if (!isResendEnabled) return;
+
+    setIsLoading(true);
+    // Call forgotPassword to re-initiate the flow and send a new code
+    const success = await forgotPassword(resetFlowData.email);
+    setIsLoading(false);
+
+    if (success) {
+      toast.info("A new verification code has been sent.");
+      // Reset the timer and disable the resend button
+      setTimeLeft(OTP_EXPIRY_SECONDS);
+      setIsResendEnabled(false);
+      setOtp(["", "", "", "", "", ""]); // Clear inputs
+    } else {
+      toast.error("Failed to resend code. Please try again later.");
+    }
+  };
 
   // Handles OTP input change
   const handleChange = (index, value) => {
@@ -35,13 +90,21 @@ function VerifyAccount() {
     }
   };
 
-  // Handles OTP submission
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const enteredOtp = otp.join("");
 
     if (enteredOtp.length !== 6) {
       toast.error("Please enter the full 6-digit code.");
+      return;
+    }
+
+    // Check if the code has expired on the front-end before submitting
+    if (isResendEnabled) {
+      toast.error(
+        "The verification code has expired. Please request a new one."
+      );
       return;
     }
 
@@ -70,7 +133,7 @@ function VerifyAccount() {
           </Link>
         </div>
       </nav>
-
+      <ToastContainer position="top-right" autoClose={5000} />
       {/* Main Section */}
       <div className="container mt-3 vh-100 ">
         <div className="row text-center justify-content-center">
@@ -107,14 +170,47 @@ function VerifyAccount() {
                       value={digit}
                       maxLength="1"
                       onChange={(e) => handleChange(index, e.target.value)}
+                      onKeyDown={(e) => {
+                        // Custom logic for backspace/delete on an empty field to move focus
+                        if (
+                          e.key === "Backspace" &&
+                          index > 0 &&
+                          otp[index] === ""
+                        ) {
+                          document.getElementById(`otp-${index - 1}`).focus();
+                        }
+                      }}
+                      disabled={isResendEnabled} // Disable inputs when code expires
                     />
                   ))}
+                </div>
+
+                {/* Countdown Timer */}
+                <div className="mt-4">
+                  {isResendEnabled ? (
+                    <p className="text-danger fw-bold">
+                      Code expired.{" "}
+                      <button
+                        onClick={handleResendCode}
+                        className="btn btn-link p-0 fw-bold"
+                        disabled={isLoading}
+                        style={{ textDecoration: "none" }}
+                      >
+                        {isLoading ? "Sending..." : "Resend Code"}
+                      </button>
+                    </p>
+                  ) : (
+                    <p className="text-success fw-bold">
+                      Code expires in:
+                      <span className="ms-2">{formatTime(timeLeft)}</span>
+                    </p>
+                  )}
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-primary w-50 my-5"
-                  disabled={isLoading}
+                  disabled={isLoading || isResendEnabled} // Disable if loading or code expired
                 >
                   {isLoading ? "Verifying..." : "Verify"}
                 </button>
