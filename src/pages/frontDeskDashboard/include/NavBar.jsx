@@ -79,6 +79,19 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
+                  location.pathname ===
+                  "/front-desk-dashboard/manage-frontdesk-guests"
+                    ? "text-white fw-bold"
+                    : "text-white-50"
+                }`}
+                to="/front-desk-dashboard/manage-frontdesk-guests"
+              >
+                Manage Guests
+              </NavLink>
+            </li>
+            {/* <li className="nav-item">
+              <NavLink
+                className={`nav-link px-3 ${
                   location.pathname === "/front-desk-dashboard/notifications"
                     ? "text-white fw-bold"
                     : "text-white-50"
@@ -87,7 +100,7 @@ function Navbar() {
               >
                 Notifications
               </NavLink>
-            </li>
+            </li> */}
           </ul>
         </div>
 

@@ -49,8 +49,7 @@ function SecurityTabIndividual() {
     setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
   };
 
-  if (showHostVisits) {
-    // 3. Render the new component when showHostVisits is true
+  if (showHostVisits) { 
     return <HostVisitsTable onBack={handleBackToTabs} />;
   }
 

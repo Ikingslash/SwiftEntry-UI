@@ -37,16 +37,13 @@ function HostVisitsTable({ onBack }) {
 const handleAction = async (visitId, action) => {
     const newStatus = action === 'accept' ? 'approved' : 'rejected';
 
-    // 1. Optimistic UI Update: Show the badge AND remove the item
-    //    We remove the item immediately for a "pending" list after a successful optimistic action.
-    //    We still use is_processing as a guard against double clicks during the API call.
     setVisits((currentVisits) =>
         currentVisits.map((visit) =>
             visit.id === visitId
                 ? {
                       ...visit,
-                      temp_status: newStatus, // Show badge
-                      is_processing: true, // Disable buttons
+                      temp_status: newStatus,
+                      is_processing: true,
                   }
                 : visit
         )
@@ -61,17 +58,10 @@ const handleAction = async (visitId, action) => {
         await api.post(endpoint);
 
         toast.success(`Visit ${visitId} ${newStatus} successfully.`);
-
-        // 2. IMMEDIATE SUCCESS HANDLING:
-        // Filter the resolved visit out of the local state.
-        // This is a faster way to handle the refresh for a "pending" list.
-        setVisits((currentVisits) =>
-            currentVisits.filter((visit) => visit.id !== visitId)
-        );
-
-        // After filtering, call fetchVisits() to load the next page/refresh list total
-        // The previous visit has already been removed, so this is just for pagination consistency.
-        fetchVisits();
+        // setVisits((currentVisits) =>
+        //     currentVisits.filter((visit) => visit.id !== visitId)
+        // );
+        // fetchVisits();
 
     } catch (error) {
         console.error(`Error ${action}ing visit:`, error);

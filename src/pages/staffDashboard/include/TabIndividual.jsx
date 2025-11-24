@@ -4,9 +4,13 @@ import PreScheduledVisitTable from "./manageGuestIndividual/PreScheduledVisitTab
 import CompletedVisitTable from "./manageGuestIndividual/CompletedVisitTable";
 import CancelledVisitTable from "./manageGuestIndividual/CancelledVisitTable";
 import MissedVisitTbale from "./manageGuestIndividual/MissedVisitTbale";
+import HostVisitsTable from "./HostVisitsTable";
+import {toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function TabIndividual() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
+  const [showHostVisits, setShowHostVisits] = useState(false);
   const [counts, setCounts] = useState({
     scheduled: 0,
     completed: 0,
@@ -40,6 +44,22 @@ function TabIndividual() {
         console.error("Error fetching counts:", error);
       }
     };
+
+    // Function to handle switching to the Host Visits view
+    const handleHostVisitsClick = (e) => {
+      e.preventDefault();
+      setShowHostVisits(true);
+    };
+
+    // Function to handle switching back to the default view
+    const handleBackToTabs = () => {
+      setShowHostVisits(false);
+      setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
+    };
+
+    if (showHostVisits) {
+      return <HostVisitsTable onBack={handleBackToTabs} />;
+    }
 
   return (
     <div>
@@ -88,6 +108,9 @@ function TabIndividual() {
             </button>
           </li>
         </ul>
+        <a href="#" className=" ms-3" onClick={handleHostVisitsClick}>
+          Your Visits Status
+        </a>
       </div>
 
       <div className="mt-5">
