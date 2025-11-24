@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // Add this import
 import api from "../../../context/api";
 import PreScheduledVisitTable from "./manageGuestGroup/PreScheduledVisitTable";
 import CompletedVisitTable from "./manageGuestGroup/CompletedVisitTable";
@@ -7,25 +7,40 @@ import MissedVisitTbale from "./manageGuestGroup/MissedVisitTbale";
 
 function TabGroup() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
-   const [counts, setCounts] = useState({
-      scheduled: 0,
-      completed: 0,
-      cancelled: 0,
-      missed: 0,
-    });
-  
-    useEffect(() => {
-      const fetchCounts = async () => {
-        try {
-          const res = await api.get("staff/guests/group-counts");
-          setCounts(res.data);
-        } catch (error) {
-          console.error("Error fetching counts:", error);
-        }
-      };
-  
-      fetchCounts();
-    }, []);
+  const [counts, setCounts] = useState({
+    scheduled: 0,
+    completed: 0,
+    cancelled: 0,
+    missed: 0,
+  });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await api.get("staff/guests/group-counts");
+        setCounts(res.data);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  const handleVisitUpdate = () => {
+    // Refresh counts when visits are updated
+    fetchCounts();
+  };
+
+  const fetchCounts = async () => {
+    try {
+      const res = await api.get("staff/guests/group-counts");
+      setCounts(res.data);
+    } catch (error) {
+      console.error("Error fetching counts:", error);
+    }
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center">
@@ -74,24 +89,23 @@ function TabGroup() {
             </button>
           </li>
         </ul>
-        <a href="#" className=" ms-3">
-          See More
-        </a>
       </div>
+
       {/* Content */}
       <div className="mt-5">
         {activeTab === "pre-scheduled-visit-table" && (
-          <PreScheduledVisitTable />
+          <PreScheduledVisitTable onVisitUpdate={handleVisitUpdate} />
         )}
-        {activeTab === "completed-visit" && <CompletedVisitTable />}
-        {activeTab === "cancelled-visit" && <CancelledVisitTable />}
-        {activeTab === "missed-visit" && <MissedVisitTbale />}
-        {/* {activeTab === "home" && <Home />}
-        {activeTab === "new-guest" && <NewGuest />}
-        {activeTab === "manage-guests" && <ManageGuests />}
-        {activeTab === "notifications" && <Notifications />} */}
-      </div>{" "}
-      {/* Hero Section */}
+        {activeTab === "completed-visit" && (
+          <CompletedVisitTable onVisitUpdate={handleVisitUpdate} />
+        )}
+        {activeTab === "cancelled-visit" && (
+          <CancelledVisitTable onVisitUpdate={handleVisitUpdate} />
+        )}
+        {activeTab === "missed-visit" && (
+          <MissedVisitTbale onVisitUpdate={handleVisitUpdate} />
+        )}
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ function CompletedVisitTable() {
       setLoading(true);
       try {
         const response = await api.get(
-          "staff/guests/individual-completed-visit",
+          "staff/guests/group-completed-visit",
           {
             params: {
               per_page: perPage,

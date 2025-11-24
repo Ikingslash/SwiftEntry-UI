@@ -27,7 +27,7 @@ import RegisterGuest from "./pages/frontDeskDashboard/RegisterGuest";
 import VisitHistory from "./pages/frontDeskDashboard/VisitHistory";
 import FrontDeskNotifications from "./pages/frontDeskDashboard/FrontDeskNotifications";
 import FrontDeskProfile from "./pages/frontDeskDashboard/FrontDeskProfile";
-import FrontDeskSettings from "./pages/frontDeskDashboard/FrontDeskSettings";
+import FrontDeskSettings from "./pages/frontDeskDashboard/FrontDeskSettings"; ;
 
 
 import SecurityLayout from "./layout/SecurityLayout";
@@ -39,6 +39,7 @@ import VisitSecurityHistory from "./pages/securityDashboard/VisitSecurityHistory
 import SecurityNotifications from "./pages/securityDashboard/SecurityNotifications";
 import SecurityProfile from "./pages/securityDashboard/SecurityProfile";
 import SecuritySettings from "./pages/securityDashboard/SecuritySettings";
+import ManageSecurityGuestsIndividual from "./pages/securityDashboard/ManageSecurityGuestsIndividual";
 
 import AdminLayout from "./layout/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -144,6 +145,7 @@ function App() {
              <Route path="register-new-guest" element={<RegisterNewGuest />} />
              <Route path="history" element={<VisitSecurityHistory />} />
              <Route path="notifications" element={<SecurityNotifications />} />
+             <Route path="manage-security-guests" element={<ManageSecurityGuestsIndividual />} />
              <Route path="profile" element={<SecurityProfile />} />
              <Route path="security-settings" element={<SecuritySettings />} />
            </Route>

@@ -101,8 +101,11 @@ export default function SecurityProfile() {
   return (
     <>
       <NavBar />
-       <ToastContainer position="top-right" autoClose={5000} />
-      <div className="container-fluid py-5" style={{ backgroundColor: "#F5FAFE", minHeight: "100vh" }}>
+      <ToastContainer position="top-right" autoClose={5000} />
+      <div
+        className="container-fluid py-5"
+        style={{ backgroundColor: "#F5FAFE", minHeight: "100vh" }}
+      >
         <div className="container mt-5">
           <div className="row justify-content-center">
             <div className="col-12 col-md-8 col-lg-6">
@@ -117,10 +120,24 @@ export default function SecurityProfile() {
                     src={profileData?.profile_picture || defaultProfilePicture}
                     alt="Profile"
                     className="rounded-circle mb-3"
-                    style={{ width: "120px", height: "120px", objectFit: "cover" }}
+                    style={{
+                      width: "120px",
+                      height: "120px",
+                      objectFit: "cover",
+                    }}
                   />
-                  <div className="d-inline-block px-3 py-1 rounded-pill bg-light text-primary fw-bold" style={{ border: '1px solid #ccc' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-badge-fill me-2" viewBox="0 0 16 16">
+                  <div
+                    className="d-inline-block px-3 py-1 rounded-pill bg-light text-primary fw-bold"
+                    style={{ border: "1px solid #ccc" }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      className="bi bi-person-badge-fill me-2"
+                      viewBox="0 0 16 16"
+                    >
                       <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 0a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
                     </svg>
                     Staff
@@ -155,7 +172,10 @@ export default function SecurityProfile() {
 
                 {/* Edit Profile Button */}
                 <div className="d-grid mt-4 px-3">
-                  <button onClick={handleEditClick} className="btn btn-primary btn-lg rounded-pill fw-bold">
+                  <button
+                    onClick={handleEditClick}
+                    className="btn btn-primary btn-lg rounded-pill fw-bold"
+                  >
                     <IoPencil className="me-2" />
                     Edit Profile
                   </button>
@@ -163,10 +183,26 @@ export default function SecurityProfile() {
 
                 {/* Log Out Button */}
                 <div className="d-grid mt-3 px-3">
-                  <button onClick={handleLogout} className="btn btn-danger btn-lg rounded-pill fw-bold">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-box-arrow-right me-2" viewBox="0 0 16 16">
-                      <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
-                      <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                  <button
+                    onClick={handleLogout}
+                    className="btn btn-danger btn-lg rounded-pill fw-bold"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="currentColor"
+                      className="bi bi-box-arrow-right me-2"
+                      viewBox="0 0 16 16"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"
+                      />
+                      <path
+                        fillRule="evenodd"
+                        d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"
+                      />
                     </svg>
                     Log Out
                   </button>
@@ -178,43 +214,94 @@ export default function SecurityProfile() {
       </div>
 
       {/* Profile Update Modal */}
-      <div className={`modal fade ${isModalOpen ? 'show d-block' : ''}`} tabIndex="-1" style={{ backgroundColor: isModalOpen ? 'rgba(0, 0, 0, 0.5)' : 'transparent' }}>
+      <div
+        className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
+        tabIndex="-1"
+        style={{
+          backgroundColor: isModalOpen ? "rgba(0, 0, 0, 0.5)" : "transparent",
+        }}
+      >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Edit Profile</h5>
-              <button type="button" className="btn-close" onClick={() => setIsModalOpen(false)}></button>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setIsModalOpen(false)}
+              ></button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleFormSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="name" className="form-label">Name</label>
+                  <label htmlFor="name" className="form-label">
+                    Name
+                  </label>
                   <input
                     type="text"
                     className="form-control"
                     id="name"
                     name="name"
-                    value={formData.name || ''}
+                    value={formData.name || ""}
                     onChange={handleFormChange}
                     required
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
+                  <label htmlFor="email" className="form-label">
+                    Email
+                  </label>
                   <input
                     type="email"
                     className="form-control"
                     id="email"
                     name="email"
-                    value={formData.email || ''}
+                    value={formData.email || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="position"
+                    name="position"
+                    value={formData.position || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="company_name"
+                    name="company_name"
+                    value={formData.company_name || ""}
                     onChange={handleFormChange}
                     required
                   />
                 </div>
                 {/* You can add more fields here if needed */}
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Close</button>
-                  <button type="submit" className="btn btn-primary">Save changes</button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Close
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Save changes
+                  </button>
                 </div>
               </form>
             </div>

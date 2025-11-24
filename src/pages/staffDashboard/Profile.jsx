@@ -268,6 +268,34 @@ export default function Profile() {
                     required
                   />
                 </div>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="position"
+                    name="position"
+                    value={formData.position || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="company_name"
+                    name="company_name"
+                    value={formData.company_name || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
                 {/* You can add more fields here if needed */}
                 <div className="modal-footer">
                   <button

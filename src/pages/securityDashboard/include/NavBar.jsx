@@ -1,8 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import api from "../../../context/api";
-import echo from "../../../context/echo";
 import { useNotifications } from "../../../context/NotificationContext";
 
 function Navbar() {
@@ -92,6 +90,18 @@ function Navbar() {
             <li className="nav-item">
               <NavLink
                 className={`nav-link px-3 ${
+                  location.pathname === "/security-dashboard/manage-security-guests"
+                    ? "text-white fw-bold"
+                    : "text-white-50"
+                }`}
+                to="/security-dashboard/manage-security-guests"
+              >
+                Manage Guests
+              </NavLink>
+            </li>
+            {/* <li className="nav-item">
+              <NavLink
+                className={`nav-link px-3 ${
                   location.pathname === "/security-dashboard/notifications"
                     ? "text-white fw-bold"
                     : "text-white-50"
@@ -100,7 +110,7 @@ function Navbar() {
               >
                 Notifications
               </NavLink>
-            </li>
+            </li> */}
           </ul>
         </div>
 

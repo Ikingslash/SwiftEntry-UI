@@ -113,7 +113,7 @@ function FrontDeskProfile() {
   return (
     <>
       <NavBar />
-       <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer position="top-right" autoClose={5000} />
       <div
         className="container-fluid py-5"
         style={{ backgroundColor: "#F5FAFE", minHeight: "100vh" }}
@@ -182,13 +182,16 @@ function FrontDeskProfile() {
                   </ul>
                 </div>
 
-                  {/* Edit Profile Button */}
-                                <div className="d-grid mt-4 px-3">
-                                  <button onClick={handleEditClick} className="btn btn-primary btn-lg rounded-pill fw-bold">
-                                    <IoPencil className="me-2" />
-                                    Edit Profile
-                                  </button>
-                                </div>
+                {/* Edit Profile Button */}
+                <div className="d-grid mt-4 px-3">
+                  <button
+                    onClick={handleEditClick}
+                    className="btn btn-primary btn-lg rounded-pill fw-bold"
+                  >
+                    <IoPencil className="me-2" />
+                    Edit Profile
+                  </button>
+                </div>
 
                 {/* Log Out Button */}
                 <div className="d-grid mt-5 px-3">
@@ -223,43 +226,94 @@ function FrontDeskProfile() {
       </div>
 
       {/* Profile Update Modal */}
-      <div className={`modal fade ${isModalOpen ? 'show d-block' : ''}`} tabIndex="-1" style={{ backgroundColor: isModalOpen ? 'rgba(0, 0, 0, 0.5)' : 'transparent' }}>
+      <div
+        className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
+        tabIndex="-1"
+        style={{
+          backgroundColor: isModalOpen ? "rgba(0, 0, 0, 0.5)" : "transparent",
+        }}
+      >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Edit Profile</h5>
-              <button type="button" className="btn-close" onClick={() => setIsModalOpen(false)}></button>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setIsModalOpen(false)}
+              ></button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleFormSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="name" className="form-label">Name</label>
+                  <label htmlFor="name" className="form-label">
+                    Name
+                  </label>
                   <input
                     type="text"
                     className="form-control"
                     id="name"
                     name="name"
-                    value={formData.name || ''}
+                    value={formData.name || ""}
                     onChange={handleFormChange}
                     required
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
+                  <label htmlFor="email" className="form-label">
+                    Email
+                  </label>
                   <input
                     type="email"
                     className="form-control"
                     id="email"
                     name="email"
-                    value={formData.email || ''}
+                    value={formData.email || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="position"
+                    name="position"
+                    value={formData.position || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="company_name"
+                    name="company_name"
+                    value={formData.company_name || ""}
                     onChange={handleFormChange}
                     required
                   />
                 </div>
                 {/* You can add more fields here if needed */}
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Close</button>
-                  <button type="submit" className="btn btn-primary">Save changes</button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Close
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Save changes
+                  </button>
                 </div>
               </form>
             </div>

@@ -27,6 +27,20 @@ function TabIndividual() {
     fetchCounts();
   }, []);
 
+    const handleVisitUpdate = () => {
+      // Refresh counts when visits are updated
+      fetchCounts();
+    };
+
+    const fetchCounts = async () => {
+      try {
+        const res = await api.get("staff/guests/individual-counts");
+        setCounts(res.data);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center">
@@ -74,16 +88,21 @@ function TabIndividual() {
             </button>
           </li>
         </ul>
-        <a href="#" className="ms-3">
-          See More
-        </a>
       </div>
 
       <div className="mt-5">
-        {activeTab === "pre-scheduled-visit-table" && <PreScheduledVisitTable />}
-        {activeTab === "completed-visit" && <CompletedVisitTable />}
-        {activeTab === "cancelled-visit" && <CancelledVisitTable />}
-        {activeTab === "missed-visit" && <MissedVisitTbale />}
+        {activeTab === "pre-scheduled-visit-table" && (
+          <PreScheduledVisitTable onVisitUpdate={handleVisitUpdate} />
+        )}
+        {activeTab === "completed-visit" && (
+          <CompletedVisitTable onVisitUpdate={handleVisitUpdate} />
+        )}
+        {activeTab === "cancelled-visit" && (
+          <CancelledVisitTable onVisitUpdate={handleVisitUpdate} />
+        )}
+        {activeTab === "missed-visit" && (
+          <MissedVisitTbale onVisitUpdate={handleVisitUpdate} />
+        )}
       </div>
     </div>
   );
