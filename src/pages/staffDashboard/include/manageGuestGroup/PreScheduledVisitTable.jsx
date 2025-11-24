@@ -73,7 +73,8 @@ function PreScheduledVisitTable({ onVisitUpdate }) {
         onVisitUpdate();
       }
     } catch (error) {
-      toast.error("Check-in failed");
+        console.error("Check-in Error:", error);
+           toast.error(error.response?.data?.error || "Check-in failed");
     }
   };
 
