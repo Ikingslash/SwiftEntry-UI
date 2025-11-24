@@ -49,7 +49,7 @@ function SecurityTabIndividual() {
     setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
   };
 
-  if (showHostVisits) { 
+  if (showHostVisits) {
     return <HostVisitsTable onBack={handleBackToTabs} />;
   }
 
@@ -101,7 +101,7 @@ function SecurityTabIndividual() {
           </li>
         </ul>
         <a href="#" className=" ms-3" onClick={handleHostVisitsClick}>
-          Your Visits Status
+          Check Your Visits
         </a>
       </div>
 
@@ -133,8 +133,17 @@ function SecurityTabIndividual() {
         )}
       </div>
 
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

@@ -101,7 +101,7 @@ function FrontdeskTabIndividual() {
           </li>
         </ul>
         <a href="#" className=" ms-3" onClick={handleHostVisitsClick}>
-          Your Visits Status
+          Check Your Visits
         </a>
       </div>
 
