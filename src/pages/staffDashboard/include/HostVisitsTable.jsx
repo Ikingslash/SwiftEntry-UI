@@ -64,7 +64,7 @@ const handleAction = async (visitId, action) => {
         // fetchVisits();
 
     } catch (error) {
-        console.error(`Error ${action}ing visit:`, error);
+         console.error(`Error ${action}ing visit:`, error);
         toast.error(`Failed to ${action} visit: ${error.response?.data?.error || 'Server error'}`);
 
         // 3. Rollback UI on failure: restore buttons
