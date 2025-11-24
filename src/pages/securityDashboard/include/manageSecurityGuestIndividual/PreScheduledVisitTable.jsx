@@ -54,11 +54,11 @@ const handleCheckIn = async () => {
     toast.success("Visitor checked in successfully!");
     setShowCheckInModal(false);
     setCheckInForm({ actual_check_in_time: "", notes: "" });
-    await fetchVisits(); // Add await here
+    await fetchVisits();
     if (onVisitUpdate) {
       onVisitUpdate();
     }
-  } catch (error) { 
+  } catch (error) {
      console.error("Check-in Error:", error);
      toast.error(error.response?.data?.error || "Check-in failed");
   }
@@ -74,7 +74,8 @@ const handleCheckOut = async () => {
       onVisitUpdate();
     }
   } catch (error) {
-    toast.error("Check-out failed");
+     console.error("Check-out Error:", error);
+     toast.error(error.response?.data?.error || "Check-out failed");
   }
 };
 

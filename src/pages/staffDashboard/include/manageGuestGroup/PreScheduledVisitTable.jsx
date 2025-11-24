@@ -68,7 +68,7 @@ function PreScheduledVisitTable({ onVisitUpdate }) {
       toast.success("Visitor checked in successfully!");
       setShowCheckInModal(false);
       setCheckInForm({ actual_check_in_time: "", notes: "" });
-      fetchVisits();
+      await fetchVisits();
       if (onVisitUpdate) {
         onVisitUpdate();
       }
@@ -88,7 +88,8 @@ function PreScheduledVisitTable({ onVisitUpdate }) {
           onVisitUpdate();
         }
     } catch (error) {
-      toast.error("Check-out failed");
+       console.error("Check-out Error:", error);
+       toast.error(error.response?.data?.error || "Check-out failed");
     }
   };
 

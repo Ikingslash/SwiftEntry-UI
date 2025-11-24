@@ -74,7 +74,8 @@ const handleCheckOut = async () => {
       onVisitUpdate();
     }
   } catch (error) {
-    toast.error("Check-out failed");
+     console.error("Check-out Error:", error);
+     toast.error(error.response?.data?.error || "Check-out failed");
   }
 };
 
