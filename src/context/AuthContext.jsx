@@ -40,7 +40,6 @@ const AUTH_PATHS = {
 
 const normalizeUser = (rawUser) => {
   if (!rawUser || typeof rawUser !== "object") {
-    console.warn("normalizeUser: rawUser is null or not an object");
     return null;
   }
 
@@ -90,7 +89,7 @@ const normalizeUser = (rawUser) => {
       ...rawUser,
     };
 
-    console.log("normalizeUser: Profile case result", normalized);
+    // console.log("normalizeUser: Profile case result", normalized);
     return normalized;
   }
 
@@ -117,7 +116,6 @@ const normalizeUser = (rawUser) => {
     ...rawUser,
   };
 
-  console.log("normalizeUser: Login case result", normalized);
   return normalized;
 };
 
