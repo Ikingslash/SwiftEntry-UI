@@ -53,14 +53,14 @@ function VerifyAccount() {
   };
 
   // Handles resending the OTP
-  const handleResendCode = async (e) => {
-    e.preventDefault();
-    if (!isResendEnabled) return;
+const handleResendCode = async (e) => {
+  e.preventDefault();
+  if (!isResendEnabled) return;
 
-    setIsLoading(true);
-    // Call forgotPassword to re-initiate the flow and send a new code
+  setIsLoading(true);
+  try {
+    // Call forgotPassword with the email from resetFlowData
     const success = await forgotPassword(resetFlowData.email);
-    setIsLoading(false);
 
     if (success) {
       toast.info("A new verification code has been sent.");
@@ -68,11 +68,22 @@ function VerifyAccount() {
       setTimeLeft(OTP_EXPIRY_SECONDS);
       setIsResendEnabled(false);
       setOtp(["", "", "", "", "", ""]); // Clear inputs
+
+      // Clear all existing inputs
+      for (let i = 0; i < 6; i++) {
+        const input = document.getElementById(`otp-${i}`);
+        if (input) input.value = "";
+      }
     } else {
       toast.error("Failed to resend code. Please try again later.");
     }
-  };
-
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    toast.error("An error occurred while resending the code.");
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Handles OTP input change
   const handleChange = (index, value) => {
     if (isNaN(value)) return;
@@ -90,32 +101,46 @@ function VerifyAccount() {
     }
   };
 
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const enteredOtp = otp.join("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const enteredOtp = otp.join("");
 
-    if (enteredOtp.length !== 6) {
-      toast.error("Please enter the full 6-digit code.");
-      return;
-    }
+  if (enteredOtp.length !== 6) {
+    toast.error("Please enter the full 6-digit code.");
+    return;
+  }
 
-    // Check if the code has expired on the front-end before submitting
-    if (isResendEnabled) {
-      toast.error(
-        "The verification code has expired. Please request a new one."
-      );
-      return;
-    }
+  // Check if the code has expired on the front-end before submitting
+  if (isResendEnabled) {
+    toast.error("The verification code has expired. Please request a new one.");
+    return;
+  }
 
-    setIsLoading(true);
+  setIsLoading(true);
+
+  try {
+    console.log("Submitting OTP for verification:", {
+      email: resetFlowData.email,
+      otp: enteredOtp,
+      userRole: resetFlowData.userRole
+    });
+
     const success = await verifyOtp(enteredOtp);
-    setIsLoading(false);
 
     if (success) {
+      console.log("OTP verification successful, navigating to reset password");
       navigate("/set-new-password");
+    } else {
+      // Error is handled in verifyOtp function
+      console.log("OTP verification failed");
     }
-  };
+  } catch (error) {
+    console.error("OTP submission error:", error);
+    toast.error("An unexpected error occurred. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div

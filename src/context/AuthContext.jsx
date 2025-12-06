@@ -413,7 +413,11 @@ const login = async (email, password) => {
         return true;
       } else {
         toast.info("If this email is registered, a code has been sent.");
-        setResetFlowData({ email: email, resetToken: null, userRole: "admin" });
+        setResetFlowData({
+          email: email,
+          resetToken: null,
+          userRole: null,
+        });
         return true;
       }
     } catch (error) {
@@ -456,67 +460,97 @@ const login = async (email, password) => {
     }
   };
 
-  const resetPassword = async (
-    email,
-    resetToken,
-    password,
-    confirmPassword
-  ) => {
-    const { userRole } = resetFlowData;
+ const resetPassword = async (
+  email,
+  resetToken,
+  password,
+  confirmPassword
+) => {
+  const { userRole } = resetFlowData;
 
-    if (!email || !resetToken || !userRole) {
-      console.error("Missing reset flow data:", {
-        email,
-        resetToken,
-        userRole,
-      });
-      toast.error("Password reset process failed. Please restart.");
-      navigate("/forgot-password");
-      return false;
+  if (!email || !resetToken || !userRole) {
+    console.error("Missing reset flow data:", {
+      email,
+      resetToken,
+      userRole,
+    });
+    toast.error("Password reset process failed. Please restart.");
+    navigate("/forgot-password");
+    return false;
+  }
+
+  try {
+    const path = AUTH_PATHS[userRole].reset;
+    console.log("Reset password attempt:", {
+      email,
+      userRole,
+      path,
+      token_length: resetToken.length,
+      token_prefix: resetToken.substring(0, 10) + "...",
+    });
+
+    // Prepare request data based on role
+    const requestData = userRole === "security"
+      ? {
+          email,
+          reset_token: resetToken,
+          password,
+          password_confirmation: confirmPassword,
+        }
+      : {
+          email,
+          token: resetToken, // Other roles might use 'token' instead of 'reset_token'
+          password,
+          password_confirmation: confirmPassword,
+        };
+
+    console.log("Sending request data:", {
+      ...requestData,
+      password: "***", // Hide password in logs
+      password_confirmation: "***"
+    });
+
+    // Use appropriate method based on role
+    const response = userRole === "security"
+      ? await api.put(path, requestData)
+      : await api.post(path, requestData);
+
+    console.log("Reset password response:", response.data);
+
+    if (response.data.message) {
+      // Clear all reset flow data upon success
+      setResetFlowData({ email: null, resetToken: null, userRole: null });
+      toast.success("Password successfully reset! Please sign in.");
+      return true;
+    }
+  } catch (error) {
+    console.error("Password reset failed:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      config: error.config?.data ? JSON.parse(error.config.data) : null
+    });
+
+    let errorMessage = "Failed to reset password. Token may have expired.";
+
+    if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.status === 401) {
+      errorMessage = "Invalid or expired reset token. Please start the process again.";
+    } else if (error.response?.status === 422) {
+      errorMessage = "Validation failed: " + JSON.stringify(error.response.data.errors);
     }
 
-    try {
-      const path = AUTH_PATHS[userRole].reset;
-      console.log("Reset password attempt:", {
-        email,
-        userRole,
-        path,
-        token_length: resetToken.length,
-        token_prefix: resetToken.substring(0, 10) + "...",
-      });
+    toast.error(errorMessage);
 
-      // Note: Backend resetPassword route for Security uses PUT, others use POST
-      const method = userRole === "security" ? api.put : api.post;
-
-      const response = await method(path, {
-        email,
-        reset_token: resetToken,
-        password,
-        password_confirmation: confirmPassword,
-      });
-
-      console.log("Reset password response:", response.data);
-
-      if (response.data.message) {
-        // Clear all reset flow data upon success
-        setResetFlowData({ email: null, resetToken: null, userRole: null });
-        toast.success("Password successfully reset! Please sign in.");
-        return true;
-      }
-    } catch (error) {
-      console.error("Password reset failed details:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        token_sent: resetToken.substring(0, 10) + "...",
-      });
-
-      const errorMessage =
-        error.response?.data?.error ||
-        "Failed to reset password. Token may have expired.";
-      toast.error(errorMessage);
-      return false;
+    // If token is invalid, clear reset flow data
+    if (error.response?.status === 401) {
+      setResetFlowData({ email: null, resetToken: null, userRole: null });
     }
-  };
+
+    return false;
+  }
+};
 
   return (
     <AuthContext.Provider
