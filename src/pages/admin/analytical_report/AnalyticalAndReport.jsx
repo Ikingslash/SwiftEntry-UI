@@ -13,7 +13,9 @@ import {
 } from "recharts";
 import React, { useState, useEffect } from "react";
 import NavBar from "../include/NavBar";
-import api from "../../../context/api"; // Assuming your Axios instance
+import api from "../../../context/api";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function AnalyticalAndReport() {
   const [analyticsData, setAnalyticsData] = useState({
@@ -96,28 +98,87 @@ const handleExport = async () => {
     if (activeFilters.walkins) queryParams.append("walkins", "true");
     if (activeFilters.preregistered) queryParams.append("preregistered", "true");
 
-    // Create export URL
-    const exportUrl = `${api.defaults.baseURL}/admin/analytics/export?${queryParams.toString()}`;
+    // Get the token from localStorage
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login again.");
+      setIsExporting(false);
+      return;
+    }
 
-    // Create a temporary link to trigger download
+    // Use the API instance to make the request
+    const response = await api.get(`/admin/analytics/export?${queryParams.toString()}`, {
+      responseType: 'blob', // This is CRITICAL for file downloads
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf, text/csv'
+      }
+    });
+
+    // Get the filename from the response headers or generate one
+    let filename = 'analytics_report';
+    const contentDisposition = response.headers['content-disposition'];
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      } else {
+        // Fallback based on format
+        const extension = exportFormat === 'csv' ? 'csv' :
+                         exportFormat === 'pdf' ? 'pdf' : 'xlsx';
+        filename = `analytics_report_${new Date().toISOString().slice(0, 10)}.${extension}`;
+      }
+    }
+
+    // Create a blob URL and trigger download
+    const blob = new Blob([response.data], {
+      type: response.headers['content-type'] ||
+            (exportFormat === 'pdf' ? 'application/pdf' :
+             exportFormat === 'csv' ? 'text/csv' :
+             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    });
+
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = exportUrl;
-    link.setAttribute('download', '');
+    link.href = url;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
+
+    // Cleanup
+    window.URL.revokeObjectURL(url);
     document.body.removeChild(link);
 
-    // Close modal after short delay
-    setTimeout(() => {
-      setIsExporting(false);
-      setShowExportModal(false);
-      toast.success(`Report exported successfully as ${exportFormat.toUpperCase()}!`);
-    }, 1000);
+    toast.success(`Report exported successfully as ${exportFormat.toUpperCase()}!`);
 
   } catch (err) {
     console.error("Error exporting report:", err);
+
+    // Try to parse error response if available
+    if (err.response && err.response.data) {
+      // If it's a JSON error (like from backend)
+      if (err.response.headers['content-type']?.includes('application/json')) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const errorData = JSON.parse(reader.result);
+            toast.error(errorData.error || "Export failed");
+          } catch {
+            toast.error("Export failed: Invalid response");
+          }
+        };
+        reader.readAsText(err.response.data);
+      } else {
+        // If it's a different type of error
+        toast.error("Export failed. Please try again.");
+      }
+    } else {
+      toast.error(err.message || "Failed to export report. Please try again.");
+    }
+  } finally {
     setIsExporting(false);
-    toast.error("Failed to export report. Please try again.");
+    setShowExportModal(false);
   }
 };
   const handleFilterChange = (filterType, value) => {
@@ -152,6 +213,7 @@ const handleExport = async () => {
 
   return (
     <div>
+      <ToastContainer position="top-right" autoClose={5000} />
       <NavBar />
       <header
         id="home"
