@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../../../../context/api";
+import { toast } from "react-toastify";
 
-function CancelledVisitTable() {
+// Added visitType prop
+function CancelledVisitTable({ visitType, onVisitUpdate }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
@@ -12,139 +14,184 @@ function CancelledVisitTable() {
   const [newTime, setNewTime] = useState("");
   const perPage = 10;
 
-  useEffect(() => {
-    const fetchVisits = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get("staff/guests/group-cancelled-visit", {
+  const fetchVisits = async () => {
+    setLoading(true);
+    try {
+        // FIX: Dynamic endpoint for cancelled visits
+      const endpoint = `/staff/guests/${visitType}/cancelled-visits`;
+      const response = await api.get(
+        endpoint,
+        {
           params: { per_page: perPage, page },
-        });
-        setVisits(response.data.visits);
-        setPagination(response.data.pagination);
-      } catch (error) {
-        console.error("Error fetching visits:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        }
+      );
+      setVisits(response.data.visits);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      toast.error("Failed to load cancelled visits");
+      setVisits([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchVisits();
-  }, [page]);
+  }, [page, visitType, onVisitUpdate]); // Added visitType and onVisitUpdate as dependencies
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) setPage((prev) => prev - 1);
   };
 
   const handleNext = () => {
-    if (pagination.current_page < pagination.last_page) setPage((prev) => prev + 1);
-  };
-
-  const handleRescheduleClick = (visit) => {
-    setSelectedVisit(visit);
-    setNewDate("");
-    setNewTime("");
-    setShowModal(true);
+    if (pagination.current_page < pagination.last_page)
+      setPage((prev) => prev + 1);
   };
 
   const handleRescheduleSubmit = async () => {
-    if (!newDate || !newTime) {
-      alert("Date and time are required");
-      return;
+    if (!selectedVisit || !newDate || !newTime) {
+        toast.error("Please select a new date and time.");
+        return;
     }
+
+    const newVisitTime = `${newDate} ${newTime}`;
 
     try {
-      // Reschedule visit
-      await api.put(`staff/guests/group/reschedule/${selectedVisit.visitor.id}`, {
-        new_date: newDate,
-        new_time: newTime,
-      });
-
-      // Notify visitor
-      await api.post("staff/guests/notify", {
-        visitor_id: selectedVisit.visitor.id,
-        message: `Your visit has been rescheduled to ${newDate} at ${newTime}`,
-      });
-
-      alert("Rescheduled and notification sent!");
-      setShowModal(false);
+        // Assume reschedule uses a generic visit ID endpoint
+        await api.post(`security/guest/visit/${selectedVisit.id}/reschedule`, {
+            visit_time: newVisitTime
+        });
+        toast.success("Visit successfully rescheduled!");
+        setShowModal(false);
+        fetchVisits();
+        if(onVisitUpdate) onVisitUpdate();
     } catch (error) {
-      console.error("Reschedule error:", error);
-      alert("Failed to reschedule or notify.");
+        console.error("Reschedule failed:", error);
+        toast.error("Failed to reschedule visit.");
     }
   };
+
+  const openRescheduleModal = (visit) => {
+    setSelectedVisit(visit);
+    // You might want to pre-fill date/time with current values or an empty string
+    setNewDate("");
+    setNewTime("");
+    setShowModal(true);
+  }
 
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="table-responsive my-5">
-      {visits.length > 0 ? (
-        <>
-          <table className="table table-bordered table-hover">
-            <thead>
-              <tr>
-                <th>Guest Name</th>
-                <th>Visit Date</th>
-                <th>Visit Time</th>
-                <th>Contact Number</th>
-                <th>Special Requirement</th>
-                <th>Visit Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visits.map((visit) => (
-                <tr key={visit.id}>
-                  <td>{visit.visitor?.name || "N/A"}</td>
-                  <td>{new Date(visit.check_in).toLocaleDateString()}</td>
-                  <td>{visit.visit_time || "N/A"}</td>
-                  <td>{visit.visitor?.contact_number || "N/A"}</td>
-                  <td>{visit.visitor?.special_requirements || "None"}</td>
-                  <td>{visit.status}</td>
-                  <td>
-                    <button className="btn btn-sm btn-link" onClick={() => handleRescheduleClick(visit)}>
-                      Reschedule
-                    </button>
-                  </td>
+    <div>
+      <div className="table-responsive my-5">
+        {visits.length > 0 ? (
+          <>
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Unique ID</th>
+                  <th>Guest Name</th>
+                  <th>Host Name</th>
+                  <th>Visit Date/Time</th>
+                  <th>Contact</th>
+                  <th>Email Address</th>
+                  <th>Special Requirement</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visits.map((visit) => (
+                  <tr key={visit.id}>
+                    <td>{visit.id}</td>
+                    <td>{visit.visitor?.name}</td>
+                    <td>{visit.host_name}</td>
+                    <td>
+                      {visit.visit_time
+                        ? new Date(visit.visit_time).toLocaleString()
+                        : "N/A"}
+                    </td>
+                    <td>{visit.visitor?.contact_number}</td>
+                    <td>{visit.visitor?.email}</td>
+                    <td>{visit.visitor?.special_requirements || "None"}</td>
+                     <td>
+                        <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => openRescheduleModal(visit)}
+                        >
+                            Reschedule
+                        </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          {/* Pagination Controls */}
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <button className="btn btn-primary" onClick={handlePrevious} disabled={pagination.current_page === 1}>
-              Previous
-            </button>
-            <span>
-              Page {pagination.current_page} of {pagination.last_page}
-            </span>
-            <button className="btn btn-primary" onClick={handleNext} disabled={pagination.current_page === pagination.last_page}>
-              Next
-            </button>
-          </div>
-        </>
-      ) : (
-        <h5>No Cancelled Visits</h5>
-      )}
+            {/* Pagination Controls */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <button
+                className="btn btn-primary"
+                onClick={handlePrevious}
+                disabled={pagination.current_page === 1}
+              >
+                Previous
+              </button>
+              <span>
+                Page {pagination.current_page} of {pagination.last_page}
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={handleNext}
+                disabled={pagination.current_page === pagination.last_page}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        ) : (
+          <h1>No Cancelled Visit</h1>
+        )}
+      </div>
 
       {/* Reschedule Modal */}
       {showModal && (
-        <div className="modal d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog" role="document">
             <div className="modal-content p-4">
               <h5 className="modal-title">Reschedule Visit</h5>
               <div className="modal-body">
                 <label>New Date</label>
-                <input type="date" className="form-control mb-2" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+                <input
+                  type="date"
+                  className="form-control mb-2"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                />
 
                 <label>New Time</label>
-                <input type="time" className="form-control mb-3" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
+                <input
+                  type="time"
+                  className="form-control mb-3"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                />
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
                   Cancel
                 </button>
-                <button className="btn btn-success" onClick={handleRescheduleSubmit}>
+                <button
+                  className="btn btn-success"
+                  onClick={handleRescheduleSubmit}
+                >
                   Submit
                 </button>
               </div>

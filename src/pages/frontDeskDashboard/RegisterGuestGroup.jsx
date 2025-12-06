@@ -6,298 +6,259 @@ import { toast } from "react-toastify";
 import { requestForToken, onMessageListener } from "../../context/firebase";
 
 function RegisterGuestGroup() {
-  const [formData, setFormData] = useState({
-    group_leader_name: "",
-    group_leader_contact: "",
-    group_leader_email: "",
-    organization_name: "",
-    address: "",
-    group_size: "",
-    visit_time: "",
-    host_name: "",
-    host_id: "", // Added host_id to state
-    host_role: "", // Added host_role to state
-    building: "",
-    floor: "",
-    purpose: "",
-    special_requirements: "",
-    emergency_contact: "",
-    previsit_instruction: "",
-    details: "",
-    photo: null,
-  });
-  const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showVisitCardModal, setShowVisitCardModal] = useState(false);
-  const [guestDetails, setGuestDetails] = useState({});
-  const [appUsers, setAppUsers] = useState([]);
-  const [visitPurposes, setVisitPurposes] = useState([]);
-  const [qrValue, setQrValue] = useState("");
-  const printRef = useRef();
+ const [formData, setFormData] = useState({
+   group_leader_name: "",
+   group_leader_contact: "",
+   group_leader_email: "",
+   organization_name: "",
+   address: "",
+   group_size: "",
+   visit_time: "",
+   host_name: "",
+   building: "",
+   floor: "",
+   purpose: "",
+   special_requirements: "",
+   emergency_contact: "",
+   previsit_instruction: "",
+   details: "",
+ });
+ const [loading, setLoading] = useState(false);
+ const [showSuccessModal, setShowSuccessModal] = useState(false);
+ const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+ const [guestDetails, setGuestDetails] = useState({});
+ const [qrValue, setQrValue] = useState("");
+ const printRef = useRef();
+ const [appUsers, setAppUsers] = useState([]);
+ const [visitPurposes, setVisitPurposes] = useState([]);
 
-  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
-  useEffect(() => {
-    // Request permission and get the FCM token
-    requestForToken()
-      .then((fcmToken) => {
-        if (fcmToken) {
-          api
-            .post("/save-fcm-token", { fcm_token: fcmToken })
-            .then((response) => {
-              // console.log("FCM token saved on backend:", response.data);
-            })
-            .catch((error) => {
-              console.error("Failed to save FCM token on backend:", error);
-            });
-        }
-      })
-      .catch((err) => {
-        console.error("An error occurred while retrieving token. ", err);
-      });
+ // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+ useEffect(() => {
+   // Request permission and get the FCM token
+   requestForToken()
+     .then((fcmToken) => {
+       if (fcmToken) {
+         console.log("FCM token:", fcmToken);
 
-    // Fetch the list of all app users (staff, security, front desk)
-    api
-      .get("/frontdesk-app-users")
-      .then((response) => {
-        // Assuming the response is an array of user names
-        if (response.data && Array.isArray(response.data.users)) {
-          setAppUsers(response.data.users);
-        } else {
-          console.error(
-            "API response for users is not an array:",
-            response.data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch app users:", error);
-      });
-    // Fetch the list of visit purposes from the backend
-    api
-      .get("/front-desk/guests/settings/visit-purposes")
-      .then((response) => {
-        if (response.data && Array.isArray(response.data)) {
-          setVisitPurposes(response.data);
-        } else {
-          console.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch visit purposes:", error);
-      });
+         api
+           .post("/save-fcm-token", { fcm_token: fcmToken })
+           .then((response) => {
+             console.log("FCM token saved on backend:", response.data);
+           })
+           .catch((error) => {
+             console.error("Failed to save FCM token on backend:", error);
+           });
+       }
+     })
+     .catch((err) => {
+       console.error("An error occurred while retrieving token. ", err);
+     });
 
-    // Set up the listener for incoming messages.
-    const unsubscribe = onMessageListener((payload) => {
-      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
-    });
+   // Fetch the list of all app users (staff, security, front desk)
+   api
+     .get("/frontdesk-app-users")
+     .then((response) => {
+       // Assuming the response is an array of user names
+       if (response.data && Array.isArray(response.data.users)) {
+         setAppUsers(response.data.users);
+       } else {
+         console.error(
+           "API response for users is not an array:",
+           response.data
+         );
+       }
+     })
+     .catch((error) => {
+       console.error("Failed to fetch app users:", error);
+     });
+   // Fetch the list of visit purposes from the backend
+   api
+     .get("/front-desk/guests/settings/visit-purposes")
+     .then((response) => {
+       if (response.data && Array.isArray(response.data)) {
+         setVisitPurposes(response.data);
+       } else {
+         console.error(
+           "API response for purposes is not an array:",
+           response.data
+         );
+       }
+     })
+     .catch((error) => {
+       console.error("Failed to fetch visit purposes:", error);
+     });
 
-    // Cleanup function to detach the listener when the component unmounts
-    return () => unsubscribe();
-  }, []);
+   // Set up the listener for incoming messages.
+   const unsubscribe = onMessageListener((payload) => {
+     toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+   });
 
+   // Cleanup function to detach the listener when the component unmounts
+   return () => unsubscribe();
+ }, []);
 
-const handleChange = (e) => {
-  const { name, value, selectedOptions } = e.target;
-  if (name === "host_id") {
-    const [role, id] = value.split("-");
-    const selectedHostName = selectedOptions[0]?.text.trim();
-    setFormData({
-      ...formData,
-      host_id: id,
-      host_role: role,
-      host_name: selectedHostName,
-    });
-  } else {
-    setFormData({ ...formData, [name]: value });
-  }
-};
+ const handleChange = (e) => {
+   const { name, value, selectedOptions } = e.target;
+   if (name === "host_id") {
+     const [role, id] = value.split("-");
+     const selectedHostName = selectedOptions[0]?.text.trim();
+     setFormData({
+       ...formData,
+       host_id: id,
+       host_role: role,
+       host_name: selectedHostName,
+     });
+   } else {
+     setFormData({ ...formData, [name]: value });
+   }
+ };
 
+ const showValidationErrors = (error) => {
+   if (error.response && error.response.status === 422) {
+     let validationErrors = error.response.data.errors || error.response.data;
 
+     if (typeof validationErrors === "string") {
+       toast.error(validationErrors);
+       return;
+     }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        photo: file,
-      }));
-      setSelectedImage(URL.createObjectURL(file));
-    }
-  };
+     Object.values(validationErrors).forEach((messages) => {
+       if (Array.isArray(messages)) {
+         messages.forEach((msg) => toast.error(msg));
+       } else if (typeof messages === "string") {
+         toast.error(messages);
+       }
+     });
+   } else {
+     toast.error(
+       error.response?.data?.message ||
+         error.message ||
+         "Something went wrong. Please try again."
+     );
+   }
+ };
 
-    const showValidationErrors = (error) => {
-        if (error.response && error.response.status === 422) {
-          let validationErrors = error.response.data.errors || error.response.data;
+ const handleSubmit = async (e) => {
+   e.preventDefault();
+   setLoading(true);
 
-          if (typeof validationErrors === "string") {
-            toast.error(validationErrors);
-            return;
-          }
+   const formDataToSend = new FormData();
 
-          Object.values(validationErrors).forEach((messages) => {
-            if (Array.isArray(messages)) {
-              messages.forEach((msg) => toast.error(msg));
-            } else if (typeof messages === "string") {
-              toast.error(messages);
-            }
-          });
-        } else {
-          toast.error(
-            error.response?.data?.message ||
-              error.message ||
-              "Something went wrong. Please try again."
-          );
-        }
-      };
+   Object.entries(formData).forEach(([key, value]) => {
+     if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
+       formDataToSend.append(key, value);
+     }
+   });
 
+   if (formData.visit_time) {
+     const visitTime = new Date(formData.visit_time);
+     if (!isNaN(visitTime.getTime())) {
+       // Check if date is valid
+       const formattedVisitTime = visitTime
+         .toISOString()
+         .slice(0, 19)
+         .replace("T", " ");
+       formDataToSend.append("visit_time", formattedVisitTime);
+     } else {
+       toast.error("Invalid visit time format.");
+       setLoading(false);
+       return;
+     }
+   }
+   // Append host_id and host_role
+   formDataToSend.append("host_id", formData.host_id);
+   formDataToSend.append("host_role", formData.host_role);
 
+   try {
+     const response = await api.post(
+       "/front-desk/guests/register-group",
+       formDataToSend,
+       {
+         headers: { "Content-Type": "multipart/form-data" },
+       }
+     );
 
+     if (response.status === 200 || response.status === 201) {
+       const visit = response.data.visit;
+       const visitor = response.data.visitor;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+       if (formData.host_id && formData.host_role) {
+         try {
+           await api.post("/genereal-notify-host", {
+             host_id: formData.host_id,
+             host_role: formData.host_role,
+             guest_name: formData.group_leader_name,
+             purpose: formData.purpose,
+           });
+           console.log("Notification trigger sent to backend.");
+           toast.success("Notification sent to host successfully.");
+         } catch (notificationError) {
+           console.error(
+             "Failed to trigger notification:" +
+               (notificationError.response?.data?.message || "Server error."),
+             notificationError
+           );
+         }
+       } else {
+         console.warn("Host ID or Role missing, skipping host notification.");
+       }
+       const visitTimeParts = visit?.check_in?.split(" ") || [];
 
-    const formDataToSend = new FormData();
+       const date = visitTimeParts?.[0] || "";
+       const time = visitTimeParts?.[1] || "";
 
-    Object.entries(formData).forEach(([key, value]) => {
-      if (
-        key !== "photo" &&
-        key !== "visit_time" &&
-        key !== "host_id" &&
-        key !== "host_role"
-      ) {
-        formDataToSend.append(key, value);
-      }
-    });
+       setGuestDetails({
+         name: visitor.name,
+         id: visit.code || "",
+         host: visit.host_name,
+         date,
+         time,
+         purpose: visit.purpose,
+         Contact_info: visitor.contact_number,
+         address: visitor.address,
+       });
 
-    // Format visit_time
-    if (formData.visit_time) {
-      const visitDate = new Date(formData.visit_time);
-      if (!isNaN(visitDate.getTime())) {
-        // Check if date is valid
-        const formattedVisitTime = visitDate
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ");
-        formDataToSend.append("visit_time", formattedVisitTime);
-      } else {
-        toast.error(
-          "Invalid visit time format. Please select a valid date and time."
-        );
-        setLoading(false);
-        return;
-      }
-    }
+       if (visit.code) {
+         setQrValue(visit.code);
+       }
+       setFormData({
+         group_leader_name: "",
+         group_leader_contact: "",
+         group_leader_email: "",
+         organization_name: "",
+         address: "",
+         group_size: "",
+         visit_time: "",
+         host_name: "",
+         host_id: "",
+         building: "",
+         floor: "",
+         purpose: "",
+         special_requirements: "",
+         emergency_contact: "",
+         previsit_instruction: "",
+         details: "",
+       });
 
-    if (formData.photo instanceof File) {
-      // Ensure it's a File object
-      formDataToSend.append("photo", formData.photo);
-    }
-
-    // Append host_id and host_role
-    formDataToSend.append("host_id", formData.host_id);
-    formDataToSend.append("host_role", formData.host_role);
-
-    try {
-      const response = await api.post(
-        "/front-desk/guests/register-group",
-        formDataToSend,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      if (response.status === 200 || response.status === 201) {
-        const visit = response.data.visit;
-        const visitor = response.data.visitor; // This would be the group leader
-
-        // Trigger notification to host
-        if (formData.host_id && formData.host_role) {
-          try {
-            await api.post("/genereal-notify-host", {
-              host_id: formData.host_id,
-              host_role: formData.host_role,
-              guest_name: formData.group_leader_name, // Use group leader's name
-              purpose: formData.purpose,
-            });
-            console.log("Notification trigger sent to backend.");
-            toast.success("Notification sent to host successfully.");
-          } catch (notificationError) {
-            console.error("Failed to trigger notification:", notificationError);
-          }
-        } else {
-          console.warn("Host ID or Role missing, skipping host notification.");
-        }
-
-        const visitTimeParts = visit?.check_in?.split(" ") || [];
-
-        const date = visitTimeParts?.[0] || "";
-        const time = visitTimeParts?.[1] || "";
-
-        setGuestDetails({
-          name: visitor.name, // This will be the group leader's name
-          id: visit.code || "",
-          host: visit.host_name,
-          date,
-          time,
-          purpose: visit.purpose,
-          Contact_info: visitor.contact_number,
-          address: visitor.address,
-          photo: visitor.photo,
-        });
-
-        if (visit.code) {
-          setQrValue(visit.code);
-        }
-        // Reset form data after successful submission
-        setFormData({
-          group_leader_name: "",
-          group_leader_contact: "",
-          group_leader_email: "",
-          organization_name: "",
-          address: "",
-          group_size: "",
-          visit_time: "",
-          host_name: "",
-          host_id: "",
-          host_role: "",
-          building: "",
-          floor: "",
-          purpose: "",
-          special_requirements: "",
-          emergency_contact: "",
-          previsit_instruction: "",
-          details: "",
-          photo: null,
-        });
-        setSelectedImage(null);
-
-        toast.success("Group visitor registered successfully!");
-        setShowSuccessModal(true);
-        setTimeout(() => {
-          setShowSuccessModal(false);
-          setShowVisitCardModal(true);
-        }, 2500);
-      } else {
-        console.error(
-          "Error: " + (response.data.message || "Something went wrong")
-        );
-        toast.error(
-          "Failed to register visitor: " +
-            (response.data.message || "Unknown error")
-        );
-      }
-    }catch (error) {
-      showValidationErrors(error);
-      console.log("Validation errors:", error.response?.data);
-    } finally {
-      setLoading(false);
-    }
-  };
+       // toast.success("Visitor group registered successfully!");
+       setShowSuccessModal(true);
+       setTimeout(() => {
+         setShowSuccessModal(false);
+         setShowVisitCardModal(true);
+       }, 2500);
+     } else {
+       console.error(
+         "Error: " + (response.data.message || "Something went wrong")
+       );
+       toast.error("Failed to register guest.");
+     }
+   } catch (error) {
+     showValidationErrors(error);
+     console.log("Validation errors:", error.response?.data);
+   } finally {
+     setLoading(false);
+   }
+ };
 
   const handlePrint = () => {
     // Get the HTML content of the visit card
@@ -452,6 +413,7 @@ const handleChange = (e) => {
                       onChange={handleChange}
                     />
                   </div>
+
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
                     <select
@@ -555,48 +517,6 @@ const handleChange = (e) => {
                 {/* Additional Information */}
                 <div className="p-4">
                   <h5 className="fw-bold">Additional Information</h5>
-                  <div className=" mt-4">
-                    <label className="form-label d-block">
-                      Add Photo (Optional)
-                    </label>
-                    <input
-                      type="file"
-                      className="d-none"
-                      id="fileUpload"
-                      accept="image/*"
-                      name="photo"
-                      onChange={handleImageChange}
-                    />
-                    <label htmlFor="fileUpload" className="d-inline-block">
-                      <div
-                        className="rounded-circle border d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {selectedImage ? (
-                          <img
-                            src={selectedImage}
-                            alt="Uploaded"
-                            className="rounded-circle"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <i
-                            className="bi bi-camera"
-                            style={{ fontSize: "24px" }}
-                          ></i>
-                        )}
-                      </div>
-                    </label>
-                  </div>
                 </div>
                 <div className="my-3">
                   <label className="form-label">Name of Organization</label>
@@ -718,28 +638,7 @@ const handleChange = (e) => {
                     </span>
                     <strong className="text-white">VISITORS BADGE</strong>
                   </div>
-                  <div className="card-body d-flex">
-                    <div className="me-3">
-                      {guestDetails.photo ? (
-                        <img
-                          src={`${guestDetails.photo}`}
-                          alt="Visitor photo"
-                          className="img-fluid rounded-circle border border-primary"
-                          style={{
-                            width: "120px",
-                            height: "120px",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto border border-primary"
-                          style={{ width: "120px", height: "120px" }}
-                        >
-                          <span className="text-muted">No Photo</span>
-                        </div>
-                      )}
-                    </div>
+                  <div className="card-body d-flex mx-4 justify-content-between">
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
                       <p className="my-2 lead">

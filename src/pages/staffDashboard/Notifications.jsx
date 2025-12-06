@@ -1,10 +1,15 @@
+
 import { useEffect, useState } from "react";
-import api from "../../context/api";
 import NavBar from "./include/NavBar";
+import api from "../../context/api";
+import { useNotifications } from "../../context/NotificationContext";
+import echo from "../../context/echo";
 import { toast } from 'react-toastify';
 import { BellRing, UserCheck, CheckSquare } from 'lucide-react';
-import { useNotifications } from "../../context/NotificationContext";
 import { useLocation } from "react-router-dom";
+
+
+
 
 
 
@@ -58,110 +63,113 @@ const Pagination = ({ pagination, handlePageChange }) => {
 
 
 
-function Notifications() {
-  const [notifications, setNotifications] = useState([]);
-  const [message, setMessage] = useState("Loading notifications...");
+function SecurityNotifications() {
+ const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Corrected the function name from markAllAsRead to markNotificationsAsRead
-  const { markNotificationsAsRead, fetchNotificationCount } =
-    useNotifications();
-  const location = useLocation();
-  const [pagination, setPagination] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
 
-  // Function to fetch the paginated notifications  /staff/notifications
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get("/staff/notifications", {
-        params: {
-          page: currentPage,
-          per_page: 10, // Assuming 10 items per page as per backend
-        },
-      });
+  const [message, setMessage] = useState("Loading notifications...");
+  const [pagination, setPagination] = useState({}); // State for pagination data
+  const [currentPage, setCurrentPage] = useState(1); // State for current page
+  // Get functions from the NotificationContext
+    const location = useLocation();
+    const { markNotificationsAsRead, fetchNotificationCount } = useNotifications();
 
-      if (response.data && Array.isArray(response.data.notifications)) {
-        setNotifications(response.data.notifications);
-        setPagination(response.data.pagination);
-        setMessage(
-          response.data.message || "Notifications fetched successfully."
-        );
-        if (response.data.notifications.length === 0) {
-          setMessage("No Notifications Yet");
-        }
-      } else {
-        setNotifications([]);
-        setPagination({});
-        setMessage(response.data.message || "No Notifications Yet");
+
+
+const fetchNotifications = async (page = 1) => {
+  setLoading(true);
+  try {
+    const response = await api.get("/staff/notifications", {
+      params: {
+        page,          // ✅ use the function param, not currentPage
+        per_page: 10,
+      },
+    });
+    if (response.data && Array.isArray(response.data.notifications)) {
+      setNotifications(response.data.notifications);
+      setPagination(response.data.pagination);
+      setMessage(response.data.message || "Notifications fetched successfully.");
+      if (response.data.notifications.length === 0) {
+        setMessage("No Notifications Yet");
       }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
+    } else {
       setNotifications([]);
       setPagination({});
-      setMessage("An error occurred while loading notifications.");
-      toast.error("An error occurred while loading notifications.");
-    } finally {
-      setLoading(false);
+      setMessage(response.data.message || "No Notifications Yet");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    setNotifications([]);
+    setPagination({});
+    setMessage("An error occurred while loading notifications.");
+    toast.error("An error occurred while loading notifications.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchNotifications();
 
-    // When the user navigates to the notifications page, mark all as read.
+    // Mark notifications as read and update the count when navigating to this page
     if (location.pathname === "/staff-dashboard/notifications") {
-      // Calling the correctly named function from the context
       markNotificationsAsRead();
-      // Also, re-fetch the unread count in the context to sync it
       fetchNotificationCount();
     }
 
-    // The real-time listener for new notifications is now handled in NotificationContext
-    // so we don't need it here.
-  }, [location, markNotificationsAsRead, fetchNotificationCount]);
+    // ✅ Listen for real-time pushes
+    const channel = echo.private(
+      `notifications.${localStorage.getItem("user_id")}`
+    );
+    channel.listen(".new-notification", (event) => {
+      setNotifications((prev) => [event.notification, ...prev]);
+      // addNotification(event.notification); // Removed undefined function call
+    });
 
-  const handlePageChange = (page) => {
-    if (page > 0 && page <= pagination.last_page) {
-      setCurrentPage(page);
-    }
-  };
+    return () => {
+      echo.leave(`notifications.${localStorage.getItem("user_id")}`);
+    };
+  }, [currentPage, location, markNotificationsAsRead, fetchNotificationCount]);
 
-  // Function to get the appropriate icon based on notification category
-  const getNotificationIcon = (category) => {
-    switch (category) {
-      case "Visitor":
-        return <UserCheck size={28} />;
-      case "Registration":
-        return <CheckSquare size={28} />;
-      default:
-        return <BellRing size={28} />;
-    }
-  };
 
-  // Function to get the appropriate color class based on notification status
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "text-warning";
-      case "Success":
-        return "text-success";
-      case "Scheduled":
-        return "text-info";
-      case "Rescheduled":
-        return "text-primary";
-      case "Missed":
-        return "text-danger";
-      case "Cancelled":
-        return "text-danger";
-      default:
-        return "text-secondary";
-    }
-  };
+   const handlePageChange = (page) => {
+     if (page > 0 && page <= pagination.last_page) {
+       setCurrentPage(page);
+       fetchNotifications(page); // ✅ call fetch with the new page
+     }
+   };
 
-  // Get color for card background if it's unread
-  const getCardBackgroundColor = (readAt) => {
-    return readAt ? "#ffffff" : "#f0f4f8";
-  };
+    // Function to get the appropriate icon based on notification category
+    const getNotificationIcon = (category) => {
+      switch (category) {
+        case 'Visitor':
+          return <UserCheck size={28} />;
+        case 'Registration':
+          return <CheckSquare size={28} />;
+        default:
+          return <BellRing size={28} />;
+      }
+    };
+
+    // Function to get the appropriate color class based on notification status
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'Pending':
+          return 'text-warning';
+        case 'Success':
+          return 'text-success';
+        case 'Scheduled':
+          return 'text-info'; // Example color for 'Scheduled'
+        case 'Rescheduled':
+          return 'text-primary'; // Example color for 'Rescheduled'
+        case 'Missed':
+          return 'text-danger'; // Example color for 'Missed'
+        case 'Cancelled':
+          return 'text-danger'; // Example color for 'Cancelled'
+        default:
+          return 'text-secondary';
+      }
+    };
 
   return (
     <div>
@@ -187,7 +195,6 @@ function Notifications() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bold mb-0">Notifications</h3>
-
             </div>
 
             <div
@@ -205,8 +212,8 @@ function Notifications() {
         {loading ? (
           <p className="text-center">{message}</p>
         ) : notifications.length > 0 ? (
-            <>
-              <div className="row">
+          <>
+            <div className="row">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
@@ -214,12 +221,7 @@ function Notifications() {
                 >
                   <div
                     className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                    style={{
-                      borderRadius: "12px",
-                      backgroundColor: getCardBackgroundColor(
-                        notification.read_at
-                      ),
-                    }}
+                    style={{ borderRadius: "12px" }}
                   >
                     <div className="d-flex align-items-center w-100">
                       <div
@@ -256,12 +258,14 @@ function Notifications() {
                   </div>
                 </div>
               ))}
-              </div>
-                {pagination.last_page > 1 && (
-                <Pagination pagination={pagination} handlePageChange={handlePageChange} />
-              )}
-            </>
-
+            </div>
+            {pagination.last_page > 1 && (
+              <Pagination
+                pagination={pagination}
+                handlePageChange={handlePageChange}
+              />
+            )}
+          </>
         ) : (
           <div className="text-center align-items-center p-5 text-muted">
             <img
@@ -279,4 +283,4 @@ function Notifications() {
   );
 }
 
-export default Notifications;
+export default SecurityNotifications;

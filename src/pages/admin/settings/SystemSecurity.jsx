@@ -16,7 +16,7 @@ function SystemSecurity() {
     // State for the security settings
     const [autoLogoutEnabled, setAutoLogoutEnabled] = useState(false);
     const [loginLockoutEnabled, setLoginLockoutEnabled] = useState(false);
-    
+
     // State for password reset form
     const [newPassword, setNewPassword] = useState('');
     const [newPasswordConfirmation, setNewPasswordConfirmation] = useState('');
@@ -35,10 +35,10 @@ function SystemSecurity() {
                 setAutoLogoutEnabled(filter_var(settings.auto_logout_enabled, 'FILTER_VALIDATE_BOOLEAN'));
                 setLoginLockoutEnabled(filter_var(settings.login_lockout_enabled, 'FILTER_VALIDATE_BOOLEAN'));
 
-                toast.success('System security settings loaded.');
+                // toast.success('System security settings loaded.');
             } catch (error) {
                 console.error('Error fetching system security settings:', error);
-                toast.error('Failed to load system security settings.');
+                // toast.error('Failed to load system security settings.');
             } finally {
                 setLoading(false);
             }
@@ -57,7 +57,7 @@ function SystemSecurity() {
             // Revert the state on error for better user experience
             if (key === 'auto_logout_enabled') setAutoLogoutEnabled(!value);
             if (key === 'login_lockout_enabled') setLoginLockoutEnabled(!value);
-            toast.error(`Failed to update setting: ${key}.`);
+            // toast.error(`Failed to update setting: ${key}.`);
         }
     };
 
@@ -76,7 +76,7 @@ function SystemSecurity() {
     // Handler for the password reset form submission
     const handlePasswordReset = async (event) => {
         event.preventDefault();
-        
+
         if (newPassword !== newPasswordConfirmation) {
             toast.error("New password and confirmation do not match.");
             return;

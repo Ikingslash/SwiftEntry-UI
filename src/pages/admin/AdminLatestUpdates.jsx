@@ -64,12 +64,12 @@ export default function AdminLatestUpdates() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bold mb-0">Latest Visitors</h3>
-              <i
+              {/* <i
                 className="bi bi-plus-circle fs-1 text-white-50 p-2"
                 style={{ cursor: "pointer", transition: "0.3s" }}
                 onMouseOver={(e) => (e.target.style.color = "#0d6efd")}
                 onMouseOut={(e) => (e.target.style.color = "white")}
-              ></i>
+              ></i> */}
             </div>
 
             <div
@@ -96,13 +96,13 @@ export default function AdminLatestUpdates() {
                   key={v.id}
                   className="list-group-item d-flex align-items-center"
                 >
-                  <img
+                  {/* <img
                     src={v.photo || "./images/user1.png"}
                     alt="visitor"
                     width="60"
                     height="60"
                     style={{ objectFit: "cover" }}
-                  />
+                  /> */}
                   <div className="ms-3">
                     <div className="fw-bold">{v.name}</div>
                     <div className="text-muted">

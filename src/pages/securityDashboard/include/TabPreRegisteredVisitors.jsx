@@ -60,9 +60,9 @@ function TabPreRegisteredVisitors({ groupedVisits, loading }) {
                           {visit.host_name || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {/* Format the check_in date for display */}
-                          {visit.check_in
-                            ? new Date(visit.check_in).toLocaleDateString()
+                          {/* Format the visit_time date for display */}
+                          {visit.visit_time
+                            ? new Date(visit.visit_time).toLocaleDateString()
                             : "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>

@@ -5,6 +5,7 @@ import html2pdf from "html2pdf.js";
 import { toast } from "react-toastify";
 import { requestForToken, onMessageListener } from "../../context/firebase";
 
+
 export default function RegisterGuestIndividual() {
   const [formData, setFormData] = useState({
     name: "",
@@ -13,26 +14,22 @@ export default function RegisterGuestIndividual() {
     address: "",
     visit_time: "",
     host_name: "",
-    host_id: "", // Added host_id to state
-    host_role: "", // Added host_role to state
     building: "",
     floor: "",
     purpose: "",
     special_requirements: "",
     emergency_contact: "",
     details: "",
-    photo: null, // Initialize photo as null
   });
 
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
-  const [appUsers, setAppUsers] = useState([]);
-  const [visitPurposes, setVisitPurposes] = useState([]);
   const [qrValue, setQrValue] = useState("");
   const printRef = useRef();
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
 
   // useEffect to handle Firebase messaging and token registration, AND to fetch users.
   useEffect(() => {
@@ -41,52 +38,28 @@ export default function RegisterGuestIndividual() {
       .then((fcmToken) => {
         if (fcmToken) {
           api
-            .post("/save-fcm-token", { fcm_token: fcmToken })
-            .then((response) => {
-              // console.log("FCM token saved on backend:", response.data);
-            })
-            .catch((error) => {
-              console.error("Failed to save FCM token on backend:", error);
-            });
+            .post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
         }
       })
-      .catch((err) => {
-        console.error("An error occurred while retrieving token. ", err);
-      });
+      .catch(() => {  });
 
     // Fetch the list of all app users (staff, security, front desk)
     api
       .get("/frontdesk-app-users")
       .then((response) => {
-        // Assuming the response is an array of user names
         if (response.data && Array.isArray(response.data.users)) {
           setAppUsers(response.data.users);
-        } else {
-          console.error(
-            "API response for users is not an array:",
-            response.data
-          );
         }
       })
-      .catch((error) => {
-        console.error("Failed to fetch app users:", error);
-      });
-    // Fetch the list of visit purposes from the backend
+      .catch(() => { });
     api
       .get("/front-desk/guests/settings/visit-purposes")
       .then((response) => {
         if (response.data && Array.isArray(response.data)) {
           setVisitPurposes(response.data);
-        } else {
-          console.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
         }
       })
-      .catch((error) => {
-        console.error("Failed to fetch visit purposes:", error);
-      });
+      .catch(() => {  });
 
     // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
@@ -96,6 +69,7 @@ export default function RegisterGuestIndividual() {
     // Cleanup function to detach the listener when the component unmounts
     return () => unsubscribe();
   }, []);
+
 
 const handleChange = (e) => {
   const { name, value, selectedOptions } = e.target;
@@ -113,43 +87,30 @@ const handleChange = (e) => {
   }
 };
 
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
 
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
+      }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        photo: file,
-      }));
-      setSelectedImage(URL.createObjectURL(file));
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong. Please try again."
+      );
     }
   };
-
-    const showValidationErrors = (error) => {
-        if (error.response && error.response.status === 422) {
-          let validationErrors = error.response.data.errors || error.response.data;
-
-          if (typeof validationErrors === "string") {
-            toast.error(validationErrors);
-            return;
-          }
-
-          Object.values(validationErrors).forEach((messages) => {
-            if (Array.isArray(messages)) {
-              messages.forEach((msg) => toast.error(msg));
-            } else if (typeof messages === "string") {
-              toast.error(messages);
-            }
-          });
-        } else {
-          toast.error(
-            error.response?.data?.message ||
-              error.message ||
-              "Something went wrong. Please try again."
-          );
-        }
-      };
 
 
   const handleSubmit = async (e) => {
@@ -158,10 +119,8 @@ const handleChange = (e) => {
 
     const formDataToSend = new FormData();
 
-    // Append all non-photo, non-visit_time, non-host_id, non-host_role fields first
     Object.entries(formData).forEach(([key, value]) => {
       if (
-        key !== "photo" &&
         key !== "visit_time" &&
         key !== "host_id" &&
         key !== "host_role"
@@ -170,7 +129,6 @@ const handleChange = (e) => {
       }
     });
 
-    // Format visit_time
     if (formData.visit_time) {
       const visitTime = new Date(formData.visit_time);
       if (!isNaN(visitTime.getTime())) {
@@ -181,17 +139,10 @@ const handleChange = (e) => {
           .replace("T", " ");
         formDataToSend.append("visit_time", formattedVisitTime);
       } else {
-        toast.error(
-          "Invalid visit time format. Please select a valid date and time."
-        );
+        toast.error("Invalid visit time format.");
         setLoading(false);
         return;
       }
-    }
-
-    // Append photo if it exists and is a File object
-    if (formData.photo instanceof File) {
-      formDataToSend.append("photo", formData.photo);
     }
 
     // Append host_id and host_role
@@ -212,7 +163,6 @@ const handleChange = (e) => {
       if (response.status === 200 || response.status === 201) {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
-
         // Trigger notification to host
         if (formData.host_id && formData.host_role) {
           try {
@@ -222,21 +172,15 @@ const handleChange = (e) => {
               guest_name: formData.name,
               purpose: formData.purpose,
             });
-            console.log("Notification trigger sent to backend.");
-            toast.success("Notification sent to host successfully.");
           } catch (notificationError) {
-            console.error("Failed to trigger notification:", notificationError);
-
+            console.error("Failed to notify host:", notificationError);
           }
-        } else {
-          console.warn("Host ID or Role missing, skipping host notification.");
         }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
 
         const date = visitTimeParts?.[0] || "";
         const time = visitTimeParts?.[1] || "";
-
         setGuestDetails({
           name: visitor.name,
           id: visit.code || "",
@@ -246,14 +190,12 @@ const handleChange = (e) => {
           purpose: visit.purpose,
           Contact_info: visitor.contact_number,
           address: visitor.address,
-          photo: visitor.photo,
         });
 
         if (visit.code) {
           setQrValue(visit.code);
         }
 
-        // Reset form data after successful submission
         setFormData({
           name: "",
           contact_number: "",
@@ -262,18 +204,14 @@ const handleChange = (e) => {
           visit_time: "",
           host_name: "",
           host_id: "",
-          host_role: "",
           building: "",
           floor: "",
           purpose: "",
           special_requirements: "",
           emergency_contact: "",
           details: "",
-          photo: null,
         });
-        setSelectedImage(null);
-
-        toast.success("Visitor registered successfully!");
+        // toast.success("Visitor registered successfully!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
@@ -283,7 +221,6 @@ const handleChange = (e) => {
         console.error(
           "Error: " + (response.data.message || "Something went wrong")
         );
-        toast.error("Failed to register visitor: " + (response.data.message || "Unknown error"));
       }
     } catch (error) {
       showValidationErrors(error);
@@ -292,6 +229,7 @@ const handleChange = (e) => {
       setLoading(false);
     }
   };
+
 
   const handlePrint = () => {
     // Get the HTML content of the visit card
@@ -428,6 +366,8 @@ const handleChange = (e) => {
                       required
                     />
                   </div>
+                  {/* Hidden inputs for host data */}
+
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
                     <select
@@ -534,48 +474,6 @@ const handleChange = (e) => {
                 {/* Additional Information */}
                 <div className="p-4">
                   <h5 className="fw-bold">Additional Information</h5>
-                  <div className=" mt-4">
-                    <label className="form-label d-block">
-                      Add Photo (Optional)
-                    </label>
-                    <input
-                      type="file"
-                      className="d-none"
-                      id="fileUpload"
-                      accept="image/*"
-                      name="photo"
-                      onChange={handleImageChange}
-                    />
-                    <label htmlFor="fileUpload" className="d-inline-block">
-                      <div
-                        className="rounded-circle border d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {selectedImage ? (
-                          <img
-                            src={selectedImage}
-                            alt="Uploaded"
-                            className="rounded-circle"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <i
-                            className="bi bi-camera"
-                            style={{ fontSize: "24px" }}
-                          ></i>
-                        )}
-                      </div>
-                    </label>
-                  </div>
                 </div>
                 <div className="mb-4">
                   <label className="form-label">
@@ -680,26 +578,7 @@ const handleChange = (e) => {
                     </span>
                     <strong className="text-white">VISITORS BADGE</strong>
                   </div>
-                  <div className="card-body d-flex">
-                    <div className="me-3">
-                      {guestDetails.photo ? (
-                        <img
-                          src={`${guestDetails.photo}`}
-                          alt="Guest"
-                          className="rounded-circle shadow"
-                          width="100"
-                          height="100"
-                          style={{ border: "4px solid #007bff" }}
-                        />
-                      ) : (
-                        <div
-                          className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto border border-primary"
-                          style={{ width: "120px", height: "120px" }}
-                        >
-                          <span className="text-muted">No Photo</span>
-                        </div>
-                      )}
-                    </div>
+                  <div className="card-body d-flex justify-content-between mx-4">
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
                       <p className="my-2 lead">

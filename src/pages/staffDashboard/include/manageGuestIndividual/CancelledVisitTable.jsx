@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import api from "../../../../context/api";
 import { toast } from "react-toastify";
 
-function CancelledVisitTable() {
+// Added visitType prop
+function CancelledVisitTable({ visitType, onVisitUpdate }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
@@ -13,30 +14,31 @@ function CancelledVisitTable() {
   const [newTime, setNewTime] = useState("");
   const perPage = 10;
 
+  const fetchVisits = async () => {
+    setLoading(true);
+    try {
+        // FIX: Dynamic endpoint for cancelled visits
+      const endpoint = `/staff/guests/${visitType}/cancelled-visits`;
+      const response = await api.get(
+        endpoint,
+        {
+          params: { per_page: perPage, page },
+        }
+      );
+      setVisits(response.data.visits);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      toast.error("Failed to load cancelled visits");
+      setVisits([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchVisits = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(
-          "staff/guests/individual-cancelled-visit",
-          {
-            params: { per_page: perPage, page },
-          }
-        );
-        setVisits(response.data.visits);
-        setPagination(response.data.pagination);
-      } catch (error) {
-        console.error("Error fetching visits:", error);
-        toast.error("Error fetching visits:", error);
-        setVisits([]);
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVisits();
-  }, [page]);
+  }, [page, visitType, onVisitUpdate]); // Added visitType and onVisitUpdate as dependencies
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) setPage((prev) => prev - 1);
@@ -47,106 +49,109 @@ function CancelledVisitTable() {
       setPage((prev) => prev + 1);
   };
 
-  const handleRescheduleClick = (visit) => {
+  const handleRescheduleSubmit = async () => {
+    if (!selectedVisit || !newDate || !newTime) {
+        toast.error("Please select a new date and time.");
+        return;
+    }
+
+    const newVisitTime = `${newDate} ${newTime}`;
+
+    try {
+        // Assume reschedule uses a generic visit ID endpoint
+        await api.post(`security/guest/visit/${selectedVisit.id}/reschedule`, {
+            visit_time: newVisitTime
+        });
+        toast.success("Visit successfully rescheduled!");
+        setShowModal(false);
+        fetchVisits();
+        if(onVisitUpdate) onVisitUpdate();
+    } catch (error) {
+        console.error("Reschedule failed:", error);
+        toast.error("Failed to reschedule visit.");
+    }
+  };
+
+  const openRescheduleModal = (visit) => {
     setSelectedVisit(visit);
+    // You might want to pre-fill date/time with current values or an empty string
     setNewDate("");
     setNewTime("");
     setShowModal(true);
-  };
-
-  const handleRescheduleSubmit = async () => {
-    if (!newDate || !newTime) {
-      alert("Date and time are required");
-      return;
-    }
-
-    try {
-      // Reschedule visit
-      await api.put(`staff/guests/reschedule/${selectedVisit.id}`, {
-        // Changed to use visit.id
-        new_date: newDate,
-        new_time: newTime,
-        host_name: selectedVisit.host_name, // Added host_name from the selected visit object
-      });
-
-      // Notify visitor
-      await api.post("staff/guests/notify", {
-        visitor_id: selectedVisit.visitor.id,
-        message: `Your visit has been rescheduled to ${newDate} at ${newTime}`,
-      });
-
-      toast.success("Rescheduled and notification sent!");
-      setShowModal(false);
-    } catch (error) {
-      console.error("Reschedule error:", error);
-      toast.error("Failed to reschedule or notify.");
-    }
-  };
+  }
 
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="table-responsive my-5">
-      {visits.length > 0 ? (
-        <>
-          <table className="table table-bordered table-hover">
-            <thead>
-              <tr>
-                <th>Guest Name</th>
-                <th>Visit Date</th>
-                <th>Visit Time</th>
-                <th>Contact Number</th>
-                <th>Special Requirement</th>
-                <th>Visit Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visits.map((visit) => (
-                <tr key={visit.id}>
-                  <td>{visit.visitor?.name || "N/A"}</td>
-                  <td>{new Date(visit.check_in).toLocaleDateString()}</td>
-                  <td>{visit.visit_time || "N/A"}</td>
-                  <td>{visit.visitor?.contact_number || "N/A"}</td>
-                  <td>{visit.visitor?.special_requirements || "None"}</td>
-                  <td>{visit.status}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-link"
-                      onClick={() => handleRescheduleClick(visit)}
-                    >
-                      Reschedule
-                    </button>
-                  </td>
+    <div>
+      <div className="table-responsive my-5">
+        {visits.length > 0 ? (
+          <>
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Unique ID</th>
+                  <th>Guest Name</th>
+                  <th>Host Name</th>
+                  <th>Visit Date/Time</th>
+                  <th>Contact</th>
+                  <th>Email Address</th>
+                  <th>Special Requirement</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visits.map((visit) => (
+                  <tr key={visit.id}>
+                    <td>{visit.id}</td>
+                    <td>{visit.visitor?.name}</td>
+                    <td>{visit.host_name}</td>
+                    <td>
+                      {visit.visit_time
+                        ? new Date(visit.visit_time).toLocaleString()
+                        : "N/A"}
+                    </td>
+                    <td>{visit.visitor?.contact_number}</td>
+                    <td>{visit.visitor?.email}</td>
+                    <td>{visit.visitor?.special_requirements || "None"}</td>
+                     <td>
+                        <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => openRescheduleModal(visit)}
+                        >
+                            Reschedule
+                        </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          {/* Pagination Controls */}
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <button
-              className="btn btn-primary"
-              onClick={handlePrevious}
-              disabled={pagination.current_page === 1}
-            >
-              Previous
-            </button>
-            <span>
-              Page {pagination.current_page} of {pagination.last_page}
-            </span>
-            <button
-              className="btn btn-primary"
-              onClick={handleNext}
-              disabled={pagination.current_page === pagination.last_page}
-            >
-              Next
-            </button>
-          </div>
-        </>
-      ) : (
-        <h5>No Cancelled Visits</h5>
-      )}
+            {/* Pagination Controls */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <button
+                className="btn btn-primary"
+                onClick={handlePrevious}
+                disabled={pagination.current_page === 1}
+              >
+                Previous
+              </button>
+              <span>
+                Page {pagination.current_page} of {pagination.last_page}
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={handleNext}
+                disabled={pagination.current_page === pagination.last_page}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        ) : (
+          <h1>No Cancelled Visit</h1>
+        )}
+      </div>
 
       {/* Reschedule Modal */}
       {showModal && (

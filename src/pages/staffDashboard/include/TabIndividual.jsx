@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../../context/api";
 import PreScheduledVisitTable from "./manageGuestIndividual/PreScheduledVisitTable";
 import CompletedVisitTable from "./manageGuestIndividual/CompletedVisitTable";
@@ -7,6 +7,7 @@ import MissedVisitTbale from "./manageGuestIndividual/MissedVisitTbale";
 import HostVisitsTable from "./HostVisitsTable";
 import {toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 
 function TabIndividual() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
@@ -18,48 +19,40 @@ function TabIndividual() {
     missed: 0,
   });
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const res = await api.get("staff/guests/individual-counts");
-        setCounts(res.data);
-      } catch (error) {
-        console.error("Error fetching counts:", error);
-      }
-    };
-
-    fetchCounts();
+  // New, unified endpoint for fetching counts
+  const fetchCounts = useCallback(async () => {
+    try {
+      // Fix: Use a consistent, logical endpoint for individual counts
+      const res = await api.get("/staff/guests/individual-counts");
+      setCounts(res.data);
+    } catch (error) {
+      console.error("Error fetching individual counts:", error);
+    }
   }, []);
 
-    const handleVisitUpdate = () => {
-      // Refresh counts when visits are updated
-      fetchCounts();
-    };
+  useEffect(() => {
+    fetchCounts();
+  }, [fetchCounts]);
 
-    const fetchCounts = async () => {
-      try {
-        const res = await api.get("staff/guests/individual-counts");
-        setCounts(res.data);
-      } catch (error) {
-        console.error("Error fetching counts:", error);
-      }
-    };
+  const handleVisitUpdate = () => {
+    // Refresh counts when visits are updated
+    fetchCounts();
+  };
+  // Function to handle switching to the Host Visits view
+  const handleHostVisitsClick = (e) => {
+    e.preventDefault();
+    setShowHostVisits(true);
+  };
 
-    // Function to handle switching to the Host Visits view
-    const handleHostVisitsClick = (e) => {
-      e.preventDefault();
-      setShowHostVisits(true);
-    };
+  // Function to handle switching back to the default view
+  const handleBackToTabs = () => {
+    setShowHostVisits(false);
+    setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
+  };
 
-    // Function to handle switching back to the default view
-    const handleBackToTabs = () => {
-      setShowHostVisits(false);
-      setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
-    };
-
-    if (showHostVisits) {
-      return <HostVisitsTable onBack={handleBackToTabs} />;
-    }
+  if (showHostVisits) {
+    return <HostVisitsTable onBack={handleBackToTabs} />;
+  }
 
   return (
     <div>
@@ -74,7 +67,7 @@ function TabIndividual() {
               }`}
               onClick={() => setActiveTab("pre-scheduled-visit-table")}
             >
-              Pre-Scheduled Visit ({counts.scheduled})
+              Scheduled Visit ({counts.scheduled})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -113,31 +106,45 @@ function TabIndividual() {
         </a>
       </div>
 
+      {/* Content - Passing visitType="individual" */}
       <div className="mt-5">
         {activeTab === "pre-scheduled-visit-table" && (
-          <PreScheduledVisitTable onVisitUpdate={handleVisitUpdate} />
+          <PreScheduledVisitTable
+            visitType="individual"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
         {activeTab === "completed-visit" && (
-          <CompletedVisitTable onVisitUpdate={handleVisitUpdate} />
+          <CompletedVisitTable
+            visitType="individual"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
         {activeTab === "cancelled-visit" && (
-          <CancelledVisitTable onVisitUpdate={handleVisitUpdate} />
+          <CancelledVisitTable
+            visitType="individual"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
         {activeTab === "missed-visit" && (
-          <MissedVisitTbale onVisitUpdate={handleVisitUpdate} />
+          <MissedVisitTbale
+            visitType="individual"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
       </div>
-          <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

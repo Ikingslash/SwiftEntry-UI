@@ -68,10 +68,10 @@ function AdminNotifications() {
     setLoading(true);
     try {
       // Corrected API endpoint for admin notifications
-      const response = await api.get("/admin/notifications", {
+      const response = await api.get("/admin/admin-notifications", {
         params: {
           page: currentPage,
-          per_page: 10, // Assuming 10 items per page as per backend
+          per_page: 10,
         },
       });
 
@@ -102,7 +102,7 @@ function AdminNotifications() {
   useEffect(() => {
     fetchNotifications();
 
-    // Mark notifications as read and update the count when navigating to this page
+    // Mark all notifications as read and update the count when navigating to this page (Point 4)
     if (location.pathname === "/admin-dashboard/notifications") {
       markNotificationsAsRead();
       fetchNotificationCount();
@@ -135,13 +135,13 @@ function AdminNotifications() {
       case 'Success':
         return 'text-success';
       case 'Scheduled':
-        return 'text-info'; // Example color for 'Scheduled'
+        return 'text-info';
       case 'Rescheduled':
-        return 'text-primary'; // Example color for 'Rescheduled'
+        return 'text-primary';
       case 'Missed':
-        return 'text-danger'; // Example color for 'Missed'
+        return 'text-danger';
       case 'Cancelled':
-        return 'text-danger'; // Example color for 'Cancelled'
+        return 'text-danger';
       default:
         return 'text-secondary';
     }
@@ -196,18 +196,32 @@ function AdminNotifications() {
         ) : notifications.length > 0 ? (
           <>
             <div className="row">
-              {notifications.map((notification) => (
+              {notifications.map((notification) => {
+                // Point 4: Visual distinction for unread notifications
+                const isUnread = !notification.is_read;
+                const cardStyle = {
+                    borderRadius: "12px",
+                    // Use a subtle background color or highlight for unread
+                    backgroundColor: isUnread ? '#f0f8ff' : 'white', // Light blue for unread
+                    borderLeft: isUnread ? '4px solid #007bff' : '1px solid #e9ecef',
+                    transition: 'background-color 0.3s',
+                    cursor: 'pointer',
+                };
+
+                return (
                 <div key={notification.id} className="col-12 col-md-10 mx-auto mb-3">
                   <div
                     className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                    style={{ borderRadius: "12px" }}
+                    style={cardStyle} // Apply dynamic style
                   >
                     <div className="d-flex align-items-center w-100">
                       <div className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#e9f5ff' }}>
                         {getNotificationIcon(notification.category)}
                       </div>
                       <div className="flex-grow-1">
-                        <h6 className="mb-1 fw-bold text-dark">{notification.title || 'No Title'}</h6>
+                        <h6 className={`mb-1 ${isUnread ? 'fw-bold text-dark' : 'text-secondary'}`}>
+                            {notification.title || 'No Title'}
+                        </h6>
                         <p className="mb-0 text-muted" style={{ fontSize: "14px" }}>
                           {notification.message || "No message"}
                         </p>
@@ -226,7 +240,7 @@ function AdminNotifications() {
                     </span>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
             {pagination.last_page > 1 && (
               <Pagination pagination={pagination} handlePageChange={handlePageChange} />

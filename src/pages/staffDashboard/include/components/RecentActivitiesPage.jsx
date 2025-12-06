@@ -26,9 +26,9 @@ export default function RecentActivitiesPage({ recents, loading, goBack }) {
                   {/* FIX: Use optional chaining to prevent error if visitor is null */}
                   <p className="mb-1 fw-bold text-dark">{item.visitor?.name || 'Unknown Visitor'} - {item.purpose}</p>
                   <small className="text-muted">
-                    {new Date(item.check_in).toLocaleDateString("en-US", { weekday: "long" })}
+                    {new Date(item.visit_time).toLocaleDateString("en-US", { weekday: "long" })}
                     {" | "}
-                    {new Date(item.check_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(item.visit_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </small>
                 </div>
               </div>

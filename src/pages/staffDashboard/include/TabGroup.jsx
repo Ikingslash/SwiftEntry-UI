@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // Add this import
+import { useState, useEffect, useCallback } from "react"; // Add this import
 import api from "../../../context/api";
 import PreScheduledVisitTable from "./manageGuestGroup/PreScheduledVisitTable";
 import CompletedVisitTable from "./manageGuestGroup/CompletedVisitTable";
@@ -10,7 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function TabGroup() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
-   const [showHostVisits, setShowHostVisits] = useState(false);
+  const [showHostVisits, setShowHostVisits] = useState(false);
   const [counts, setCounts] = useState({
     scheduled: 0,
     completed: 0,
@@ -18,49 +18,41 @@ function TabGroup() {
     missed: 0,
   });
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const res = await api.get("staff/guests/group-counts");
-        setCounts(res.data);
-      } catch (error) {
-        console.error("Error fetching counts:", error);
-      }
-    };
+  // New, unified endpoint for fetching counts
+  const fetchCounts = useCallback(async () => {
+    try {
+      const res = await api.get("/staff/guests/group-counts");
+      setCounts(res.data);
+    } catch (error) {
+      console.error("Error fetching group counts:", error);
+    }
+  }, []); // Empty dependency array for stability
 
+  useEffect(() => {
     fetchCounts();
-  }, []);
+  }, [fetchCounts]);
 
   const handleVisitUpdate = () => {
     // Refresh counts when visits are updated
     fetchCounts();
   };
 
-  const fetchCounts = async () => {
-    try {
-      const res = await api.get("staff/guests/group-counts");
-      setCounts(res.data);
-    } catch (error) {
-      console.error("Error fetching counts:", error);
-    }
+  // Function to handle switching to the Host Visits view
+  const handleHostVisitsClick = (e) => {
+    e.preventDefault();
+    setShowHostVisits(true);
   };
 
-    // Function to handle switching to the Host Visits view
-    const handleHostVisitsClick = (e) => {
-      e.preventDefault();
-      setShowHostVisits(true);
-    };
+  // Function to handle switching back to the default view
+  const handleBackToTabs = () => {
+    setShowHostVisits(false);
+    setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
+  };
 
-    // Function to handle switching back to the default view
-    const handleBackToTabs = () => {
-      setShowHostVisits(false);
-      setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
-    };
-
-    if (showHostVisits) {
-      return <HostVisitsTable onBack={handleBackToTabs} />;
-    }
-
+  if (showHostVisits) {
+    // 3. Render the new component when showHostVisits is true
+    return <HostVisitsTable onBack={handleBackToTabs} />;
+  }
 
   return (
     <div>
@@ -76,7 +68,7 @@ function TabGroup() {
               }`}
               onClick={() => setActiveTab("pre-scheduled-visit-table")}
             >
-              Pre-Scheduled Visit ({counts.scheduled})
+              Scheduled Visit ({counts.scheduled})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -115,21 +107,34 @@ function TabGroup() {
         </a>
       </div>
 
-      {/* Content */}
+      {/* Content - Passing visitType="group" */}
       <div className="mt-5">
         {activeTab === "pre-scheduled-visit-table" && (
-          <PreScheduledVisitTable onVisitUpdate={handleVisitUpdate} />
+          <PreScheduledVisitTable
+            visitType="group"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
         {activeTab === "completed-visit" && (
-          <CompletedVisitTable onVisitUpdate={handleVisitUpdate} />
+          <CompletedVisitTable
+            visitType="group"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
         {activeTab === "cancelled-visit" && (
-          <CancelledVisitTable onVisitUpdate={handleVisitUpdate} />
+          <CancelledVisitTable
+            visitType="group"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
         {activeTab === "missed-visit" && (
-          <MissedVisitTbale onVisitUpdate={handleVisitUpdate} />
+          <MissedVisitTbale
+            visitType="group"
+            onVisitUpdate={handleVisitUpdate}
+          />
         )}
       </div>
+
       <ToastContainer
         position="top-right"
         autoClose={5000}

@@ -39,10 +39,8 @@ function DataPrivacy() {
                 setPeakVisitorHoursEnabled(filter_var(settings.peak_visitor_hours_enabled, 'FILTER_VALIDATE_BOOLEAN'));
                 setVisitorTypesEnabled(filter_var(settings.visitor_types_enabled, 'FILTER_VALIDATE_BOOLEAN'));
 
-                toast.success('Data privacy settings loaded.');
             } catch (error) {
                 console.error('Error fetching data privacy settings:', error);
-                toast.error('Failed to load data privacy settings.');
             } finally {
                 setLoading(false);
             }
@@ -57,8 +55,7 @@ function DataPrivacy() {
             await api.post("/admin/data-privacy/update-single", { key, value });
             toast.success(`Setting for "${key}" updated successfully!`);
         } catch (error) {
-            console.error('Error updating setting:', error);
-            toast.error(`Failed to update setting: ${key}.`);
+            console.error('Error updating setting:', error); 
         }
     };
 

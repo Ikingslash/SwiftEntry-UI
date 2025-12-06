@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import api from "../../../../context/api"; // Commented out backend API import
+import api from "../../../../context/api";
+import { toast } from "react-toastify"; // Added missing toast import
 
-function MissedVisitTable() {
+// Added visitType prop
+function MissedVisitTable({ visitType }) {
 const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
@@ -9,10 +11,15 @@ const [visits, setVisits] = useState([]);
   const perPage = 10;
 
   useEffect(() => {
-    const fetchVisits = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get('staff/guests/group-missed-visit', {
+    fetchVisits();
+  }, [page, visitType]); // Added visitType as dependency
+
+  const fetchVisits = async () => {
+    setLoading(true);
+    try {
+        // FIX: Dynamic endpoint for missed visits
+      const endpoint = `/staff/guests/${visitType}/missed-visits`;
+      const response = await api.get(endpoint, {
           params: {
             per_page: perPage,
             page: page,
@@ -23,13 +30,11 @@ const [visits, setVisits] = useState([]);
         setPagination(response.data.pagination);
       } catch (error) {
         console.error('Error fetching visits:', error);
+        toast.error("Failed to load missed visits"); // Added error toast
       } finally {
         setLoading(false);
       }
     };
-
-    fetchVisits();
-  }, [page]);
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) {
@@ -51,7 +56,7 @@ const [visits, setVisits] = useState([]);
     <div>
       <div className="table-responsive my-5">
       {visits.length > 0 ? (
-        <>
+          <>
         <table className="table table-bordered table-hover">
           <thead>
             <tr>
@@ -59,7 +64,7 @@ const [visits, setVisits] = useState([]);
               <th>Guest Name</th>
               <th>Host Name</th>
               <th>Visit Date/Time</th>
-              <th>Contact Information</th>
+              <th>Contact</th>
               <th>Email Address</th>
               <th>Special Requirement</th>
             </tr>
@@ -70,7 +75,12 @@ const [visits, setVisits] = useState([]);
                 <td>{visit.id}</td>
                 <td>{visit.visitor?.name}</td>
                 <td>{visit.host_name}</td>
-                <td>{new Date(visit.check_in).toLocaleString()}</td>
+                <td>
+                    {visit.visit_time
+                        ? new Date(visit.visit_time).toLocaleString()
+                        : "N/A"
+                    }
+                </td>
                 <td>{visit.visitor?.contact_number}</td>
                 <td>{visit.visitor?.email}</td>
                 <td>{visit.visitor?.special_requirements || 'None'}</td>
@@ -100,7 +110,7 @@ const [visits, setVisits] = useState([]);
             </div>
           </>
           ) : (
-            <h1>No Missed  Visit</h1>
+            <h1>No Missed Visit</h1>
           )}
       </div>
     </div>

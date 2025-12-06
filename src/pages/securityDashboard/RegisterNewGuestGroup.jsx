@@ -22,10 +22,8 @@ function RegisterNewGuestGroup() {
     emergency_contact: "",
     previsit_instruction: "",
     details: "",
-    photo: null,
   });
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
@@ -117,18 +115,6 @@ const handleChange = (e) => {
 };
 
 
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        photo: file,
-      }));
-      setSelectedImage(URL.createObjectURL(file));
-    }
-  };
-
   const showValidationErrors = (error) => {
     if (error.response && error.response.status === 422) {
       let validationErrors = error.response.data.errors || error.response.data;
@@ -163,7 +149,6 @@ const handleChange = (e) => {
 
     Object.entries(formData).forEach(([key, value]) => {
       if (
-        key !== "photo" &&
         key !== "visit_time" &&
         key !== "host_id" &&
         key !== "host_role"
@@ -186,14 +171,6 @@ const handleChange = (e) => {
         setLoading(false);
         return;
       }
-    }
-
-    // if (formData.visit_time) {
-    //   formDataToSend.append("visit_time", formData.visit_time);
-    // }
-
-    if (formData.photo) {
-      formDataToSend.append("photo", formData.photo);
     }
     // Append host_id and host_role
     formDataToSend.append("host_id", formData.host_id);
@@ -244,7 +221,6 @@ const handleChange = (e) => {
           purpose: visit.purpose,
           Contact_info: visitor.contact_number,
           address: visitor.address,
-          photo: visitor.photo,
         });
 
         if (visit.code) {
@@ -267,11 +243,9 @@ const handleChange = (e) => {
           emergency_contact: "",
           previsit_instruction: "",
           details: "",
-          photo: null,
         });
-        setSelectedImage(null);
 
-        toast.success("Visitor group registered successfully!");
+        // toast.success("Visitor group registered successfully!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
@@ -511,7 +485,7 @@ const handleChange = (e) => {
                     >
                       <option value="">Select Purpose</option>
                       {visitPurposes.map((purpose, index) => (
-                        <option key={purpose} value={purpose}>
+                        <option key={index} value={purpose}>
                           {purpose}
                         </option>
                       ))}
@@ -537,50 +511,8 @@ const handleChange = (e) => {
             <div className="col-md-6">
               <div className="d-flex flex-column gap-3">
                 {/* Additional Information */}
-                <div className="p-4">
+                <div className="pt-4">
                   <h5 className="fw-bold">Additional Information</h5>
-                  <div className=" mt-4">
-                    <label className="form-label d-block">
-                      Add Photo (Optional)
-                    </label>
-                    <input
-                      type="file"
-                      className="d-none"
-                      id="fileUpload"
-                      accept="image/*"
-                      name="photo"
-                      onChange={handleImageChange}
-                    />
-                    <label htmlFor="fileUpload" className="d-inline-block">
-                      <div
-                        className="rounded-circle border d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {selectedImage ? (
-                          <img
-                            src={selectedImage}
-                            alt="Uploaded"
-                            className="rounded-circle"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <i
-                            className="bi bi-camera"
-                            style={{ fontSize: "24px" }}
-                          ></i>
-                        )}
-                      </div>
-                    </label>
-                  </div>
                 </div>
                 <div className="my-3">
                   <label className="form-label">Name of Organization</label>
@@ -700,17 +632,7 @@ const handleChange = (e) => {
                     </span>
                     <strong className="text-white">VISITORS BADGE</strong>
                   </div>
-                  <div className="card-body d-flex">
-                    <div className="me-3">
-                      <img
-                        src={`${guestDetails.photo}`}
-                        alt="Visitor photo"
-                        className="rounded-circle shadow"
-                        width="100"
-                        height="100"
-                        style={{ border: "4px solid #007bff" }}
-                      />
-                    </div>
+                  <div className="card-body d-flex mx-4 justify-content-between">
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
                       <p className="my-2 lead">

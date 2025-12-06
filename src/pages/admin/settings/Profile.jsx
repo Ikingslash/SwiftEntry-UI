@@ -44,7 +44,7 @@ function Profile() {
                 // Fetch current admin's profile
                 const adminResponse = await api.get('/admin/profile');
                 setAdminProfile(adminResponse.data.profile);
-                
+
                 // Fetch list of admins (for the tabs)
                 const adminsResponse = await api.get('/admin/list-admins');
                 setAdmins(adminsResponse.data.admins);
@@ -53,10 +53,10 @@ function Profile() {
                 const companyResponse = await api.get('/admin/settings/company');
                 setCompanyProfile(companyResponse.data.company);
 
-                toast.success('Profile and company data loaded.');
+                // toast.success('Profile and company data loaded.');
             } catch (error) {
                 console.error('Error fetching profile data:', error);
-                toast.error('Failed to load profile data.');
+                // toast.error('Failed to load profile data.');
             }
         };
 
@@ -102,7 +102,7 @@ function Profile() {
             setPreviewAdminPhoto(null);
         } catch (error) {
             console.error('Error updating admin profile:', error);
-            toast.error('Failed to update admin profile.');
+            // toast.error('Failed to update admin profile.');
         }
     };
 
@@ -130,7 +130,7 @@ function Profile() {
         if (companyLogoFile) {
             formData.append('logo', companyLogoFile);
         }
-        
+
         try {
             await api.post('/admin/settings/company', formData, {
                  headers: {
@@ -144,7 +144,7 @@ function Profile() {
             setPreviewCompanyLogo(null);
         } catch (error) {
             console.error('Error updating company profile:', error);
-            toast.error('Failed to update company details.');
+            // toast.error('Failed to update company details.');
         }
     };
 
@@ -175,7 +175,7 @@ function Profile() {
         if (newAdminPhotoFile) {
             formData.append('photo', newAdminPhotoFile);
         }
-        
+
         try {
             await api.post('/admin/settings/admins', formData, {
                  headers: {
@@ -192,7 +192,7 @@ function Profile() {
             setAdmins(adminsResponse.data.admins);
         } catch (error) {
             console.error('Error adding new admin:', error);
-            toast.error('Failed to add new admin.');
+            // toast.error('Failed to add new admin.');
         }
     };
 
@@ -226,7 +226,7 @@ function Profile() {
                                 </li>
                             ))}
                         </ul>
-                        
+
                         {/* Admin Profile Form */}
                         <form onSubmit={handleUpdateAdminProfile}>
                             <div className="d-flex justify-content-between align-items-center mb-4">

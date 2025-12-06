@@ -194,7 +194,7 @@ export default function MainDashboard({
                         >
                           ●
                         </span>
-                        {new Date(guest.check_in).toLocaleTimeString("en-US", {
+                        {new Date(guest.visit_time).toLocaleTimeString("en-US", {
                           hour: "2-digit",
                           minute: "2-digit",
                         }) || "No time"}
@@ -232,7 +232,7 @@ export default function MainDashboard({
                         </p>
                         <small className="text-muted">
                           <Clock size={12} className="me-1" />
-                          {new Date(guest.check_in).toLocaleTimeString(
+                          {new Date(guest.visit_time).toLocaleTimeString(
                             "en-US",
                             {
                               hour: "2-digit",

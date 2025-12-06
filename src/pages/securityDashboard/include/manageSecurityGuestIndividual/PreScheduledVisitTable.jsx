@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import api from "../../../../context/api";
 import { toast } from "react-toastify";
 
-
 function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -12,96 +11,64 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
 
   // modal and action states
   const [selectedVisit, setSelectedVisit] = useState(null);
-  const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [showCheckOutModal, setShowCheckOutModal] = useState(false);
-  const [checkInForm, setCheckInForm] = useState({
-    actual_check_in_time: "",
-    notes: "",
-  });
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     fetchVisits();
-  }, [page, visitType]); // Added visitType as dependency
+  }, [page, visitType]);
 
-const fetchVisits = async () => {
-  setLoading(true);
-  try {
-    // FIX: Dynamic and corrected endpoint for pre-scheduled visits
-    const endpoint = `/security/guest/${visitType}/scheduled-visits`;
-    const response = await api.get(
-      endpoint,
-      {
+  const fetchVisits = async () => {
+    setLoading(true);
+    try {
+      // FIX: Dynamic and corrected endpoint for pre-scheduled visits
+      const endpoint = `/security/guest/${visitType}/scheduled-visits`;
+      const response = await api.get(endpoint, {
         params: { per_page: perPage, page },
+      });
+
+      setVisits(response.data.visits);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      toast.error("Failed to load visits");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelVisit = async () => {
+    if (!cancelReason.trim()) {
+      toast.error("Please provide a reason for cancellation");
+      return;
+    }
+
+    try {
+      await api.post(`/security/guest/visit/${selectedVisit.id}/cancel`, {
+        reason: cancelReason
+      });
+
+      toast.success("Visit cancelled successfully!");
+      setShowCancelModal(false);
+      setCancelReason("");
+
+      // Refresh the visits list - cancelled visits should disappear
+      await fetchVisits();
+
+      if (onVisitUpdate) {
+        onVisitUpdate();
       }
-    );
-
-    setVisits(response.data.visits);
-    setPagination(response.data.pagination);
-  } catch (error) {
-    console.error("Error fetching visits:", error);
-    toast.error("Failed to load visits");
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleCheckIn = async () => {
-  try {
-    await api.post(
-      `security/guest/visit/${selectedVisit.id}/check-in`,
-      checkInForm
-    );
-    toast.success("Visitor checked in successfully!");
-    setShowCheckInModal(false);
-    setCheckInForm({ actual_check_in_time: "", notes: "" });
-    await fetchVisits();
-    if (onVisitUpdate) {
-      onVisitUpdate();
+    } catch (error) {
+      console.error("Cancel Error:", error);
+      toast.error(error.response?.data?.error || "Failed to cancel visit");
     }
-  } catch (error) {
-     console.error("Check-in Error:", error);
-     toast.error(error.response?.data?.error || "Check-in failed");
-  }
-};
+  };
 
-const handleCheckOut = async () => {
-  try {
-    await api.post(`security/guest/visit/${selectedVisit.id}/check-out`);
-    toast.success("Visitor checked out successfully!");
-    setShowCheckOutModal(false);
-    await fetchVisits(); // Add await here
-    if (onVisitUpdate) {
-      onVisitUpdate();
-    }
-  } catch (error) {
-     console.error("Check-out Error:", error);
-     toast.error(error.response?.data?.error || "Check-out failed");
-  }
-};
-
-  const openCheckInModal = (visit) => {
+  const openCancelModal = (visit) => {
     setSelectedVisit(visit);
-    // Set default check-in time to current time
-    setCheckInForm({
-      actual_check_in_time: new Date().toISOString().slice(0, 16),
-      notes: "",
-    });
-    setShowCheckInModal(true);
+    setCancelReason("");
+    setShowCancelModal(true);
   };
-
-  const openCheckOutModal = (visit) => {
-    setSelectedVisit(visit);
-    setShowCheckOutModal(true);
-  };
-
-  const handleCheckInFormChange = (e) => {
-    const { name, value } = e.target;
-    setCheckInForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) setPage((prev) => prev - 1);
@@ -129,8 +96,8 @@ const handleCheckOut = async () => {
                   <th>Contact</th>
                   <th>Email</th>
                   <th>Special Requirement</th>
-                  <th>Check-in</th>
-                  <th>Check-out</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -148,34 +115,25 @@ const handleCheckOut = async () => {
                     <td>{visit.visitor?.contact_number}</td>
                     <td>{visit.visitor?.email}</td>
                     <td>{visit.visitor?.special_requirements || "None"}</td>
-
-                    {/* CHECK IN COLUMN */}
                     <td>
-                      {visit.check_in === null ? (
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => openCheckInModal(visit)}
-                        >
-                          Check In
-                        </button>
-                      ) : (
-                        <span className="badge bg-primary">
-                          {new Date(visit.check_in).toLocaleString()}
-                        </span>
-                      )}
+                      <span className={`badge ${
+                        visit.status === 'cancelled' ? 'bg-danger' :
+                        visit.status === 'completed' ? 'bg-success' :
+                        visit.status === 'checked_in' ? 'bg-primary' :
+                        'bg-warning text-dark'
+                      }`}>
+                        {visit.status ? visit.status.replace(/_/g, ' ') : 'Pending'}
+                      </span>
                     </td>
-
-                    {/* CHECK OUT COLUMN */}
                     <td>
-                      {visit.check_in !== null && visit.check_out === null ? (
+                      {visit.status !== 'cancelled' && visit.status !== 'completed' && (
                         <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => openCheckOutModal(visit)}
+                          onClick={() => openCancelModal(visit)}
+                          disabled={visit.status === 'cancelled'}
                         >
-                          Check Out
+                          Cancel
                         </button>
-                      ) : (
-                        <span className="text-muted">—</span>
                       )}
                     </td>
                   </tr>
@@ -211,92 +169,49 @@ const handleCheckOut = async () => {
         )}
       </div>
 
-      {/* CHECK-IN MODAL WITH FORM */}
-      {showCheckInModal && (
+      {/* CANCEL VISIT MODAL */}
+      {showCancelModal && (
         <div className="modal fade show d-block" tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content p-3">
-              <h4>Check In Visitor</h4>
+              <h4>Cancel Visit</h4>
 
               <p>
-                Check in details for{" "}
-                <strong>{selectedVisit.visitor?.name}</strong>
+                Are you sure you want to cancel the visit for{" "}
+                <strong>{selectedVisit.visitor?.name}</strong>?
               </p>
 
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="actual_check_in_time" className="form-label">
-                    Check-in Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    className="form-control"
-                    id="actual_check_in_time"
-                    name="actual_check_in_time"
-                    value={checkInForm.actual_check_in_time}
-                    onChange={handleCheckInFormChange}
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="notes" className="form-label">
-                    Additional Notes
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="notes"
-                    name="notes"
-                    rows="3"
-                    value={checkInForm.notes}
-                    onChange={handleCheckInFormChange}
-                    placeholder="Any additional notes for this check-in..."
-                  ></textarea>
-                </div>
-              </form>
+              <div className="mb-3">
+                <label htmlFor="cancelReason" className="form-label">
+                  Reason for Cancellation
+                </label>
+                <textarea
+                  className="form-control"
+                  id="cancelReason"
+                  rows="3"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Please provide a reason for cancellation..."
+                  required
+                ></textarea>
+              </div>
 
               <div className="d-flex justify-content-end gap-2">
                 <button
                   className="btn btn-secondary"
                   onClick={() => {
-                    setShowCheckInModal(false);
-                    setCheckInForm({ actual_check_in_time: "", notes: "" });
+                    setShowCancelModal(false);
+                    setCancelReason("");
                   }}
                 >
-                  Cancel
+                  Go Back
                 </button>
                 <button
-                  className="btn btn-success"
-                  onClick={handleCheckIn}
-                  disabled={!checkInForm.actual_check_in_time}
+                  className="btn btn-danger"
+                  onClick={handleCancelVisit}
+                  disabled={!cancelReason.trim()}
                 >
-                  Submit Check-In
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CHECK-OUT MODAL */}
-      {showCheckOutModal && (
-        <div className="modal fade show d-block" tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content p-3">
-              <h4>Confirm Check-Out</h4>
-              <p>
-                Are you sure you want to check out{" "}
-                <strong>{selectedVisit.visitor?.name}</strong>?
-              </p>
-              <div className="d-flex justify-content-end gap-2">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowCheckOutModal(false)}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-danger" onClick={handleCheckOut}>
-                  Confirm Check-Out
+                  Confirm Cancellation
                 </button>
               </div>
             </div>

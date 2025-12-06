@@ -30,8 +30,14 @@ function TabWalkInVisitors({ groupedVisits, loading }) {
                 {sortedDates.map((date, index) => (
                   <React.Fragment key={index}>
                     <tr className="table">
-                      <td colSpan="7" className="py-4" style={{ backgroundColor: "#F5FAFE" }}>
-                        {date === new Date().toISOString().split("T")[0] ? "Today" : date}
+                      <td
+                        colSpan="7"
+                        className="py-4"
+                        style={{ backgroundColor: "#F5FAFE" }}
+                      >
+                        {date === new Date().toISOString().split("T")[0]
+                          ? "Today"
+                          : date}
                       </td>
                     </tr>
                     {groupedVisits[date].map((visit, idx) => (
@@ -52,7 +58,7 @@ function TabWalkInVisitors({ groupedVisits, loading }) {
                           {visit.host_name || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
-                          {visit.visit_date || "N/A"}
+                          {visit.visit_time || "N/A"}
                         </td>
                         <td className="text-muted" style={{ fontSize: "14px" }}>
                           {visit.visitor?.special_requirements || "None"}

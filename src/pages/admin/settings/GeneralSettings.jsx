@@ -209,7 +209,7 @@ function GeneralSettings() {
               selected={selectedTheme === "blue"}
               onClick={() => handleThemeSelect("blue")}
             />
-            <CardOption
+            {/* <CardOption
               title="Classic"
               themeColor="#fd7e14" // Example orange
               selected={selectedTheme === "orange"}
@@ -220,41 +220,7 @@ function GeneralSettings() {
               themeColor="#6f42c1" // Example purple
               selected={selectedTheme === "purple"}
               onClick={() => handleThemeSelect("purple")}
-            />
-          </div>
-
-          <div className="card shadow-sm p-4 rounded-4 border-0">
-            {" "}
-            {/* Added rounded-4 border-0 */}
-            <h6 className="mb-3 fw-semibold">Customize Primary Color</h6>
-            <div className="row align-items-center">
-              <div className="col-md-6 mb-2">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter Color Code (e.g. #007bff)"
-                  value={settings.primary_color}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      primary_color: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="col-md-3 mb-2">
-                <button
-                  type="button" // Explicitly set type to button
-                  className="btn btn-primary w-100"
-                  onClick={() =>
-                    handleUpdateSetting("primary_color", settings.primary_color)
-                  }
-                >
-                  Update
-                </button>
-              </div>
-            </div>
+            /> */}
           </div>
         </div>
       </div>

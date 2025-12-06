@@ -30,28 +30,22 @@ export const requestForToken = async () => {
     if (permission === "granted") {
       const currentToken = await getToken(messaging, { vapidKey: vapidKey });
       if (currentToken) {
-        console.log("FCM registration token:", currentToken);
-        // Send the token to your backend
         try {
           await api.post("/save-fcm-token", { fcm_token: currentToken });
-          toast.success("FCM token saved successfully on the backend.");
+          console.log("FCM token saved on backend successfully.");
         } catch (error) {
           console.error("Failed to save FCM token on backend:", error);
-          toast.error("Failed to save FCM token on backend: " + (error.response?.data?.message || "Server error."));
         }
         return currentToken;
       } else {
         console.warn("No FCM registration token available. Request permission to generate one.");
-        toast.warn("No FCM token. Please allow notifications.");
         return null;
       }
     } else {
       console.warn("Notification permission denied.");
-      toast.warn("Notification permission denied. Cannot receive push notifications.");
       return null;
     }
   } catch (err) {
-    console.error("An error occurred while retrieving token or requesting permission. ", err);
     toast.error("Error with push notifications: " + err.message);
     return null;
   }

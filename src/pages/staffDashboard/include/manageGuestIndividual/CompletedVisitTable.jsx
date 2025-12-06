@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import api from "../../../../context/api"; // Backend API import (commented out)
+import api from "../../../../context/api";
+import { toast } from "react-toastify";
 
-function CompletedVisitTable() {
+// Added visitType prop
+function CompletedVisitTable({ visitType }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
@@ -9,30 +11,33 @@ function CompletedVisitTable() {
   const perPage = 10;
 
   useEffect(() => {
-    const fetchVisits = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(
-          "staff/guests/individual-completed-visit",
-          {
-            params: {
-              per_page: perPage,
-              page: page,
-            },
-          }
-        );
-
-        setVisits(response.data.visits);
-        setPagination(response.data.pagination);
-      } catch (error) {
-        console.error("Error fetching visits:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVisits();
-  }, [page]);
+  }, [page, visitType]);
+
+  const fetchVisits = async () => {
+    setLoading(true);
+    try {
+        // FIX: Dynamic endpoint for completed visits
+      const endpoint = `/staff/guests/${visitType}/completed-visits`;
+      const response = await api.get(
+        endpoint,
+        {
+          params: {
+            per_page: perPage,
+            page: page,
+          },
+        }
+      );
+
+      setVisits(response.data.visits);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      toast.error("Failed to load completed visits"); // Added error toast
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) {
@@ -52,7 +57,7 @@ function CompletedVisitTable() {
   return (
     <div>
       <div className="table-responsive my-5">
-        {visits.length > 0 ? (
+      {visits.length > 0 ? (
           <>
             <table className="table table-bordered table-hover">
               <thead>
@@ -60,10 +65,10 @@ function CompletedVisitTable() {
                   <th>Unique ID</th>
                   <th>Guest Name</th>
                   <th>Host Name</th>
-                  <th>Visit Date/Time</th>
-                  <th>Contact Information</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
+                  <th>Check-In Time</th>
+                  <th>Contact</th>
+                  <th>Created At</th>
+                  <th>Updated At</th>
                   <th>Special Requirement</th>
                 </tr>
               </thead>
@@ -104,7 +109,7 @@ function CompletedVisitTable() {
             </div>
           </>
         ) : (
-          <h1>No Pre-Scheduled Visit</h1>
+          <h1>No Completed Visits</h1>
         )}
       </div>
     </div>

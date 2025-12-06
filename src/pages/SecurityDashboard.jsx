@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import NavBar from "./securityDashboard/include/NavBar";
 import api from "../context/api";
-import AddGuestModal from "./securityDashboard/include/AddGuestModal";
-import { PlusCircle } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { NavLink } from "react-router-dom";
@@ -12,120 +10,6 @@ function SecurityDashboard() {
   const [scanResult, setScanResult] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const printRef = useRef();
-
-  const [showAddGuest, setShowAddGuest] = useState(false);
-
-  // State variables for the AddGuestModal
-  const [name, setName] = useState("");
-  const [visitorType, setVisitorType] = useState("Individual");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [contact_number, setContact_number] = useState("");
-  const [emergency_contact, setEmergencyContact] = useState("");
-  const [special_requirements, setSpecialRequirements] = useState("");
-  const [photo, setPhoto] = useState("");
-  const [is_vip, setIs_vip] = useState(false);
-  const [is_blacklisted, setIs_blacklisted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const openAddGuestModal = () => {
-    setShowAddGuest(true);
-  };
-  // ✅ Image handler (works perfectly with preview)
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPhoto(file);
-      setSelectedImage(URL.createObjectURL(file));
-    } else {
-      setPhoto(null);
-      setSelectedImage(null);
-    }
-  };
-
-  const showValidationErrors = (error) => {
-    if (error.response && error.response.status === 422) {
-      let validationErrors = error.response.data.errors || error.response.data;
-
-      if (typeof validationErrors === "string") {
-        toast.error(validationErrors);
-        return;
-      }
-
-      Object.values(validationErrors).forEach((messages) => {
-        if (Array.isArray(messages)) {
-          messages.forEach((msg) => toast.error(msg));
-        } else if (typeof messages === "string") {
-          toast.error(messages);
-        }
-      });
-    } else {
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
-      );
-    }
-  };
-
-  // Function to handle adding a new guest (connected to the API)
-  // ✅ Handle Add Guest
-  const handleAddGuest = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setIsSubmitting(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("contact_number", contact_number);
-      formData.append("email", email);
-      formData.append("address", address);
-      formData.append("is_vip", is_vip ? 1 : 0);
-      formData.append("is_blacklisted", is_blacklisted ? 1 : 0);
-      formData.append("emergency_contact", emergency_contact);
-      formData.append("special_requirements", special_requirements);
-      formData.append("visitor_type", visitorType);
-
-      // ✅ Append photo if selected
-      if (photo) {
-        formData.append("photo", photo);
-      }
-
-      const response = await api.post("/security/visitors", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (response.status === 201) {
-        toast.success("New visitor registered successfully!");
-
-        setShowAddGuest(false);
-
-        // Reset form fields
-        setName("");
-        setVisitorType("Individual");
-        setEmail("");
-        setAddress("");
-        setContact_number("");
-        setEmergencyContact("");
-        setSpecialRequirements("");
-        setPhoto(null);
-        setIs_vip(false);
-        setIs_blacklisted(false);
-        setSelectedImage(null);
-      } else {
-        toast.error(response.data.message || "Failed to register visitor.");
-      }
-    } catch (error) {
-      showValidationErrors(error);
-      console.log("Validation errors:", error.response?.data);
-    } finally {
-      setLoading(false);
-      setIsSubmitting(false);
-    }
-  };
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner("reader", {
@@ -160,29 +44,53 @@ function SecurityDashboard() {
     }
   };
 
-  const handlePrint = () => {
-    const element = printRef.current;
+  // ✅ NEW FUNCTION: Update security confirmation in database
+  const handleConfirmVisit = async () => {
+    if (!userProfile || !userProfile.visit_id) {
+      toast.error("No visit data available.");
+      return;
+    }
 
-    // Create a new window to print
-    const printWindow = window.open("", "", "height=600,width=800");
-    printWindow.document.write("<html><head><title>Visitor Badge</title>");
-    // Include Bootstrap CSS for styling in the print window
-    printWindow.document.write(
-      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-    );
-    printWindow.document.write("</head><body >");
-    printWindow.document.write('<div class="p-5">');
-    printWindow.document.write(element.outerHTML);
-    printWindow.document.write("</div>");
-    printWindow.document.write("</body></html>");
-    printWindow.document.close();
+    try {
+      const response = await api.post(`/security/visit/confirm/${userProfile.visit_id}`);
 
-    // Wait for the content to load and then print
-    printWindow.onload = function () {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    };
+      if (response.status === 200) {
+        toast.success("Visit confirmed successfully!");
+
+        // Update local state to show confirmation
+        setUserProfile(prev => ({
+          ...prev,
+          security_confirmation: 1,
+          status: "Confirmed"
+        }));
+
+        // Close the modal after confirmation
+        const modal = bootstrap.Modal.getInstance(document.getElementById("printTagModal"));
+        if (modal) {
+          modal.hide();
+        }
+
+        // Reset scan result for next scan
+        setScanResult(null);
+      } else {
+        toast.error(response.data.message || "Failed to confirm visit.");
+      }
+    } catch (error) {
+      console.error("Confirm Error:", error);
+
+      if (error.response && error.response.status === 422) {
+        const validationErrors = error.response.data.errors;
+        Object.values(validationErrors).forEach((messages) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) => toast.error(msg));
+          } else if (typeof messages === "string") {
+            toast.error(messages);
+          }
+        });
+      } else {
+        toast.error(error.response?.data?.message || "An error occurred while confirming the visit.");
+      }
+    }
   };
 
   return (
@@ -208,18 +116,7 @@ function SecurityDashboard() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h2 className="fw-bold mb-0">Guest Confirmation</h2>
-              <button
-                onClick={openAddGuestModal}
-                className="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-circle"
-                style={{ width: "48px", height: "48px" }}
-              >
-                <PlusCircle
-                  size={24}
-                  className="text-white"
-                  style={{ cursor: "pointer" }}
-                />
-              </button>
-              {/* <i className="bi bi-plus-circle fs-1 text-primary p-2"></i> */}
+              {/* REMOVED: Plus button */}
             </div>
             <div className="d-flex align-items-center mt-2">
               <p
@@ -344,17 +241,43 @@ function SecurityDashboard() {
                 </div>
                 <div className="d-flex justify-content-between border-bottom py-4 small">
                   <span className="text-muted">Visit Status</span>
-                  <span>{userProfile.status}</span>
+                  <span>
+                    {userProfile.security_confirmation === 1 ? (
+                      <span className="badge bg-success">Confirmed</span>
+                    ) : (
+                      <span className="badge bg-warning text-dark">Pending</span>
+                    )}
+                  </span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom py-4 small">
+                  <span className="text-muted">Security Confirmation</span>
+                  <span>
+                    {userProfile.security_confirmation === 1 ? (
+                      <span className="badge bg-success">✓ Confirmed</span>
+                    ) : (
+                      <span className="badge bg-secondary">Pending</span>
+                    )}
+                  </span>
                 </div>
 
                 <div className="text-center mt-4 d-print-none">
-                  <button
-                    type="button"
-                    className="btn btn-primary w-100 rounded-3 py-2"
-                    onClick={handlePrint}
-                  >
-                    Confirm
-                  </button>
+                  {userProfile.security_confirmation === 1 ? (
+                    <button
+                      type="button"
+                      className="btn btn-success w-100 rounded-3 py-2"
+                      disabled
+                    >
+                      ✓ Already Confirmed
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-primary w-100 rounded-3 py-2"
+                      onClick={handleConfirmVisit}
+                    >
+                      Confirm Visit
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -381,39 +304,6 @@ function SecurityDashboard() {
           }
         }
       `}</style>
-
-      {/* Add Guest Modal */}
-      {/* Add Guest Modal */}
-      <AddGuestModal
-        show={showAddGuest}
-        onClose={() => setShowAddGuest(false)}
-        name={name}
-        visitorType={visitorType}
-        email={email}
-        address={address}
-        contact_number={contact_number}
-        emergency_contact={emergency_contact}
-        special_requirements={special_requirements}
-        is_vip={is_vip}
-        is_blacklisted={is_blacklisted}
-        photo={photo}
-        setName={setName}
-        setVisitorType={setVisitorType}
-        setEmail={setEmail}
-        setAddress={setAddress}
-        setContact_number={setContact_number}
-        setEmergencyContact={setEmergencyContact}
-        setSpecialRequirements={setSpecialRequirements}
-        setIs_vip={setIs_vip}
-        setIs_blacklisted={setIs_blacklisted}
-        setPhoto={setPhoto}
-        handleAddGuest={handleAddGuest}
-        loading={loading}
-        setLoading={setLoading}
-        selectedImage={selectedImage}
-        isSubmitting={isSubmitting}
-        handleImageChange={handleImageChange}
-      />
     </div>
   );
 }

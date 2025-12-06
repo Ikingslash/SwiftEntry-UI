@@ -7,157 +7,141 @@ import { toast } from "react-toastify";
 // import showValidationErrors from "./include/components/showValidationErrors";
 
 function NewGuestGroup() {
-  const [formData, setFormData] = useState({
-    group_leader_name: "",
-    group_leader_contact: "",
-    group_leader_email: "",
-    organization_name: "",
-    group_size: "",
-    visit_time: "",
-    host_name: "",
-    building: "",
-    floor: "",
-    purpose: "",
-    special_requirements: "",
-    emergency_contact: "",
-    previsit_instruction: "",
-    details: "",
-    photo: null,
-  });
-  const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showVisitCardModal, setShowVisitCardModal] = useState(false);
-  const [guestDetails, setGuestDetails] = useState({});
-  const [qrValue, setQrValue] = useState("");
-  const [appUsers, setAppUsers] = useState([]);
-  const [visitPurposes, setVisitPurposes] = useState([]);
-  const printRef = useRef();
+const [formData, setFormData] = useState({
+  name: "",
+  contact_number: "",
+  email: "",
+  address: "",
+  visit_time: "",
+  host_name: "",
+  building: "",
+  floor: "",
+  purpose: "",
+  special_requirements: "",
+  emergency_contact: "",
+  details: "",
+  photo: "",
+});
 
+const [loading, setLoading] = useState(false);
+const [selectedImage, setSelectedImage] = useState(null);
+const [showSuccessModal, setShowSuccessModal] = useState(false);
+const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+const [guestDetails, setGuestDetails] = useState({});
+const [appUsers, setAppUsers] = useState([]);
+const [visitPurposes, setVisitPurposes] = useState([]);
+const [qrValue, setQrValue] = useState("");
+const printRef = useRef();
 
-
-  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
-  useEffect(() => {
-    // Request permission and get the FCM token
-    requestForToken()
-      .then((fcmToken) => {
-        if (fcmToken) {
-          console.log("FCM token:", fcmToken);
-
-          api
-            .post("/save-fcm-token", { fcm_token: fcmToken })
-            .then((response) => {
-              // console.log("FCM token saved on backend:", response.data);
-            })
-            .catch((error) => {
-              console.error("Failed to save FCM token on backend:", error);
-            });
-        }
-      })
-      .catch((err) => {
-        console.error("An error occurred while retrieving token. ", err);
-      });
-
-    // Fetch the list of all app users (staff, security, front desk)
-    api
-      .get("/frontdesk-app-users")
-      .then((response) => {
-        // Assuming the response is an array of user names
-        if (response.data && Array.isArray(response.data.users)) {
-          setAppUsers(response.data.users);
-        } else {
-          console.error(
-            "API response for users is not an array:",
-            response.data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch app users:", error);
-      });
-    // Fetch the list of visit purposes from the backend
-    api
-      .get("/staff/settings/visit-purposes")
-      .then((response) => {
-        if (response.data && Array.isArray(response.data)) {
-          setVisitPurposes(response.data);
-        } else {
-          console.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch visit purposes:", error);
-      });
-
-    // Set up the listener for incoming messages.
-    const unsubscribe = onMessageListener((payload) => {
-      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
-    });
-
-    // Cleanup function to detach the listener when the component unmounts
-    return () => unsubscribe();
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value, selectedOptions } = e.target;
-    if (name === "host_id") {
-      const [role, id] = value.split("-");
-      const selectedHostName = selectedOptions[0]?.text.trim();
-      setFormData({
-        ...formData,
-        host_id: id,
-        host_role: role,
-        host_name: selectedHostName,
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
+// Get current logged-in user from localStorage or API
+const getCurrentUser = () => {
+  try {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      return JSON.parse(userData);
     }
-  };
+    return null;
+  } catch (error) {
+    console.error("Error parsing user data from localStorage:", error);
+    return null;
+  }
+};
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        photo: file,
-      }));
-      setSelectedImage(URL.createObjectURL(file));
-    }
-  };
-
-
-
-  const showValidationErrors = (error) => {
-    if (error.response && error.response.status === 422) {
-      let validationErrors = error.response.data.errors || error.response.data;
-
-      if (typeof validationErrors === "string") {
-        toast.error(validationErrors);
-        return;
+// useEffect to handle Firebase messaging and token registration, AND to fetch users.
+useEffect(() => {
+  // Request permission and get the FCM token
+  requestForToken()
+    .then((fcmToken) => {
+      if (fcmToken) {
+        api
+          .post("/staff/save-fcm-token", { fcm_token: fcmToken })
+          .catch(() => {});
       }
+    })
+    .catch(() => {});
 
-      Object.values(validationErrors).forEach((messages) => {
-        if (Array.isArray(messages)) {
-          messages.forEach((msg) => toast.error(msg));
-        } else if (typeof messages === "string") {
-          toast.error(messages);
-        }
-      });
-    } else {
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
-      );
+  // Fetch the list of visit purposes from the backend
+  api
+    .get("/staff/settings/visit-purposes")
+    .then((response) => {
+      if (response.data && Array.isArray(response.data)) {
+        setVisitPurposes(response.data);
+      }
+    })
+    .catch(() => {});
+
+  // Set up the listener for incoming messages.
+  const unsubscribe = onMessageListener((payload) => {
+    toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+  });
+
+  // Cleanup function to detach the listener when the component unmounts
+  return () => unsubscribe();
+}, []);
+
+useEffect(() => {
+  const currentUser = getCurrentUser();
+
+  if (currentUser && currentUser.id && currentUser.name) {
+    setFormData((prev) => ({
+      ...prev,
+      host_id: currentUser.id,
+      host_role: currentUser.role || "staff",
+      host_name: currentUser.name,
+    }));
+  } else {
+    console.error("No valid user found in localStorage");
+    toast.error("Unable to set host. Please log in again.");
+  }
+}, []);
+
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData({ ...formData, [name]: value });
+};
+
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setFormData((prev) => ({ ...prev, photo: file }));
+    setSelectedImage(URL.createObjectURL(file));
+  }
+};
+
+const showValidationErrors = (error) => {
+  if (error.response && error.response.status === 422) {
+    let validationErrors = error.response.data.errors || error.response.data;
+
+    if (typeof validationErrors === "string") {
+      toast.error(validationErrors);
+      return;
     }
-  };
 
+    Object.values(validationErrors).forEach((messages) => {
+      if (Array.isArray(messages)) {
+        messages.forEach((msg) => toast.error(msg));
+      } else if (typeof messages === "string") {
+        toast.error(messages);
+      }
+    });
+  } else {
+    toast.error(
+      error.response?.data?.message || "Something went wrong. Please try again."
+    );
+  }
+};
+
+  // SUBMIT HANDLER
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    // Validate host data before submission
+    if (!formData.host_id || !formData.host_role || !formData.host_name) {
+      toast.error("Host information is missing. Please refresh the page.");
+      setLoading(false);
+      return;
+    }
 
     const formDataToSend = new FormData();
 
@@ -166,23 +150,36 @@ function NewGuestGroup() {
         key !== "photo" &&
         key !== "visit_time" &&
         key !== "host_id" &&
-        key !== "host_role"
+        key !== "host_role" &&
+        key !== "host_name"
       ) {
         formDataToSend.append(key, value);
       }
     });
 
-    if (formData.visit_time) {
-      formDataToSend.append("visit_time", formData.visit_time);
+  if (formData.visit_time) {
+      const visitTime = new Date(formData.visit_time);
+      if (!isNaN(visitTime)) {
+        const formattedVisitTime = visitTime
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+        formDataToSend.append("visit_time", formattedVisitTime);
+      } else {
+        toast.error("Invalid visit time format.");
+        setLoading(false);
+        return;
+      }
     }
 
     if (formData.photo) {
       formDataToSend.append("photo", formData.photo);
     }
 
-    // Append host_id and host_role
-    formDataToSend.append("host_id", formData.host_id);
+    // host fields
+     formDataToSend.append("host_id", formData.host_id);
     formDataToSend.append("host_role", formData.host_role);
+    formDataToSend.append("host_name", formData.host_name);
 
     try {
       const response = await api.post(
@@ -197,26 +194,22 @@ function NewGuestGroup() {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
 
-        // Trigger notification to host
+        // Send notification
         if (formData.host_id && formData.host_role) {
           try {
-            await api.post("/genereal-notify-host", {
+            await api.post("/admin/notify-admin-host", {
               host_id: formData.host_id,
               host_role: formData.host_role,
               guest_name: formData.group_leader_name,
               purpose: formData.purpose,
             });
-            console.log("Notification trigger sent to backend.");
-            toast.success("Notification sent to host successfully.");
-          } catch (notificationError) {
-            console.error("Failed to trigger notification:", notificationError);
+          }  catch (notificationError) {
+            // Notification failure should not block the main flow
+            console.error("Failed to notify host:", notificationError);
           }
-        } else {
-          console.warn("Host ID or Role missing, skipping host notification.");
         }
 
         const visitTimeParts = visit?.check_in?.split(" ") || [];
-
         const date = visitTimeParts?.[0] || "";
         const time = visitTimeParts?.[1] || "";
 
@@ -235,15 +228,18 @@ function NewGuestGroup() {
         if (visit.code) {
           setQrValue(visit.code);
         }
+
         setFormData({
           group_leader_name: "",
           group_leader_contact: "",
           group_leader_email: "",
           organization_name: "",
+          address: "",
           group_size: "",
           visit_time: "",
-          host_name: "",
-          host_id: "",
+          host_name: formData.host_name,
+          host_id: formData.host_id,
+          host_role: formData.host_role,
           building: "",
           floor: "",
           purpose: "",
@@ -255,21 +251,17 @@ function NewGuestGroup() {
         });
         setSelectedImage(null);
 
-        toast.success("Group visitor registered successfully!");
+        toast.success("Group visitor registered!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-        toast.error("Unexpected response:", response.data.message || response);
-        console.error(
-          "Error: " + (response.data.message || "Something went wrong")
-        );
+        toast.error("Unexpected error occurred");
       }
     } catch (error) {
       showValidationErrors(error);
-      console.log("Validation errors:", error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -371,6 +363,18 @@ function NewGuestGroup() {
                     </div>
                   </div>
                   <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label">Group Size</label>
                     <select
                       className="form-select"
@@ -399,31 +403,29 @@ function NewGuestGroup() {
                       onChange={handleChange}
                     />
                   </div>
+                  {/* Hidden inputs for host data */}
+                  <input
+                    type="hidden"
+                    name="host_id"
+                    value={formData.host_id}
+                  />
+                  <input
+                    type="hidden"
+                    name="host_role"
+                    value={formData.host_role}
+                  />
 
+                  {/* Display only - show the host name to user */}
                   <div className="mb-3">
                     <label className="form-label">Host Name</label>
-                    <select
-                      className="form-select rounded-pill"
-                      id="host_id"
-                      name="host_id"
-                      value={`${formData.host_role || ""}-${
-                        formData.host_id || ""
-                      }`}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select a host</option>
-                      {appUsers.map((user, index) => (
-                        <option
-                          key={`${user.role || "unknown"}-${user.id || index}`}
-                          value={`${user.role}-${user.id}`}
-                          data-role={user.role}
-                          data-id={user.id}
-                        >
-                          {user.name}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      className="form-control rounded-pill"
+                      name="host_name"
+                      value={formData.host_name}
+                      readOnly
+                      placeholder="Host will be automatically assigned"
+                    />
                   </div>
 
                   <div className="row">
@@ -502,46 +504,7 @@ function NewGuestGroup() {
                 {/* Additional Information */}
                 <div className="p-4">
                   <h5 className="fw-bold">Additional Information</h5>
-                  <div className=" mt-4">
-                    <label className="form-label d-block">Add Photo</label>
-                    <input
-                      type="file"
-                      className="d-none"
-                      id="fileUpload"
-                      accept="image/*"
-                      name="photo"
-                      onChange={handleImageChange}
-                    />
-                    <label htmlFor="fileUpload" className="d-inline-block">
-                      <div
-                        className="rounded-circle border d-flex justify-content-center align-items-center"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          backgroundColor: "#f8f9fa",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {selectedImage ? (
-                          <img
-                            src={selectedImage}
-                            alt="Uploaded"
-                            className="rounded-circle"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <i
-                            className="bi bi-camera"
-                            style={{ fontSize: "24px" }}
-                          ></i>
-                        )}
-                      </div>
-                    </label>
-                  </div>
+                  
                 </div>
                 <div className="my-3">
                   <label className="form-label">Name of Organization</label>
@@ -657,17 +620,7 @@ function NewGuestGroup() {
                     </span>
                     <strong className="text-white">VISITORS BADGE</strong>
                   </div>
-                  <div className="card-body d-flex">
-                    <div className="me-3">
-                      <img
-                        src={`${guestDetails.photo}`}
-                        alt="Guest"
-                        className="rounded-circle shadow"
-                        width="100"
-                        height="100"
-                        style={{ border: "4px solid #007bff" }}
-                      />
-                    </div>
+                  <div className="card-body d-flex mx-4 justify-content-between">
                     <div className="flex-grow-1 ms-2">
                       <h5 className="fw-bold my-3">{guestDetails.name}</h5>
                       <p className="my-2 lead">

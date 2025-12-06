@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext"; // Assuming AuthContext provides user and token
-import api from "../context/api"; // Assuming your Axios instance
+import { useAuth } from "../context/AuthContext";
+import api from "../context/api";
 import NavBar from "./admin/include/NavBar";
 import {
   LineChart,
@@ -290,8 +290,6 @@ function SecurityFrontDeskDashboard() {
           <div className="col-md-6">
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="lead">Priority Alerts</h6>
-              {/* See all links to paginated alerts page (you should create a route/page or handle accordingly) */}
-
               <Link to="/admin-dashboard/alerts" className="text-primary">
                 See all
               </Link>

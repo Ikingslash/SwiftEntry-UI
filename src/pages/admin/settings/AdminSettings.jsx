@@ -1,12 +1,12 @@
 import { useState } from "react";
 import GeneralSettings from "./GeneralSettings";
-import UserRolePermission from "./UserRolePermission";
+// import UserRolePermission from "./UserRolePermission";
 import Notification from "./Notification";
 import DataPrivacy from "./DataPrivacy";
 import SystemSecurity from "./SystemSecurity";
 import Profile from "./Profile";
 
-import NavBar from "../include/NavBar"; 
+import NavBar from "../include/NavBar";
 
 function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general-settings");
@@ -62,7 +62,7 @@ function AdminSettings() {
                 General Settings
               </button>
             </li>
-            <li className="nav-item pe-4">
+            {/* <li className="nav-item pe-4">
               <button
                 className={`nav-link ${
                   activeTab === "user-role-permission" ? "active" : "text-dark"
@@ -71,7 +71,7 @@ function AdminSettings() {
               >
                 User Role and Permission
               </button>
-            </li>
+            </li> */}
             <li className="nav-item pe-4">
               <button
                 className={`nav-link ${
@@ -113,12 +113,12 @@ function AdminSettings() {
               </button>
             </li>
           </ul>
-      
+
         </div>
         {/* Content */}
         <div className="mt-5">
           {activeTab === "general-settings" && <GeneralSettings />}
-          {activeTab === "user-role-permission" && <UserRolePermission />}
+          {/* {activeTab === "user-role-permission" && <UserRolePermission />} */}
           {activeTab === "notification" && <Notification />}
           {activeTab === "data-privacy" && <DataPrivacy />}
           {activeTab === "system-security" && <SystemSecurity />}

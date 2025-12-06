@@ -54,6 +54,10 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPriorityAlerts from "./pages/admin/AdminPriorityAlerts";
 import AdminLatestUpdates from "./pages/admin/AdminLatestUpdates";
+import AdminNewGuest from "./pages/admin/registerVisit/NewGuest";
+
+<Route path="/admin/new-guest" element={<AdminNewGuest />} />
+
 
 function App() {
  return (
@@ -127,6 +131,7 @@ function App() {
                element={<AnalyticalAndReport />}
              />
              <Route path="settings" element={<AdminSettings />} />
+             <Route path="new-guest" element={<AdminNewGuest />} />
              <Route path="profile" element={<AdminProfile />} />
              <Route path="notifications" element={<AdminNotifications />} />
              <Route path="alerts" element={<AdminPriorityAlerts />} />

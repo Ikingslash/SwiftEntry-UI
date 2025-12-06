@@ -1,12 +1,15 @@
 import { useState, useRef } from "react";
 import NavBar from "../securityDashboard/include/NavBar";
-import api from "../../context/api"; // your Axios instance
+import api from "../../context/api";
 import { NavLink } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function GenerateByUniqueCode() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [userProfile, setUserProfile] = useState(null);
-  const printRef = useRef();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const modalRef = useRef(null);
 
   const handleChange = (index, value) => {
     if (isNaN(value)) return;
@@ -28,45 +31,70 @@ function GenerateByUniqueCode() {
       const response = await api.get(`/security/visit/scan/${enteredOtp}`);
       setUserProfile(response.data);
 
-      const modal = new window.bootstrap.Modal(
-        document.getElementById("printTagModal")
-      );
-      modal.show();
+      // Reset OTP after successful scan
+      setOtp(["", "", "", "", "", ""]);
+
+      // Show modal using ref
+      if (modalRef.current) {
+        const modal = new window.bootstrap.Modal(modalRef.current);
+        modal.show();
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      alert("No visitor record found for this code.");
+      toast.error("No visitor record found for this code.");
+      setOtp(["", "", "", "", "", ""]); // Reset on error
     }
   };
 
-  const handlePrint = () => {
-       const element = printRef.current;
+  const handleConfirm = async () => {
+    if (!userProfile || !userProfile.visit_id) {
+      toast.error("No visit ID found. Please scan again.");
+      return;
+    }
 
-     // Create a new window to print
-     const printWindow = window.open("", "", "height=600,width=800");
-     printWindow.document.write("<html><head><title>Visitor Badge</title>");
-     // Include Bootstrap CSS for styling in the print window
-     printWindow.document.write(
-       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-     );
-     printWindow.document.write("</head><body >");
-     printWindow.document.write('<div class="p-5">');
-     printWindow.document.write(element.outerHTML);
-     printWindow.document.write("</div>");
-     printWindow.document.write("</body></html>");
-     printWindow.document.close();
+    setIsUpdating(true);
+    try {
+      // Call API to update security confirmation
+      const response = await api.post(`/security/visit/confirm/${userProfile.visit_id}`);
 
-     // Wait for the content to load and then print
-     printWindow.onload = function () {
-       printWindow.focus();
-       printWindow.print();
-       printWindow.close();
-     };
+      if (response.data.success) {
+        toast.success("Visit confirmed successfully!");
+
+        // Close the modal
+        if (modalRef.current) {
+          const modal = window.bootstrap.Modal.getInstance(modalRef.current);
+          modal.hide();
+        }
+
+        // Reset state
+        setUserProfile(null);
+
+        // Optionally refresh the page or show success message
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        toast.error(response.data.message || "Failed to confirm visit");
+      }
+    } catch (error) {
+      console.error("Error confirming visit:", error);
+      toast.error(error.response?.data?.message || "An error occurred while confirming the visit");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    // Handle backspace
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`).focus();
+    }
   };
 
   return (
     <div>
       <NavBar />
-
+      <ToastContainer position="top-right" autoClose={5000} />
       {/* Hero */}
       <header
         className="text-white text-center position-relative px-4"
@@ -83,21 +111,14 @@ function GenerateByUniqueCode() {
         <div className="container">
           <div className="text-white shadow-sm" style={{ minHeight: "180px" }}>
             <div className="d-flex align-items-center justify-content-between">
-              <h2 className="fw-bod mb-0">Guest Confirmation</h2>
-           
+              <h2 className="fw-bold mb-0">Guest Confirmation</h2>
             </div>
             <div className="d-flex align-items-center mt-2">
               <p
                 className="badge text-white"
                 style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}
               >
-                Syndani Group{" "}
-                <span
-                  className="badge text-light p-1"
-                  style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}
-                >
-                  Company
-                </span>
+                Security Confirmation
               </p>
               <div
                 className="flex-grow-1 ms-2 mb-3"
@@ -119,28 +140,27 @@ function GenerateByUniqueCode() {
               <p className="text-muted">Enter Guest Unique Code</p>
             </div>
             <div className="my-5">
-              <form>
-                <div className="d-flex justify-content-center gap-2">
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      id={`otp-${index}`}
-                      type="text"
-                      className="form-control text-center fs-4"
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "5px",
-                      }}
-                      value={digit}
-                      maxLength="1"
-                      onChange={(e) => handleChange(index, e.target.value)}
-                    />
-                  ))}
-                </div>
-              </form>
+              <div className="d-flex justify-content-center gap-2">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`otp-${index}`}
+                    type="text"
+                    className="form-control text-center fs-4"
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "5px",
+                    }}
+                    value={digit}
+                    maxLength="1"
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    autoFocus={index === 0}
+                  />
+                ))}
+              </div>
             </div>
-
 
             <NavLink className="mt-4 d-block" to="/security-dashboard">
               <small>Scan QR Instead</small>
@@ -153,6 +173,7 @@ function GenerateByUniqueCode() {
       <div
         className="modal fade"
         id="printTagModal"
+        ref={modalRef}
         tabIndex="-1"
         aria-hidden="true"
       >
@@ -164,7 +185,8 @@ function GenerateByUniqueCode() {
             className="modal-content rounded-4 shadow-lg"
             style={{ border: "none" }}
           >
-            <div className="modal-header border-0 d-print-none">
+            <div className="modal-header border-0">
+              <h5 className="modal-title">Confirm Guest Visit</h5>
               <button
                 type="button"
                 className="btn-close"
@@ -174,10 +196,10 @@ function GenerateByUniqueCode() {
             </div>
 
             {userProfile && (
-              <div className="modal-body px-4" ref={printRef}>
+              <div className="modal-body px-4">
                 <div className="text-center mb-4">
                   <img
-                    src="../images/user.png"
+                    src={userProfile.photo || "../images/user.png"}
                     alt="User"
                     className="rounded-circle shadow"
                     style={{
@@ -202,7 +224,7 @@ function GenerateByUniqueCode() {
                 </div>
                 <div className="d-flex justify-content-between border-bottom py-4 small">
                   <span className="text-muted">ID No.</span>
-                  <span>{userProfile.ID_No}</span>
+                  <span>{userProfile.ID_No || "N/A"}</span>
                 </div>
                 <div className="d-flex justify-content-between border-bottom py-4 small">
                   <span className="text-muted">Host Name</span>
@@ -214,24 +236,42 @@ function GenerateByUniqueCode() {
                 </div>
                 <div className="d-flex justify-content-between border-bottom py-4 small">
                   <span className="text-muted">Contact Info</span>
-                  <span>{userProfile.contact_info}</span>
+                  <span>{userProfile.contact_info || "N/A"}</span>
                 </div>
                 <div className="d-flex justify-content-between border-bottom py-4 small">
-                  <span className="text-muted">Special Requi.</span>
-                  <span>{userProfile.special_request}</span>
+                  <span className="text-muted">Special Requirements</span>
+                  <span>{userProfile.special_request || "None"}</span>
                 </div>
                 <div className="d-flex justify-content-between border-bottom py-4 small">
                   <span className="text-muted">Visit Status</span>
-                  <span>{userProfile.status}</span>
+                  <span
+                    className={`badge bg-${
+                      userProfile.status === "confirmed" ? "success" : "warning"
+                    }`}
+                  >
+                    {userProfile.status}
+                  </span>
                 </div>
 
-                <div className="text-center mt-4 d-print-none">
+                <div className="text-center mt-4">
                   <button
                     type="button"
                     className="btn btn-primary w-100 rounded-3 py-2"
-                    onClick={handlePrint}
+                    onClick={handleConfirm}
+                    disabled={isUpdating}
                   >
-                    Confirm
+                    {isUpdating ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Confirming...
+                      </>
+                    ) : (
+                      "Confirm Visit"
+                    )}
                   </button>
                 </div>
               </div>
@@ -239,15 +279,6 @@ function GenerateByUniqueCode() {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          .modal-content, .modal-content * { visibility: visible; }
-          .modal-content { position: absolute; top: 0; left: 0; width: 100%; }
-          .btn, .btn-close, .modal-header, .d-print-none { display: none !important; }
-        }
-      `}</style>
     </div>
   );
 }

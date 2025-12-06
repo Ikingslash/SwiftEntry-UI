@@ -8,7 +8,8 @@ export const NotificationContext = createContext();
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth(); // must have user.id and user.role ("staff" | "security")
+  const [latestUnread, setLatestUnread] = useState([]); 
+  const { user } = useAuth();
 
   // Function to determine base endpoint based on role
   const getRolePrefix = useCallback((role) => {
@@ -47,17 +48,32 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [user, rolePrefix]);
 
+  // 👈 NEW FUNCTION: Fetch the top 3 unread notifications for the dropdown
+  const fetchLatestUnread = useCallback(async () => {
+    if (!user || !rolePrefix) return;
+    try {
+      const response = await api.get(`/${rolePrefix}/notifications/latest-unread`);
+      setLatestUnread(response.data.latest_unread_notifications || []);
+    } catch (error) {
+      console.error("Error fetching latest unread notifications:", error);
+    }
+  }, [user, rolePrefix]);
+
+
   const markNotificationsAsRead = useCallback(async () => {
     if (!user || !rolePrefix) return;
-    const prevCount = unreadCount; // keep old count in case of error
+    const prevCount = unreadCount;
     setUnreadCount(0);
     try {
-      await api.post(`/${rolePrefix}/notifications/mark-as-read`);
+      // Changed from 'mark-as-read' to 'mark-all-read'
+      await api.post(`/${rolePrefix}/notifications/mark-all-read`);
+      setLatestUnread([]);
     } catch (err) {
       console.error("Error marking notifications as read:", err);
-      setUnreadCount(prevCount); // revert if failed
+      setUnreadCount(prevCount);
     }
   }, [user, rolePrefix, unreadCount]);
+
 
   const markAsRead = useCallback(async (notificationId) => {
     if (!user || !rolePrefix) return;
@@ -65,15 +81,19 @@ export const NotificationProvider = ({ children }) => {
       await api.post(`/${rolePrefix}/notifications/mark-read`, {
         notification_id: notificationId,
       });
+      // Refresh count and dropdown after marking one as read
+      fetchNotificationCount();
+      fetchLatestUnread();
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
-  }, [user, rolePrefix]);
+  }, [user, rolePrefix, fetchNotificationCount, fetchLatestUnread]); // 👈 Added dependencies
 
   // Initial fetch
   useEffect(() => {
     fetchNotificationCount();
-  }, [fetchNotificationCount]);
+    fetchLatestUnread(); // 👈 Fetch dropdown list on load
+  }, [fetchNotificationCount, fetchLatestUnread]);
 
   // Real-time updates
   useEffect(() => {
@@ -85,13 +105,14 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount((prev) =>
           event.unreadCount !== undefined ? event.unreadCount : prev + 1
         );
+        fetchLatestUnread(); // 👈 Refresh dropdown on new notification
       });
 
       return () => {
         echo.leave(`notifications.${user.id}`);
       };
     }
-  }, [user]);
+  }, [user, fetchLatestUnread]); // 👈 Added dependency
 
   return (
     <NotificationContext.Provider
@@ -104,6 +125,8 @@ export const NotificationProvider = ({ children }) => {
         markNotificationsAsRead,
         markAsRead,
         setUnreadCount,
+        latestUnread, // 👈 Export latest unread list
+        fetchLatestUnread,
       }}
     >
       {children}

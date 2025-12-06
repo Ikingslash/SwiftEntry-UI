@@ -91,31 +91,35 @@ const handleExport = async () => {
     queryParams.append("format", exportFormat);
     queryParams.append("filter", activeFilters.timePeriod || "daily");
 
-    if (activeFilters.vip) queryParams.append("vip", true);
-    if (activeFilters.blacklist) queryParams.append("blacklist", true);
-    if (activeFilters.walkins) queryParams.append("walkins", true);
-    if (activeFilters.preregistered) queryParams.append("preregistered", true);
+    if (activeFilters.vip) queryParams.append("vip", "true");
+    if (activeFilters.blacklist) queryParams.append("blacklist", "true");
+    if (activeFilters.walkins) queryParams.append("walkins", "true");
+    if (activeFilters.preregistered) queryParams.append("preregistered", "true");
 
-    // ✅ FIXED: Ensure you call the correct backend route (with full path)
-    window.open(
-      `${
-        import.meta.env.VITE_API_BASE_URL || ""
-      }/api/admin/analytics/export?${queryParams.toString()}`,
-      "_blank"
-    );
+    // Create export URL
+    const exportUrl = `${api.defaults.baseURL}/admin/analytics/export?${queryParams.toString()}`;
 
-      // give small delay before closing modal
+    // Create a temporary link to trigger download
+    const link = document.createElement('a');
+    link.href = exportUrl;
+    link.setAttribute('download', '');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Close modal after short delay
     setTimeout(() => {
       setIsExporting(false);
       setShowExportModal(false);
-      alert(`Exporting report as ${exportFormat.toUpperCase()}...`);
-    }, 1200);
+      toast.success(`Report exported successfully as ${exportFormat.toUpperCase()}!`);
+    }, 1000);
+
   } catch (err) {
-    console.error("Error exporting report:", err.response?.data || err.message);
-    alert("Failed to export report. Please try again.");
+    console.error("Error exporting report:", err);
+    setIsExporting(false);
+    toast.error("Failed to export report. Please try again.");
   }
 };
-
   const handleFilterChange = (filterType, value) => {
     // This function updates the activeFilters state.
     // The useEffect hook, which depends on activeFilters, will then trigger fetchAnalyticsData.
@@ -136,7 +140,7 @@ const handleExport = async () => {
     setShowFilterModal(false);
   };
 
-  
+
 
   if (loading) {
     return <p className="text-center mt-5">Loading analytics data...</p>;

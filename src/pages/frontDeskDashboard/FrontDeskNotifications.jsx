@@ -54,12 +54,12 @@ const Pagination = ({ pagination, handlePageChange }) => {
   );
 };
 
-function FrontDeskNotifications() {
+function AdminNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [message, setMessage] = useState("Loading notifications...");
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({}); // State for pagination data
-  const [currentPage, setCurrentPage] = useState(1); // State for current page
+  const [pagination, setPagination] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);  
   // Get functions from the NotificationContext
   const { markNotificationsAsRead, fetchNotificationCount } = useNotifications();
   const location = useLocation();
@@ -67,10 +67,11 @@ function FrontDeskNotifications() {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
+      // Corrected API endpoint for admin notifications
       const response = await api.get("/front-desk/notifications", {
         params: {
           page: currentPage,
-          per_page: 10, // Assuming 10 items per page as per backend
+          per_page: 10,
         },
       });
 
@@ -101,7 +102,7 @@ function FrontDeskNotifications() {
   useEffect(() => {
     fetchNotifications();
 
-    // Mark notifications as read and update the count when navigating to this page
+    // Mark all notifications as read and update the count when navigating to this page (Point 4)
     if (location.pathname === "/front-desk-dashboard/notifications") {
       markNotificationsAsRead();
       fetchNotificationCount();
@@ -134,13 +135,13 @@ function FrontDeskNotifications() {
       case 'Success':
         return 'text-success';
       case 'Scheduled':
-        return 'text-info'; // Example color for 'Scheduled'
+        return 'text-info';
       case 'Rescheduled':
-        return 'text-primary'; // Example color for 'Rescheduled'
+        return 'text-primary';
       case 'Missed':
-        return 'text-danger'; // Example color for 'Missed'
+        return 'text-danger';
       case 'Cancelled':
-        return 'text-danger'; // Example color for 'Cancelled'
+        return 'text-danger';
       default:
         return 'text-secondary';
     }
@@ -170,7 +171,12 @@ function FrontDeskNotifications() {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bold mb-0">Notifications</h3>
-
+              <i
+                className="bi bi-plus-circle fs-1 text-white-50 p-2"
+                style={{ cursor: "pointer", transition: "0.3s" }}
+                onMouseOver={(e) => (e.target.style.color = "#0d6efd")}
+                onMouseOut={(e) => (e.target.style.color = "white")}
+              ></i>
             </div>
 
             <div
@@ -190,18 +196,32 @@ function FrontDeskNotifications() {
         ) : notifications.length > 0 ? (
           <>
             <div className="row">
-              {notifications.map((notification) => (
+              {notifications.map((notification) => {
+                // Point 4: Visual distinction for unread notifications
+                const isUnread = !notification.is_read;
+                const cardStyle = {
+                    borderRadius: "12px",
+                    // Use a subtle background color or highlight for unread
+                    backgroundColor: isUnread ? '#f0f8ff' : 'white', // Light blue for unread
+                    borderLeft: isUnread ? '4px solid #007bff' : '1px solid #e9ecef',
+                    transition: 'background-color 0.3s',
+                    cursor: 'pointer',
+                };
+
+                return (
                 <div key={notification.id} className="col-12 col-md-10 mx-auto mb-3">
                   <div
                     className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                    style={{ borderRadius: "12px" }}
+                    style={cardStyle} // Apply dynamic style
                   >
                     <div className="d-flex align-items-center w-100">
                       <div className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#e9f5ff' }}>
                         {getNotificationIcon(notification.category)}
                       </div>
                       <div className="flex-grow-1">
-                        <h6 className="mb-1 fw-bold text-dark">{notification.title || 'No Title'}</h6>
+                        <h6 className={`mb-1 ${isUnread ? 'fw-bold text-dark' : 'text-secondary'}`}>
+                            {notification.title || 'No Title'}
+                        </h6>
                         <p className="mb-0 text-muted" style={{ fontSize: "14px" }}>
                           {notification.message || "No message"}
                         </p>
@@ -220,7 +240,7 @@ function FrontDeskNotifications() {
                     </span>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
             {pagination.last_page > 1 && (
               <Pagination pagination={pagination} handlePageChange={handlePageChange} />
@@ -228,7 +248,7 @@ function FrontDeskNotifications() {
           </>
         ) : (
           <div className="text-center align-items-center p-5 text-muted">
-            <img src="../images/notification_bucket.png" width="400" height="400" alt="Notification" className="" />
+            <img src="https://placehold.co/400x400/E9F5FF/053561?text=No+Notifications" width="400" height="400" alt="Notification" className="img-fluid" />
             <h4 className="text-muted">{message}</h4>
           </div>
         )}
@@ -237,4 +257,4 @@ function FrontDeskNotifications() {
   );
 }
 
-export default FrontDeskNotifications;
+export default AdminNotifications;

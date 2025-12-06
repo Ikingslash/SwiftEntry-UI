@@ -1,8 +1,7 @@
-import { useRef, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
-// Pagination component to display page numbers and navigation buttons.
 const Pagination = ({ pagination, handlePageChange }) => {
   const { current_page, last_page } = pagination;
   const pages = [];
@@ -47,356 +46,161 @@ const Pagination = ({ pagination, handlePageChange }) => {
   );
 };
 
-
-function TabIncoming({ filters, searchQuery, refreshKey }) {
-  const [incomingVisits, setIncomingVisits] = useState([]);
+function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
+  const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
-  const [selectedVisitForModal, setSelectedVisitForModal] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [toast, setToast] = useState({ message: '', type: '' });
-    const printRef = useRef();
+  const [selectedVisit, setSelectedVisit] = useState(null);
 
-
-useEffect(() => {
-  console.log("[TabIncoming] Refresh triggered with refreshKey:", refreshKey);
-  fetchIncomingVisits();
-}, [refreshKey]);
-
-
-useEffect(() => {
-  const delay = setTimeout(() => {
+  useEffect(() => {
     fetchIncomingVisits();
-  }, 800);
-  return () => clearTimeout(delay);
-}, [filters, searchQuery, currentPage]);
+  }, [refreshKey, filters, searchQuery, currentPage]);
 
+  const fetchIncomingVisits = async () => {
+    setLoading(true);
+    try {
+      const visitorType = filters.group && !filters.individual ? "group" :
+                         filters.individual && !filters.group ? "individual" : "all";
 
+      const response = await api.get("/front-desk/guests/visits/incoming", {
+        params: {
+          visitor_type: visitorType,
+          search: searchQuery,
+          per_page: 8,
+          page: currentPage,
+        },
+      });
 
-const fetchIncomingVisits = async () => {
-  setLoading(true);
-  try {
-    // Determine visitor_type based on filters
-    let visitorTypeParam = "all";
-    if (filters.group && !filters.individual) {
-      visitorTypeParam = "group";
-    } else if (filters.individual && !filters.group) {
-      visitorTypeParam = "individual";
+      setVisits(response.data.visits || []);
+      setPagination(response.data.pagination || {});
+    } catch (error) {
+      console.error("Error fetching incoming visits:", error);
+      toast.error("Failed to fetch incoming visits");
+      setVisits([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Determine status_filter based on filters. Pending will filter for pre-registered visits.
-    let statusFilterParam = "scheduled_visit, pre_registered_visit, Walk_In";
-    if (filters.pending) {
-      statusFilterParam = "pre_registered_visit";
-    }
-
-    // Debug log
-    console.log("[TabIncoming] Fetching incoming visits with params:", {
-      visitor_type: visitorTypeParam,
-      status_filter: statusFilterParam,
-      search: searchQuery,
-      per_page: 10,
-      page: currentPage,
-      refreshKey,
-    });
-
-    // Make API call with dynamic parameters + cache-buster
-    const response = await api.get("/front-desk/guests/incoming", {
-      params: {
-        visitor_type: visitorTypeParam,
-        status_filter: statusFilterParam,
-        search: searchQuery,
-        per_page: 10,
-        page: currentPage,
-        // cache busting param to force fresh server response
-        _t: Date.now(),
-        // include refreshKey for transparency (optional)
-        refresh: refreshKey,
-      },
-      // ensure proxies / intermediate caches don't give stale responses
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    });
-
-    setIncomingVisits(response.data.visits || []);
-    setPagination(response.data.pagination || {});
-    console.log(
-      "[TabIncoming] fetchIncomingVisits success: items=",
-      (response.data.visits || []).length
-    );
-  } catch (error) {
-    console.error("Error fetching incoming visits:", error);
-    setIncomingVisits([]);
-    toast.error("Failed to fetch incoming visits. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  const handlePrintTagClick = (visit) => {
-    setSelectedVisitForModal(visit);
+  const handleCheckOut = async (visitId) => {
+    try {
+      await api.post(`/front-desk/guests/visits/${visitId}/check-out`);
+      toast.success("Visitor checked out successfully!");
+      fetchIncomingVisits();
+      onVisitAction();
+    } catch (error) {
+      console.error("Error checking out:", error);
+      toast.error(error.response?.data?.message || "Failed to check out visitor");
+    }
   };
 
-    const handlePrint = () => {
-      // Get the HTML content of the visit card
-      const element = printRef.current;
-
-      // Create a new window to print
-      const printWindow = window.open("", "", "height=600,width=800");
-      printWindow.document.write("<html><head><title>Visitor Badge</title>");
-      // Include Bootstrap CSS for styling in the print window
-      printWindow.document.write(
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-      );
-      printWindow.document.write("</head><body >");
-      printWindow.document.write('<div class="p-5">');
-      printWindow.document.write(element.outerHTML);
-      printWindow.document.write("</div>");
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
-
-      // Wait for the content to load and then print
-      printWindow.onload = function () {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      };
-    };
-
-
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return 'Not checked in';
+    const date = new Date(dateTime);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div>
       {loading ? (
-        <p className="text-center">Loading incoming visits...</p>
-      ) : incomingVisits.length === 0 ? (
-        <p className="text-center">No incoming visits found.</p>
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading incoming visits...</p>
+        </div>
+      ) : visits.length === 0 ? (
+        <div className="text-center py-5">
+          <i className="bi bi-door-open fs-1 text-muted"></i>
+          <h5 className="mt-3 text-muted">No incoming visits</h5>
+          <p className="text-muted">Check in visitors from Confirmed tab</p>
+        </div>
       ) : (
         <>
-          <div className="row mb-5">
-            {incomingVisits.map((visit) => (
-              <div key={visit.id} className="col-12 col-md-6 mb-4">
-                <div className="card shadow p-3 rounded-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <img
-                      src={`${visit.visitor_photo}`}
-                      alt="User"
-                      className="rounded-circle me-3"
-                      width="40"
-                      height="40"
-                      style={{ objectFit: "cover" }}
-                    />
-                    <div>
-                      <p className="mb-0">{visit.visitor_name}</p>
-                      <small className="text-muted">
-                        {visit.visitor_email}
-                      </small>
+          <div className="row row-cols-1 row-cols-md-2 g-4">
+            {visits.map((visit) => (
+              <div key={visit.id} className="col my-4">
+                <div className="card h-100 shadow border-start border-4 border-primary rounded-3">
+                  <div className="card-body p-3">
+                    <div className="d-flex align-items-start mb-3">
+                      <div className="flex-grow-1">
+                        <h6 className="card-title mb-1 fw-bold">
+                          {visit.visitor_name}
+                        </h6>
+                        <small className="text-muted">
+                          {visit.visitor_email}
+                        </small>
+                      </div>
+                      <span className="badge bg-primary">Checked In</span>
                     </div>
-                    {visit.is_verified && (
-                      <span
-                        className="ms-auto px-4 py-1 badge text-primary rounded-5"
-                        style={{ backgroundColor: "#E7F3FE" }}
-                      >
-                        Verified{" "}
-                        <span
-                          className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
-                          style={{
-                            width: "18px",
-                            height: "18px",
-                            fontSize: "12px",
-                            marginLeft: "4px",
-                          }}
-                        >
-                          ✓
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="container bg-light rounded p-3">
-                    <div className="row mb-3">
-                      <div className="col-3">
-                        <small className="">ID No</small>
-                        <p className="mb-0 text-muted">
-                          <small>{visit.visit_code}</small>{" "}
-                        </p>
+
+                    <div className="row g-2 mb-3">
+                      <div className="col-6">
+                        <small className="text-muted d-block">ID No</small>
+                        <strong>{visit.visit_code}</strong>
                       </div>
-                      <div className="col-3">
-                        <small className="">Time Checked in</small>
-                        <p className="mb-0 text-muted">
-                          <small>{visit.check_in_time}</small>{" "}
-                        </p>
+                      <div className="col-6">
+                        <small className="text-muted d-block">
+                          Check-in Time
+                        </small>
+                        <strong>{formatDateTime(visit.check_in)}</strong>
                       </div>
-                      <div className="col-3 ">
-                        <small className="">Visit Date</small>
-                        <p className="mb-0 text-muted">
-                          <small>{visit.visit_date}</small>{" "}
-                        </p>
+                      <div className="col-6">
+                        <small className="text-muted d-block">Host</small>
+                        <strong>{visit.host_name}</strong>
                       </div>
-                      <div className="col-3">
-                        <small className="">Host</small>
-                        <p className="mb-0 text-muted">
-                          <small>{visit.host_name}</small>{" "}
-                        </p>
+                      <div className="col-6">
+                        <small className="text-muted d-block">Duration</small>
+                        <strong>{visit.duration || "Calculating..."}</strong>
                       </div>
                     </div>
-                    <div
-                      className="flex-grow-1 my-2"
-                      style={{
-                        height: "2px",
-                        backgroundColor: "rgba(225, 228, 231, 0.8)",
-                      }}
-                    ></div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <small className="text-muted">Contact Info</small>
-                        <p className="mb-0">
-                          <small>{visit.visitor_contact_number}</small>
-                         
-                        </p>
-                      </div>
+
+                    <div className="d-flex justify-content-between">
+                      <i className="text-muted fs-6"></i>
                       <button
-                        className="btn btn-primary rounded-3 mt-4 w-50"
-                        data-bs-toggle="modal"
-                        data-bs-target="#printTagModal"
-                        onClick={() => handlePrintTagClick(visit)}
+                        className="btn btn-danger btn-sm"
+                        onClick={() => {
+                          if (
+                            window.confirm(`Check out ${visit.visitor_name}?`)
+                          ) {
+                            handleCheckOut(visit.id);
+                          }
+                        }}
                       >
-                        Print Tag
+                        <i className="bi bi-box-arrow-right me-1"></i> Check Out
                       </button>
                     </div>
+                  </div>
+                  <div className="card-footer bg-light border-top-0">
+                    <small className="text-muted">
+                      <i className="bi bi-clock-history me-1"></i>
+                      Currently visiting for{" "}
+                      {visit.current_duration || "a while"}
+                    </small>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+
           {pagination.last_page > 1 && (
-            <Pagination
-              pagination={pagination}
-              handlePageChange={handlePageChange}
-            />
+            <div className="mt-4">
+              <Pagination
+                pagination={pagination}
+                handlePageChange={handlePageChange}
+              />
+            </div>
           )}
         </>
       )}
-
-      {/* Modal - same as previous version */}
-      <div
-        className="modal fade"
-        id="printTagModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div
-          className="modal-dialog modal-lg py-4"
-          style={{
-            position: "fixed",
-            top: 0,
-            right: 0,
-            width: "50%",
-            maxWidth: "40%",
-            height: "100vh",
-            overflowY: "auto",
-          }}
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-                onClick={() => setSelectedVisitForModal(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {selectedVisitForModal ? (
-                <div ref={printRef} className="row g-3 container px-5">
-                  <div className="col-12">
-                    <img
-                      src={`${selectedVisitForModal.visitor_photo}`}
-                      alt="User"
-                      className="rounded-circle mb-3"
-                      width="80"
-                      height="80"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Guest Name</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedVisitForModal.visitor_name}</small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Visit Date</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedVisitForModal.visit_date}</small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-md-6">
-                    <small className="fw-bold">Visit Time</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedVisitForModal.check_in_time}</small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-md-6">
-                    <small className="fw-bold">Host Name</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedVisitForModal.host_name}</small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-md-6">
-                    <small className="fw-bold">Contact Info</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>
-                      {selectedVisitForModal.visitor_contact_number}
-                    </small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-md-6">
-                    <small className="fw-bold">Special Request</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedVisitForModal.special_requirements}</small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-md-6">
-                    <small className="fw-bold">Visit Status</small>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedVisitForModal.visit_status}</small>
-                  </div>
-                  <hr className="w-100" />
-                  <div className="col-12 text-center">
-                    <button
-                      type="button"
-                      className="btn btn-primary w-50"
-                      onClick={handlePrint}
-                    >
-                      Print Tag
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-muted">No visitor selected</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

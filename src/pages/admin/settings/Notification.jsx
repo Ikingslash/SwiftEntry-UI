@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../../../context/api"; 
+import api from "../../../context/api";
 import { toast } from 'react-toastify';
 import { Switch } from '@headlessui/react';
 
@@ -24,10 +24,10 @@ function Notification() {
       const response = await api.get("/admin/settings");
       // Access the notification_preferences object from the response
       setPreferences(response.data.notification_preferences);
-      toast.success("Notification preferences loaded successfully!");
+      // toast.success("Notification preferences loaded successfully!");
     } catch (err) {
       console.error("Error fetching notification preferences:", err.response?.data || err.message);
-       toast.error("Failed to load notification preferences. Please try again.");
+      //  toast.error("Failed to load notification preferences. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -46,9 +46,9 @@ function Notification() {
        toast.success(`Notification for '${key}' updated successfully!`);
       // No need to re-fetch if optimistic update is reliable
     } catch (err) {
-      console.error(`Error updating notification preference '${key}':`, err.response?.data || err.message); 
-       toast.error(`Failed to update preference: ` + (err.response?.data?.message || err.message));
-      
+      console.error(`Error updating notification preference '${key}':`, err.response?.data || err.message);
+      //  toast.error(`Failed to update preference: ` + (err.response?.data?.message || err.message));
+
       // Revert on error
       setPreferences(prev => ({ ...prev, [key]: !newValue }));
     }
