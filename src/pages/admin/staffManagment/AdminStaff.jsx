@@ -1,14 +1,14 @@
 import { useState } from "react";
 import NavBar from "../include/NavBar";
 import ManageStaffTable from "./ManageStaffTable";
-import api from "../../../context/api"; 
+import api from "../../../context/api";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 
 function AdminStaff() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
-   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newStaffFormData, setNewStaffFormData] = useState({
     name: "",
     email: "",
@@ -17,7 +17,6 @@ function AdminStaff() {
     position: "",
     company_name: "",
     status: "1",
-    password: "",
     photo: null,
   });
   const [selectedImage, setSelectedImage] = useState(null);
@@ -35,7 +34,6 @@ function AdminStaff() {
       position: "",
       company_name: "",
       status: "1",
-      password: "",
       photo: null,
     });
     setSelectedImage(null);
@@ -65,31 +63,30 @@ function AdminStaff() {
     }
   };
 
-     const showValidationErrors = (error) => {
-      if (error.response && error.response.status === 422) {
-        let validationErrors = error.response.data.errors || error.response.data;
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
 
-        if (typeof validationErrors === "string") {
-          toast.error(validationErrors);
-          return;
-        }
-
-        Object.values(validationErrors).forEach((messages) => {
-          if (Array.isArray(messages)) {
-            messages.forEach((msg) => toast.error(msg));
-          } else if (typeof messages === "string") {
-            toast.error(messages);
-          }
-        });
-      } else {
-        toast.error(
-          error.response?.data?.message ||
-            error.message ||
-            "Something went wrong. Please try again."
-        );
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
       }
-    };
 
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Something went wrong. Please try again."
+      );
+    }
+  };
 
   const handleAddNewStaff = async (e) => {
     e.preventDefault();
@@ -97,8 +94,11 @@ function AdminStaff() {
     setIsSubmitting(true);
     const formData = new FormData();
 
+    // Don't send password field
     Object.entries(newStaffFormData).forEach(([key, value]) => {
-      formData.append(key, value);
+      if (key !== 'password') { // Remove password from form data
+        formData.append(key, value);
+      }
     });
 
     try {
@@ -109,8 +109,8 @@ function AdminStaff() {
       console.log("Staff added:", response.data);
       handleAddModalClose();
       triggerRefresh();
-      toast.success("Staff added successfully!");
-    }  catch (error) {
+      toast.success("Staff added successfully! An invitation email has been sent to the staff member.");
+    } catch (error) {
       showValidationErrors(error);
       console.log("Validation errors:", error.response?.data);
     } finally {
@@ -293,7 +293,7 @@ function AdminStaff() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label">Email</label>
+                      <label className="form-label">Email*</label>
                       <input
                         type="email"
                         className="form-control"
@@ -303,6 +303,7 @@ function AdminStaff() {
                         placeholder="Enter email"
                         required
                       />
+                      <small className="text-muted">An invitation email will be sent to this address</small>
                       {formErrors.email && (
                         <div className="text-danger small">
                           {formErrors.email[0]}
@@ -360,18 +361,7 @@ function AdminStaff() {
                       />
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label">Temporary Password</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        name="password"
-                        value={newStaffFormData.password}
-                        onChange={handleNewStaffFormChange}
-                        placeholder="Enter temporary password"
-                        required
-                      />
-                    </div>
+                    {/* REMOVED TEMPORARY PASSWORD FIELD */}
 
                     <div className="mt-4 text-center">
                       <button
@@ -386,10 +376,10 @@ function AdminStaff() {
                               role="status"
                               aria-hidden="true"
                             ></span>
-                            Saving...
+                            Sending Invitation...
                           </>
                         ) : (
-                          "Save"
+                          "Send Invitation"
                         )}
                       </button>
                     </div>

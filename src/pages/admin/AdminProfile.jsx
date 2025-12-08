@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../context/api";
 import NavBar from "./include/NavBar";
-import { toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AdminProfile() {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ export default function AdminProfile() {
   return (
     <>
       <NavBar />
+        <ToastContainer position="top-right" autoClose={5000} />
       <div className="container-fluid py-5" style={{ backgroundColor: "#F5FAFE", minHeight: "100vh" }}>
         <div className="container mt-5">
           <div className="row justify-content-center">
