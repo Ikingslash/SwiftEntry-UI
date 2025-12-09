@@ -55,7 +55,7 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPriorityAlerts from "./pages/admin/AdminPriorityAlerts";
 import AdminLatestUpdates from "./pages/admin/AdminLatestUpdates";
 import AdminNewGuest from "./pages/admin/registerVisit/NewGuest";
-import SetupPassword from "./pages/admin/SetupPassword";
+import SetupPassword from "./pages/SetupPassword";
 
 <Route path="/admin/new-guest" element={<AdminNewGuest />} />
 
