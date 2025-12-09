@@ -32,13 +32,13 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
   // Fetch data on component mount, when refreshKey changes, or when page changes
   useEffect(() => {
     fetchCompletedVisits();
-  }, [refreshKey, page]); // Added 'page' to the dependency array
+  }, [refreshKey, page]);
 
   const fetchCompletedVisits = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Include the 'page' parameter in the API call
+
       const response = await api.get(`/admin/visits/completed?page=${page}`);
       setVisits(response.data.visits);
       setPagination(response.data.pagination);
@@ -46,7 +46,7 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
       console.error("Error fetching completed visits:", err.response?.data || err.message);
       setError("Failed to load completed visits. Please try again.");
       setVisits({});
-      setPagination({}); // Reset pagination on error
+      setPagination({});
     } finally {
       setLoading(false);
     }
@@ -187,7 +187,7 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
                     <tr key={idx}>
                       <td>{visit.visitor_name}</td>
                       <td>{visit.host_name}</td>
-                      <td>{visit.visit_date_formatted}, {visit.check_in_time_formatted}</td>
+                      <td>{visit.visit_date_formatted}, {visit.visit_time_formatted}</td>
                       <td>{visit.visitor_type}</td>
                       <td>{visit.check_in_time_formatted}</td>
                       <td>{visit.check_out_time_formatted}</td>
