@@ -27,8 +27,7 @@ function SetupPassword() {
       allParams: Object.fromEntries(searchParams.entries())
     });
 
-    if (token && email) {
-      // Set form data immediately
+    if (token && email) { 
       setFormData(prev => ({
         ...prev,
         token,
@@ -84,8 +83,6 @@ function SetupPassword() {
     } catch (error) {
       console.error("Token validation error:", error);
 
-      // If validation fails, still allow user to try setting password
-      // (backend will validate again during setup)
       setValidToken(true);
       toast.warning("Unable to validate token. You can still try to set password.");
     } finally {

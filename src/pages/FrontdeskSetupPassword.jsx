@@ -97,86 +97,77 @@ function FrontdeskSetupPassword() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+   e.preventDefault();
 
-    // Frontend validation
-    if (formData.password !== formData.password_confirmation) {
-      toast.error("Passwords do not match");
-      return;
-    }
+   // Frontend validation
+   if (formData.password !== formData.password_confirmation) {
+     toast.error("Passwords do not match");
+     return;
+   }
 
-    if (formData.password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
+   if (formData.password.length < 8) {
+     toast.error("Password must be at least 8 characters");
+     return;
+   }
 
-    setLoading(true);
+   if (!formData.token || !formData.email) {
+     toast.error("Invalid setup link");
+     return;
+   }
 
-    console.log("Submitting password setup:", {
-      email: formData.email,
-      tokenLength: formData.token?.length
-    });
+   setLoading(true);
 
-    try {
-      // Try different endpoints for setup
-      const endpoints = [
-        "/api/admin/frontdesk/setup-password",
-        "/admin/frontdesk/setup-password",
-        "/admin/frontdesk/setup-password",
-        "/api/admin/frontdesk/setup-password",
-        "/admin/frontdesk/setup-password",
-      ];
+   // Debug logging
+   console.log("Submitting setup password request:", {
+     email: formData.email,
+     token: formData.token,
+     tokenLength: formData.token.length,
+     passwordLength: formData.password.length,
+     endpoint: "/admin/frontdesk/setup-password",
+   });
 
-      let success = false;
-      let errorMessage = "Setup failed";
+   try {
+     // Use the correct endpoint
+     const response = await api.post("/admin/frontdesk/setup-password", formData);
+     console.log("Setup password response:", response.data);
 
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`Trying setup endpoint: ${endpoint}`);
-          const response = await api.post(endpoint, formData);
+     if (response.data.success) {
+       toast.success("Password set successfully! You can now login.");
+       setTimeout(() => {
+         navigate("/");
+       }, 2000);
+     }
+   } catch (error) {
+     console.error("Setup password error:", {
+       status: error.response?.status,
+       data: error.response?.data,
+       message: error.message,
+       config: error.config,
+     });
 
-          if (response.data && response.data.success) {
-            toast.success("Password set successfully! You can now login.");
-            success = true;
-
-            setTimeout(() => {
-              navigate('/login');
-            }, 2000);
-            break;
-          }
-        } catch (err) {
-          console.log(`Endpoint ${endpoint} failed:`, err.response?.data || err.message);
-          errorMessage = err.response?.data?.message || err.message;
-          continue;
-        }
-      }
-
-      if (!success) {
-        toast.error(errorMessage);
-      }
-    } catch (error) {
-      console.error("Setup password error:", error);
-
-      if (error.response?.status === 422) {
-        const errors = error.response.data.errors || {};
-        Object.values(errors).forEach(errArray => {
-          errArray.forEach(err => toast.error(err));
-        });
-      } else if (error.response?.status === 401) {
-        // toast.error("Invalid or expired setup link");
-        console.error("Unauthorized:", error.response.data);
-      } else if (error.response?.status === 400) {
-        // toast.error(error.response.data.message || "Bad request");
-        console.error("Bad Request:", error.response.data);
-      } else {
-        // toast.error("Something went wrong. Please try again.");
-        console.error("Unexpected error:", error.response?.data || error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+     if (error.response?.status === 422) {
+       const errors = error.response.data.errors || {};
+       Object.values(errors).forEach((errArray) => {
+         if (Array.isArray(errArray)) {
+           errArray.forEach((err) => toast.error(err));
+         } else {
+           toast.error(errArray);
+         }
+       });
+     } else if (error.response?.status === 404) {
+       toast.error(
+         "Invalid setup link. The token may be incorrect or expired."
+       );
+     } else if (error.response?.status === 400) {
+       toast.error(error.response.data.message || "Setup link has expired");
+     } else {
+       toast.error("Something went wrong. Please try again.");
+     }
+   } finally {
+     setLoading(false);
+   }
+ };
 
   if (checkingToken) {
     return (
