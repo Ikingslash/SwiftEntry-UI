@@ -55,6 +55,7 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminPriorityAlerts from "./pages/admin/AdminPriorityAlerts";
 import AdminLatestUpdates from "./pages/admin/AdminLatestUpdates";
 import AdminNewGuest from "./pages/admin/registerVisit/NewGuest";
+import SetupPassword from "./pages/admin//SetupPassword";
 
 <Route path="/admin/new-guest" element={<AdminNewGuest />} />
 
@@ -72,6 +73,7 @@ function App() {
            <Route path="/forgot-password" element={<ForgotPassword />} />
            <Route path="/verify-account" element={<VerifyAccount />} />
            <Route path="/set-new-password" element={<SetNewPassword />} />
+           <Route path="/setup-password" element={<SetupPassword />} />
 
            {/* Protected Routes */}
            <Route
