@@ -187,7 +187,7 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
                     <tr key={idx}>
                       <td>{visit.visitor_name}</td>
                       <td>{visit.host_name}</td>
-                      <td>{visit.visit_date_formatted}, {visit.visit_time_formatted}</td>
+                      <td>{visit.visit_time}</td>
                       <td>{visit.visitor_type}</td>
                       <td>{visit.check_in_time_formatted}</td>
                       <td>{visit.check_out_time_formatted}</td>
