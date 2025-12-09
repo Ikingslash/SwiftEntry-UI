@@ -1,6 +1,6 @@
 import { useState } from "react";
 import NavBar from "../include/NavBar";
-import ManageStaffTable from "./ManageStaffTable";
+import ManageStaffTable from "./ManageFrontdeskTable";
 import api from "../../../context/api";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
