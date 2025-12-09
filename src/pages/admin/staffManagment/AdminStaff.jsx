@@ -12,7 +12,6 @@ function AdminStaff() {
   const [newStaffFormData, setNewStaffFormData] = useState({
     name: "",
     email: "",
-    role: "",
     department: "",
     position: "",
     company_name: "",
@@ -29,7 +28,6 @@ function AdminStaff() {
     setNewStaffFormData({
       name: "",
       email: "",
-      role: "",
       department: "",
       position: "",
       company_name: "",
@@ -310,20 +308,6 @@ function AdminStaff() {
                         </div>
                       )}
                     </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Job Role</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="role"
-                        value={newStaffFormData.role}
-                        onChange={handleNewStaffFormChange}
-                        placeholder="Enter job role"
-                        required
-                      />
-                    </div>
-
                     <div className="mb-3">
                       <label className="form-label">Department</label>
                       <input
@@ -373,7 +357,6 @@ function AdminStaff() {
                           <>
                             <span
                               className="spinner-border spinner-border-sm me-2"
-                              role="status"
                               aria-hidden="true"
                             ></span>
                             Sending Invitation...
