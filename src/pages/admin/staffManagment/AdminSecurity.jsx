@@ -16,8 +16,7 @@ function AdminSecurity() {
     role: "security",
     position: "",
     company_name: "",
-    department: "",
-    password: "",
+    department: "", 
     photo: null,
   });
 
@@ -37,7 +36,6 @@ function AdminSecurity() {
       position: "",
       company_name: "",
       department: "",
-      password: "",
       photo: null,
     });
     setSelectedImage(null);
@@ -112,7 +110,6 @@ function AdminSecurity() {
     formData.append("position", newStaffFormData.position);
     formData.append("company_name", newStaffFormData.company_name);
     formData.append("department", newStaffFormData.department);
-    formData.append("password", newStaffFormData.password);
 
     if (newStaffFormData.photo) {
       formData.append("photo", newStaffFormData.photo);
@@ -362,19 +359,7 @@ function AdminSecurity() {
                         />
                       </div>
 
-                      {/* Password */}
-                      <div className="mb-3">
-                        <label className="form-label">Temporary Password</label>
-                        <input
-                          type="password"
-                          className="form-control"
-                          name="password"
-                          value={newStaffFormData.password}
-                          onChange={handleNewStaffFormChange}
-                          placeholder="Enter temporary password"
-                          required
-                        />
-                      </div>
+
                     </div>
 
                     <div className="mt-4 text-center">

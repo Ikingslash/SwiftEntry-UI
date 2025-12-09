@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../../../context/api";
 import NavBar from "../include/NavBar";
-import ManageFrontdeskTable from "./ManageFrontdeskTable"; 
+import ManageFrontdeskTable from "./ManageFrontdeskTable";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 
@@ -12,9 +12,10 @@ function AdminFrontdesk() {
   const [newStaffFormData, setNewStaffFormData] = useState({
     name: "",
     email: "",
-    role: "",
+    role: "frontdesk",
+    position: "",
     company_name: "",
-    password: "",
+    department: "",
     photo: null,
   });
   const [selectedImage, setSelectedImage] = useState(null);
@@ -30,10 +31,13 @@ function AdminFrontdesk() {
     setNewStaffFormData({
       name: "",
       email: "",
-      role: "",
       company_name: "",
-      password: "",
+      role: "frontdesk",
+      position: "",
+      company_name: "",
+      department: "",
       photo: null,
+
     });
     setSelectedImage(null);
     setPhotoFile(null);
@@ -102,9 +106,10 @@ function AdminFrontdesk() {
 
     formData.append("name", newStaffFormData.name);
     formData.append("email", newStaffFormData.email);
-    formData.append("role", newStaffFormData.role);
+     formData.append("role", newStaffFormData.role);
     formData.append("company_name", newStaffFormData.company_name);
-    formData.append("password", newStaffFormData.password);
+    formData.append("position", newStaffFormData.position);
+    formData.append("department", newStaffFormData.department);
 
     // ✅ Corrected file append condition
     if (newStaffFormData.photo instanceof File) {
@@ -131,7 +136,7 @@ function AdminFrontdesk() {
   return (
     <div>
       <NavBar />
-        <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer position="top-right" autoClose={5000} />
       <header
         id="home"
         className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
@@ -321,23 +326,6 @@ function AdminFrontdesk() {
                         )}
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">Job Role</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="role"
-                          value={newStaffFormData.role}
-                          onChange={handleNewStaffFormChange}
-                          placeholder="Enter job role"
-                          required
-                        />
-                        {formErrors.role && (
-                          <div className="text-danger small">
-                            {formErrors.role[0]}
-                          </div>
-                        )}
-                      </div>
-                      <div className="mb-3">
                         <label className="form-label">Company Name</label>
                         <input
                           type="text"
@@ -355,42 +343,49 @@ function AdminFrontdesk() {
                         )}
                       </div>
                       <div className="mb-3">
-                        <label className="form-label">Temporary Password</label>
+                        <label className="form-label">Position</label>
                         <input
-                          type="password"
+                          type="text"
                           className="form-control"
-                          name="password"
-                          value={newStaffFormData.password}
+                          name="position"
+                          value={newStaffFormData.position}
                           onChange={handleNewStaffFormChange}
-                          placeholder="Enter temporary password"
+                          placeholder="Enter position (e.g. Gate Officer)"
                           required
                         />
-                        {formErrors.password && (
-                          <div className="text-danger small">
-                            {formErrors.password[0]}
-                          </div>
-                        )}
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label">Department</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="department"
+                          value={newStaffFormData.department}
+                          onChange={handleNewStaffFormChange}
+                          placeholder="Enter department"
+                          required
+                        />
                       </div>
                     </div>
                     <div className="mt-4 text-center">
-                        <button
-                          type="submit"
-                          className="btn btn-primary w-50"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <span
-                                className="spinner-border spinner-border-sm me-2"
-                                role="status"
-                                aria-hidden="true"
-                              ></span>
-                              Saving...
-                            </>
-                          ) : (
-                            "Save"
-                          )}
-                        </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary w-50"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            Saving...
+                          </>
+                        ) : (
+                          "Save"
+                        )}
+                      </button>
                     </div>
                   </div>
                 </form>
