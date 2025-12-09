@@ -56,6 +56,8 @@ import AdminPriorityAlerts from "./pages/admin/AdminPriorityAlerts";
 import AdminLatestUpdates from "./pages/admin/AdminLatestUpdates";
 import AdminNewGuest from "./pages/admin/registerVisit/NewGuest";
 import SetupPassword from "./pages/SetupPassword";
+import FrontdeskSetupPassword from "./pages/FrontdeskSetupPassword";
+import SecuritySetupPassword from "./pages/SecuritySetupPassword";
 
 <Route path="/admin/new-guest" element={<AdminNewGuest />} />
 
@@ -74,6 +76,8 @@ function App() {
            <Route path="/verify-account" element={<VerifyAccount />} />
            <Route path="/set-new-password" element={<SetNewPassword />} />
            <Route path="/setup-password" element={<SetupPassword />} />
+           <Route path="/frontdesk-setup-password" element={<FrontdeskSetupPassword />} />
+           <Route path="/security-setup-password" element={<SecuritySetupPassword />} />
 
            {/* Protected Routes */}
            <Route

@@ -164,11 +164,14 @@ function SetupPassword() {
           errArray.forEach(err => toast.error(err));
         });
       } else if (error.response?.status === 401) {
-        toast.error("Invalid or expired setup link");
+        // toast.error("Invalid or expired setup link");
+        console.error("Unauthorized:", error.response.data);
       } else if (error.response?.status === 400) {
-        toast.error(error.response.data.message || "Bad request");
+        // toast.error(error.response.data.message || "Bad request");
+        console.error("Bad Request:", error.response.data);
       } else {
-        toast.error("Something went wrong. Please try again.");
+        // toast.error("Something went wrong. Please try again.");
+        console.error("Unexpected error:", error.response?.data || error.message);
       }
     } finally {
       setLoading(false);
@@ -191,6 +194,7 @@ function SetupPassword() {
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
+         <ToastContainer position="top-right" autoClose={5000} />
         <div className="col-md-6">
           <div className="card shadow">
             <div className="card-header bg-primary text-white">
