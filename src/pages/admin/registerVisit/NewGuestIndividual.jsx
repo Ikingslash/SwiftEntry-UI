@@ -147,20 +147,27 @@ export default function NewGuestIndividual() {
       }
     });
 
-    if (formData.visit_time) {
-      const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime)) {
-        const formattedVisitTime = visitTime
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ");
-        formDataToSend.append("visit_time", formattedVisitTime);
-      } else {
-        toast.error("Invalid visit time format.");
-        setLoading(false);
-        return;
+      // Fix for timezone issue
+      if (formData.visit_time) {
+        const visitTime = new Date(formData.visit_time);
+        if (!isNaN(visitTime.getTime())) {
+          // Convert to UTC to avoid timezone issues
+          const utcTime = new Date(
+            visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
+          );
+          const formattedVisitTime = utcTime
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ");
+          formDataToSend.append("visit_time", formattedVisitTime);
+          console.log("Original time:", formData.visit_time);
+          console.log("Sending UTC time:", formattedVisitTime);
+        } else {
+          toast.error("Invalid visit time format.");
+          setLoading(false);
+          return;
+        }
       }
-    }
 
     // Append host fields
     formDataToSend.append("host_id", formData.host_id);
@@ -231,7 +238,7 @@ export default function NewGuestIndividual() {
           purpose: "",
           special_requirements: "",
           emergency_contact: "",
-          details: "", 
+          details: "",
         });
         setSelectedImage(null);
          toast.success("Group visitor registered!");

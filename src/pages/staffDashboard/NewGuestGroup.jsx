@@ -100,14 +100,6 @@ const handleChange = (e) => {
   setFormData({ ...formData, [name]: value });
 };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    setFormData((prev) => ({ ...prev, photo: file }));
-    setSelectedImage(URL.createObjectURL(file));
-  }
-};
-
 const showValidationErrors = (error) => {
   if (error.response && error.response.status === 422) {
     let validationErrors = error.response.data.errors || error.response.data;
@@ -147,7 +139,6 @@ const showValidationErrors = (error) => {
 
     Object.entries(formData).forEach(([key, value]) => {
       if (
-        key !== "photo" &&
         key !== "visit_time" &&
         key !== "host_id" &&
         key !== "host_role" &&
@@ -157,24 +148,28 @@ const showValidationErrors = (error) => {
       }
     });
 
-  if (formData.visit_time) {
-      const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime)) {
-        const formattedVisitTime = visitTime
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ");
-        formDataToSend.append("visit_time", formattedVisitTime);
-      } else {
-        toast.error("Invalid visit time format.");
-        setLoading(false);
-        return;
-      }
-    }
+   // Fix for timezone issue
+   if (formData.visit_time) {
+     const visitTime = new Date(formData.visit_time);
+     if (!isNaN(visitTime.getTime())) {
+       // Convert to UTC to avoid timezone issues
+       const utcTime = new Date(
+         visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
+       );
+       const formattedVisitTime = utcTime
+         .toISOString()
+         .slice(0, 19)
+         .replace("T", " ");
+       formDataToSend.append("visit_time", formattedVisitTime);
+       console.log("Original time:", formData.visit_time);
+       console.log("Sending UTC time:", formattedVisitTime);
+     } else {
+       toast.error("Invalid visit time format.");
+       setLoading(false);
+       return;
+     }
+   }
 
-    if (formData.photo) {
-      formDataToSend.append("photo", formData.photo);
-    }
 
     // host fields
      formDataToSend.append("host_id", formData.host_id);
@@ -222,7 +217,6 @@ const showValidationErrors = (error) => {
           purpose: visit.purpose,
           Contact_info: visitor.contact_number,
           address: visitor.address,
-          photo: visitor.photo,
         });
 
         if (visit.code) {
@@ -247,7 +241,6 @@ const showValidationErrors = (error) => {
           emergency_contact: "",
           previsit_instruction: "",
           details: "",
-          photo: null,
         });
         setSelectedImage(null);
 
@@ -504,7 +497,7 @@ const showValidationErrors = (error) => {
                 {/* Additional Information */}
                 <div className="p-4">
                   <h5 className="fw-bold">Additional Information</h5>
-                  
+
                 </div>
                 <div className="my-3">
                   <label className="form-label">Name of Organization</label>
