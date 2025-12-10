@@ -282,11 +282,11 @@ function Navbar() {
               <li>
                 <NavLink
                   className={`dropdown-item py-2 ${
-                    location.pathname === "/front-desk-dashboard/settings"
+                    location.pathname === "/front-desk-dashboard/front-desk-settings"
                       ? "text-primary bg-white fw-bold"
                       : "text-dark bg-white"
                   }`}
-                  to="/front-desk-dashboard/settings"
+                  to="/front-desk-dashboard/front-desk-settings"
                 >
                   Settings
                 </NavLink>

@@ -78,7 +78,7 @@ const handleChange = (e) => {
 
     // Map the role names to match backend expectations
     const roleMap = {
-      'front_desk': 'frontdesk',
+      'front_desk': 'front_desk',
       'staff': 'staff',
       'security': 'security',
       'admin': 'admin'
