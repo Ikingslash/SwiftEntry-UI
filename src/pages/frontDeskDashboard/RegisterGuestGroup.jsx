@@ -208,7 +208,7 @@ function RegisterGuestGroup() {
        } else {
          console.warn("Host ID or Role missing, skipping host notification.");
        }
-       const visitTimeParts = visit?.check_in?.split(" ") || [];
+       const visitTimeParts = visit?.visit_time?.split(" ") || [];
 
        const date = visitTimeParts?.[0] || "";
        const time = visitTimeParts?.[1] || "";

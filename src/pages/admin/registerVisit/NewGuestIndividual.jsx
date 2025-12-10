@@ -205,7 +205,7 @@ export default function NewGuestIndividual() {
           }
         }
 
-        const visitTimeParts = visit?.check_in?.split(" ") || [];
+        const visitTimeParts = visit?.visit_time?.split(" ") || [];
         const date = visitTimeParts?.[0] || "";
         const time = visitTimeParts?.[1] || "";
 
