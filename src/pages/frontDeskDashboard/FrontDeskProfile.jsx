@@ -7,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { IoPencil } from 'react-icons/io5';
 
-// Removed the Pagination component as it's not relevant for a profile page.
-
 function FrontDeskProfile() {
   const navigate = useNavigate();
   const { logout, updateUser } = useAuth(); // Assume AuthContext provides 'user' and 'logout'
@@ -16,12 +14,10 @@ function FrontDeskProfile() {
   const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
-      name: "",
-      email: "",
       position: "",
-      company_name: "",
-      employee_id: "",
     });
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
 
 
   // Function to fetch the user's profile data
@@ -31,7 +27,10 @@ function FrontDeskProfile() {
     try {
       const response = await api.get("front-desk/profile");
       setProfileData(response.data);
-      setFormData(response.data);
+      setFormData({ position: response.data.position || "" });
+      // Reset image preview when modal is opened with existing data
+      setImagePreview(null);
+      setImageFile(null);
 
       toast.success("Profile loaded successfully!");
     } catch (error) {
@@ -63,6 +62,9 @@ function FrontDeskProfile() {
 
     const handleEditClick = () => {
       setIsModalOpen(true);
+      // Reset image preview when opening modal
+      setImagePreview(null);
+      setImageFile(null);
     };
 
     const handleFormChange = (e) => {
@@ -73,17 +75,62 @@ function FrontDeskProfile() {
       }));
     };
 
+    const handleImageChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error("Please select a valid image file");
+          return;
+        }
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error("Image size should be less than 5MB");
+          return;
+        }
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+      } else {
+        setImageFile(null);
+        setImagePreview(null);
+      }
+    };
+
     const handleFormSubmit = async (e) => {
       e.preventDefault();
       try {
-        // Send the updated data to the backend
-        const response = await api.put("/front-desk/update-profile", formData);
+        let response;
+        
+        // If image is selected, use FormData
+        if (imageFile) {
+          const formDataToSend = new FormData();
+          formDataToSend.append('name', formData.name);
+          formDataToSend.append('email', formData.email);
+          formDataToSend.append('position', formData.position);
+          formDataToSend.append('company_name', formData.company_name);
+          formDataToSend.append('employee_id', formData.employee_id);
+          formDataToSend.append('profile_picture', imageFile);
+
+          response = await api.put("/front-desk/update-profile", formDataToSend, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        } else {
+          // If no image, send JSON as before
+          response = await api.put("/front-desk/update-profile", formData);
+        }
+
          // Get the updated profile data from backend
              const updatedData = response.data;
 
              // Update both local and global states
              setProfileData(updatedData);
              updateUser(updatedData);
+
+             // Reset image states
+             setImageFile(null);
+             setImagePreview(null);
 
              // Close modal
              setIsModalOpen(false);
@@ -98,7 +145,7 @@ function FrontDeskProfile() {
 
 
   // Placeholder image for when a profile picture isn't available
-  const defaultProfilePicture = "https://placehold.co/100x100";
+  const defaultProfilePicture = "https://placehold.co/120x120/E0E7FF/6B7280?text=No+Image";
 
   if (loading) {
     return (
@@ -129,13 +176,20 @@ function FrontDeskProfile() {
                 {/* Profile Picture and Staff Badge */}
                 <div className="text-center mt-4">
                   <img
-                    src={profileData?.profile_picture || defaultProfilePicture}
+                    src={
+                      profileData?.profile_picture && profileData.profile_picture.trim() !== ""
+                        ? profileData.profile_picture
+                        : defaultProfilePicture
+                    }
                     alt="Profile"
                     className="rounded-circle mb-3"
                     style={{
                       width: "120px",
                       height: "120px",
                       objectFit: "cover",
+                    }}
+                    onError={(e) => {
+                      e.target.src = defaultProfilePicture;
                     }}
                   />
                   <div
@@ -245,6 +299,44 @@ function FrontDeskProfile() {
             </div>
             <div className="modal-body">
               <form onSubmit={handleFormSubmit}>
+                {/* Profile Picture Upload */}
+                <div className="mb-4 text-center">
+                  <label htmlFor="profile_picture" className="form-label d-block">
+                    Profile Picture
+                  </label>
+                  <div className="d-flex flex-column align-items-center">
+                    <img
+                      src={
+                        imagePreview ||
+                        (profileData?.profile_picture && profileData.profile_picture.trim() !== ""
+                          ? profileData.profile_picture
+                          : defaultProfilePicture)
+                      }
+                      alt="Profile Preview"
+                      className="rounded-circle mb-3"
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        objectFit: "cover",
+                      }}
+                      onError={(e) => {
+                        e.target.src = defaultProfilePicture;
+                      }}
+                    />
+                    <input
+                      type="file"
+                      className="form-control"
+                      id="profile_picture"
+                      name="profile_picture"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ maxWidth: "300px" }}
+                    />
+                    <small className="text-muted mt-2">
+                      Accepted formats: JPG, PNG, GIF (Max 5MB)
+                    </small>
+                  </div>
+                </div>
                 <div className="mb-3">
                   <label htmlFor="name" className="form-label">
                     Name
