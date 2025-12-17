@@ -14,12 +14,10 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
     position: "",
-    company_name: "",
-    employee_id: "",
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Function to fetch the user's profile data
   const fetchProfileData = async () => {
@@ -27,7 +25,10 @@ export default function Profile() {
     try {
       const response = await api.get("/staff/profile");
       setProfileData(response.data);
-      setFormData(response.data);
+      setFormData({ position: response.data.position || "" });
+      // Reset image preview when modal is opened with existing data
+      setImagePreview(null);
+      setImageFile(null);
       toast.success("Profile loaded successfully!");
     } catch (error) {
       console.error("Error fetching profile data:", error);
@@ -57,6 +58,9 @@ export default function Profile() {
 
   const handleEditClick = () => {
     setIsModalOpen(true);
+    // Reset image preview when opening modal
+    setImagePreview(null);
+    setImageFile(null);
   };
 
   const handleFormChange = (e) => {
@@ -67,11 +71,48 @@ export default function Profile() {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send the updated data to the backend
-      const response = await api.put("/staff/profile/update", formData);
+      let response;
+      
+      // If image is selected, use FormData
+      if (imageFile) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('position', formData.position || "");
+        formDataToSend.append('profile_picture', imageFile);
+
+        response = await api.put("/staff/profile/update", formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // If no image, send JSON with only position
+        response = await api.put("/staff/profile/update", { position: formData.position || "" });
+      }
+
       // Get the updated profile data from backend
       const updatedData = response.data;
 
@@ -79,12 +120,15 @@ export default function Profile() {
       setProfileData(updatedData);
       updateUser(updatedData);
 
+      // Reset image states
+      setImageFile(null);
+      setImagePreview(null);
+
       // Close modal
       setIsModalOpen(false);
 
       // Success message
       toast.success("Profile updated successfully!");
-
 
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -93,7 +137,7 @@ export default function Profile() {
   };
 
   // Placeholder image for when a profile picture isn't available
-  const defaultProfilePicture = "https://placehold.co/100x100";
+  const defaultProfilePicture = "https://placehold.co/120x120/E0E7FF/6B7280?text=No+Image";
 
   if (loading) {
     return (
@@ -124,13 +168,20 @@ export default function Profile() {
                 {/* Profile Picture and Staff Badge */}
                 <div className="text-center mt-4">
                   <img
-                    src={profileData?.profile_picture || defaultProfilePicture}
+                    src={
+                      profileData?.profile_picture && profileData.profile_picture.trim() !== ""
+                        ? profileData.profile_picture
+                        : defaultProfilePicture
+                    }
                     alt="Profile"
                     className="rounded-circle mb-3"
                     style={{
                       width: "120px",
                       height: "120px",
                       objectFit: "cover",
+                    }}
+                    onError={(e) => {
+                      e.target.src = defaultProfilePicture;
                     }}
                   />
                   <div
@@ -240,36 +291,46 @@ export default function Profile() {
             </div>
             <div className="modal-body">
               <form onSubmit={handleFormSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="name" className="form-label">
-                    Name
+                {/* Profile Picture Upload */}
+                <div className="mb-4 text-center">
+                  <label htmlFor="profile_picture" className="form-label d-block">
+                    Profile Picture
                   </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="name"
-                    name="name"
-                    value={formData.name || ""}
-                    onChange={handleFormChange}
-                    required
-                  />
+                  <div className="d-flex flex-column align-items-center">
+                    <img
+                      src={
+                        imagePreview ||
+                        (profileData?.profile_picture && profileData.profile_picture.trim() !== ""
+                          ? profileData.profile_picture
+                          : defaultProfilePicture)
+                      }
+                      alt="Profile Preview"
+                      className="rounded-circle mb-3"
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        objectFit: "cover",
+                      }}
+                      onError={(e) => {
+                        e.target.src = defaultProfilePicture;
+                      }}
+                    />
+                    <input
+                      type="file"
+                      className="form-control"
+                      id="profile_picture"
+                      name="profile_picture"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ maxWidth: "300px" }}
+                    />
+                    <small className="text-muted mt-2">
+                      Accepted formats: JPG, PNG, GIF (Max 5MB)
+                    </small>
+                  </div>
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    name="email"
-                    value={formData.email || ""}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="name" className="form-label">
+                  <label htmlFor="position" className="form-label">
                     Position
                   </label>
                   <input
@@ -279,21 +340,6 @@ export default function Profile() {
                     name="position"
                     value={formData.position || ""}
                     onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="name" className="form-label">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="company_name"
-                    name="company_name"
-                    value={formData.company_name || ""}
-                    onChange={handleFormChange}
-                    required
                   />
                 </div>
                 {/* You can add more fields here if needed */}
