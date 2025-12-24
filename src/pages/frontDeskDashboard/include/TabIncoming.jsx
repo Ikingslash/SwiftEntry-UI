@@ -101,10 +101,16 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return 'Not checked in';
-    const date = new Date(dateTime);
+    // Append Z if missing to ensure UTC parsing
+    const utcString = dateTime.includes('Z') ? dateTime : dateTime.replace(' ', 'T') + 'Z';
+    const date = new Date(utcString);
+
+    if (isNaN(date.getTime())) return dateTime; // Fallback
+
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     });
   };
 
