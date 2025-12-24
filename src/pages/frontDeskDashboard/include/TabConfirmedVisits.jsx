@@ -184,7 +184,7 @@ function TabConfirmedVisits({ filters, searchQuery, refreshKey, onVisitAction })
                     <div className="alert alert-info py-2 mb-3">
                       <small>
                         <i className="bi bi-shield-check me-1"></i>
-                        Security confirmed at: {formatTime(visit.security_confirmed_at)}
+                        Visit confirmed at: {formatTime(visit.security_confirmed_at)}
                       </small>
                     </div>
 
