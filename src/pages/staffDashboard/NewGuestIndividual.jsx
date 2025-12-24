@@ -205,9 +205,26 @@ const handleSubmit = async (e) => {
         }
       }
 
-      const visitTimeParts = visit?.check_in?.split(" ") || [];
-      const date = visitTimeParts?.[0] || "";
-      const time = visitTimeParts?.[1] || "";
+      let date = "";
+      let time = "";
+
+      if (visit?.check_in) {
+        const utcString = visit.check_in.replace(" ", "T") + "Z";
+        const utcDate = new Date(utcString);
+        if (!isNaN(utcDate.getTime())) {
+          const localFaceValue = new Date(
+            utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
+          );
+          const isoLocal = localFaceValue.toISOString();
+          const parts = isoLocal.split("T");
+          date = parts[0];
+          time = parts[1].slice(0, 8);
+        } else {
+          const visitTimeParts = visit.check_in.split(" ");
+          date = visitTimeParts[0] || "";
+          time = visitTimeParts[1] || "";
+        }
+      }
 
       setGuestDetails({
         name: visitor.name,
