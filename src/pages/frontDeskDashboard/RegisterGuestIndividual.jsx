@@ -76,15 +76,9 @@ export default function RegisterGuestIndividual() {
     if (name === "host_id") {
       const [role, id] = value.split("-");
 
-      // Map the role names to match backend expectations
-      const roleMap = {
-        'front_desk': 'front_desk',
-        'staff': 'staff',
-        'security': 'security',
-        'admin': 'admin'
-      };
-
-      const backendRole = roleMap[role] || role;
+      // Normalize role to snake_case for backend compatibility
+      // e.g., "Front Desk" -> "front_desk", "Staff" -> "staff"
+      const backendRole = role.toLowerCase().replace(/\s+/g, '_');
       const selectedHostName = selectedOptions[0]?.text.trim();
 
       setFormData({

@@ -102,21 +102,14 @@ function RegisterGuestGroup() {
     if (name === "host_id") {
       const [role, id] = value.split("-");
 
-      // Map the role names to match backend expectations
-      const roleMap = {
-        'front_desk': 'front_desk',
-        'staff': 'staff',
-        'security': 'security',
-        'admin': 'admin'
-      };
-
-      const backendRole = roleMap[role] || role;
+      // Normalize role to snake_case for backend compatibility
+      const backendRole = role.toLowerCase().replace(/\s+/g, '_');
       const selectedHostName = selectedOptions[0]?.text.trim();
 
       setFormData({
         ...formData,
         host_id: id,
-        host_role: backendRole, // Use mapped role
+        host_role: backendRole,
         host_name: selectedHostName,
       });
     } else {

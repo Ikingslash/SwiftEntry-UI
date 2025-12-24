@@ -79,7 +79,7 @@ function NewGuestGroup() {
       setFormData((prev) => ({
         ...prev,
         host_id: currentUser.id,
-        host_role: currentUser.role || "admin",
+        host_role: (currentUser.role || "admin").toLowerCase().replace(/\s+/g, '_'),
         host_name: currentUser.name,
       }));
     } else {

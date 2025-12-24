@@ -73,26 +73,19 @@ export default function RegisterNewGuestIndividual() {
 const handleChange = (e) => {
   const { name, value, selectedOptions } = e.target;
   if (name === "host_id") {
-    const [role, id] = value.split("-");
+      const [role, id] = value.split("-");
 
-    // Map the role names to match backend expectations
-    const roleMap = {
-      'front_desk': 'front_desk',
-      'staff': 'staff',
-      'security': 'security',
-      'admin': 'admin'
-    };
+      // Normalize role to snake_case for backend compatibility
+      const backendRole = role.toLowerCase().replace(/\s+/g, '_');
+      const selectedHostName = selectedOptions[0]?.text.trim();
 
-    const backendRole = roleMap[role] || role;
-    const selectedHostName = selectedOptions[0]?.text.trim();
-    
-    setFormData({
-      ...formData,
-      host_id: id,
-      host_role: backendRole,
-      host_name: selectedHostName,
-    });
-  } else {
+      setFormData({
+        ...formData,
+        host_id: id,
+        host_role: backendRole,
+        host_name: selectedHostName,
+      });
+    } else {
     setFormData({ ...formData, [name]: value });
   }
 };

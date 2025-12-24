@@ -114,9 +114,15 @@ function TabConfirmedVisits({ filters, searchQuery, refreshKey, onVisitAction })
 
   const formatTime = (timeString) => {
     if (!timeString) return 'Not set';
-    return new Date(timeString).toLocaleTimeString([], {
+    // Append Z if missing to ensure UTC parsing
+    const utcString = timeString.includes('Z') ? timeString : timeString.replace(' ', 'T') + 'Z';
+    const date = new Date(utcString);
+    if (isNaN(date.getTime())) return timeString; // Fallback if parsing fails
+    
+    return date.toLocaleTimeString([], {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     });
   };
 
@@ -178,7 +184,7 @@ function TabConfirmedVisits({ filters, searchQuery, refreshKey, onVisitAction })
                     <div className="alert alert-info py-2 mb-3">
                       <small>
                         <i className="bi bi-shield-check me-1"></i>
-                        Security confirmed at: {visit.security_confirmed_at}
+                        Security confirmed at: {formatTime(visit.security_confirmed_at)}
                       </small>
                     </div>
 
