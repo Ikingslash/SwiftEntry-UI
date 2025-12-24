@@ -98,20 +98,31 @@ function RegisterGuestGroup() {
  }, []);
 
  const handleChange = (e) => {
-   const { name, value, selectedOptions } = e.target;
-   if (name === "host_id") {
-     const [role, id] = value.split("-");
-     const selectedHostName = selectedOptions[0]?.text.trim();
-     setFormData({
-       ...formData,
-       host_id: id,
-       host_role: role,
-       host_name: selectedHostName,
-     });
-   } else {
-     setFormData({ ...formData, [name]: value });
-   }
- };
+    const { name, value, selectedOptions } = e.target;
+    if (name === "host_id") {
+      const [role, id] = value.split("-");
+
+      // Map the role names to match backend expectations
+      const roleMap = {
+        'front_desk': 'front_desk',
+        'staff': 'staff',
+        'security': 'security',
+        'admin': 'admin'
+      };
+
+      const backendRole = roleMap[role] || role;
+      const selectedHostName = selectedOptions[0]?.text.trim();
+
+      setFormData({
+        ...formData,
+        host_id: id,
+        host_role: backendRole, // Use mapped role
+        host_name: selectedHostName,
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
 
  const showValidationErrors = (error) => {
    if (error.response && error.response.status === 422) {

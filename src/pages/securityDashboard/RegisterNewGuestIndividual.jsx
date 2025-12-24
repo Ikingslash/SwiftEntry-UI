@@ -74,11 +74,22 @@ const handleChange = (e) => {
   const { name, value, selectedOptions } = e.target;
   if (name === "host_id") {
     const [role, id] = value.split("-");
+
+    // Map the role names to match backend expectations
+    const roleMap = {
+      'front_desk': 'front_desk',
+      'staff': 'staff',
+      'security': 'security',
+      'admin': 'admin'
+    };
+
+    const backendRole = roleMap[role] || role;
     const selectedHostName = selectedOptions[0]?.text.trim();
+    
     setFormData({
       ...formData,
       host_id: id,
-      host_role: role,
+      host_role: backendRole,
       host_name: selectedHostName,
     });
   } else {
