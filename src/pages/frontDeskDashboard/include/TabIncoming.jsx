@@ -52,15 +52,6 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedVisit, setSelectedVisit] = useState(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    // Update current time every minute to refresh duration
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     fetchIncomingVisits();
@@ -174,7 +165,7 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
                       </div>
                       <div className="col-6">
                         <small className="text-muted d-block">Duration</small>
-                        <strong>{calculateDuration(visit.check_in)}</strong>
+                        <strong>{visit.duration || "Calculating..."}</strong>
                       </div>
                     </div>
 
