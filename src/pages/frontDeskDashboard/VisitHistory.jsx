@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import NavBar from "./include/NavBar";
 import TabPreRegisteredVisitors from "./include/TabPreRegisteredVisitors";
-import TabWalkInVisitors from "./include/TabWalkInVisitors";
 import { IoCheckmark } from "react-icons/io5";
 import api from "../../context/api";
 import { toast } from "react-toastify";
@@ -22,7 +21,6 @@ const groupVisitsByDate = (visits) => {
 };
 
 function VisitSecurityHistory() {
-  const [activeTab, setActiveTab] = useState("pre-registered-visitors");
   const [activeFilter, setActiveFilter] = useState("all");
   const [groupedVisits, setGroupedVisits] = useState({});
   const [pagination, setPagination] = useState({});
@@ -57,7 +55,7 @@ function VisitSecurityHistory() {
             (error.response?.data?.message || "Server error.")
         );
       });
-  }, [activeFilter, month, purpose, activeTab, currentPage]);
+  }, [activeFilter, month, purpose, currentPage]);
 
 const fetchHistory = async () => {
   setLoading(true);
@@ -66,32 +64,15 @@ const fetchHistory = async () => {
       ? new Date(`${month} 1, 2025`).getMonth() + 1
       : null;
 
-    let response;
-
-    if (activeTab === "pre-registered-visitors") {
-      // Pre-registered visitors use guest-history
-      response = await api.get("/guest-history", {
-        params: {
-          visitor_type: activeFilter,
-          month: monthParam,
-          purpose: purpose !== "all" ? purpose : null,
-          status: "pre_registered_visit",
-          per_page: perPage,
-          page: currentPage,
-        },
-      });
-    } else if (activeTab === "walk-in-visitors") {
-      // Walk-in visitors use dedicated endpoint
-      response = await api.get("/front-desk/history/walk-ins", {
-        params: {
-          visitor_type: activeFilter,
-          month: monthParam,
-          purpose: purpose !== "all" ? purpose : null,
-          per_page: perPage,
-          page: currentPage,
-        },
-      });
-    }
+    const response = await api.get("/front-desk/history/visits", {
+      params: {
+        visitor_type: activeFilter,
+        month: monthParam,
+        purpose: purpose !== "all" ? purpose : null,
+        per_page: perPage,
+        page: currentPage,
+      },
+    });
 
     if (!response?.data || !response.data.visits) {
       throw new Error("Invalid response structure: 'visits' key not found.");
@@ -100,7 +81,7 @@ const fetchHistory = async () => {
     const groupedData = groupVisitsByDate(response.data.visits);
     setGroupedVisits(groupedData);
     setPagination(response.data.pagination || {});
-    toast.success("Visit history fetched successfully.");
+    // toast.success("Visit history fetched successfully.");
   } catch (err) {
       console.error("Error fetching history:", err);
       if (err.response && err.response.status === 422) {
@@ -139,7 +120,7 @@ const fetchHistory = async () => {
             style={{ backgroundColor: "#053561", minHeight: "180px" }}
           >
             <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bod mb-0">History</h3>
+              <h3 className="fw-bod mb-0">Visits</h3>
               
             </div>
 
@@ -185,57 +166,6 @@ const fetchHistory = async () => {
                 backgroundColor: "rgb(200, 200, 200)",
               }}
             ></div>
-
-            <ul className="nav d-flex flex-wrap">
-              <li className="nav-item">
-                <a
-                  className="nav-link px-4 py-2 text-center"
-                  onClick={() => setActiveTab("pre-registered-visitors")}
-                  style={{
-                    borderBottom:
-                      activeTab === "pre-registered-visitors"
-                        ? "4px solid rgb(0, 123, 255)"
-                        : "4px solid transparent",
-                    color:
-                      activeTab === "pre-registered-visitors"
-                        ? "#007bff"
-                        : "rgba(0, 0, 0, 0.5)",
-                    fontWeight:
-                      activeTab === "pre-registered-visitors"
-                        ? "bold"
-                        : "normal",
-                    transition: "all 0.3s ease-in-out",
-                    cursor: "pointer",
-                    minWidth: "180px",
-                  }}
-                >
-                  Pre-Registered Visitors
-                </a>
-              </li>
-              <li className="nav-item">
-                <a
-                  className="nav-link px-4 py-2 text-center"
-                  onClick={() => setActiveTab("walk-in-visitors")}
-                  style={{
-                    borderBottom:
-                      activeTab === "walk-in-visitors"
-                        ? "4px solid rgb(0, 123, 255)"
-                        : "4px solid transparent",
-                    color:
-                      activeTab === "walk-in-visitors"
-                        ? "#007bff"
-                        : "rgba(0, 0, 0, 0.5)",
-                    fontWeight:
-                      activeTab === "walk-in-visitors" ? "bold" : "normal",
-                    transition: "all 0.3s ease-in-out",
-                    cursor: "pointer",
-                    minWidth: "150px",
-                  }}
-                >
-                  Walk-in Visitors
-                </a>
-              </li>
-            </ul>
           </div>
 
           <div className="d-flex gap-2">
@@ -308,22 +238,12 @@ const fetchHistory = async () => {
       </div>
 
       <div className="container mt-5">
-        {activeTab === "pre-registered-visitors" && (
-          <TabPreRegisteredVisitors
-            groupedVisits={groupedVisits}
-            pagination={pagination}
-            loading={loading}
-            handlePageChange={handlePageChange}
-          />
-        )}
-        {activeTab === "walk-in-visitors" && (
-          <TabWalkInVisitors
-            groupedVisits={groupedVisits}
-            pagination={pagination}
-            loading={loading}
-            handlePageChange={handlePageChange}
-          />
-        )}
+        <TabPreRegisteredVisitors
+          groupedVisits={groupedVisits}
+          pagination={pagination}
+          loading={loading}
+          handlePageChange={handlePageChange}
+        />
       </div>
     </div>
   );
