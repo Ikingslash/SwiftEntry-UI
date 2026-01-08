@@ -32,6 +32,31 @@ const [visitPurposes, setVisitPurposes] = useState([]);
 const [qrValue, setQrValue] = useState("");
 const printRef = useRef();
 
+// Helper function to format date to DD/MM/YYYY
+const formatDateToDDMMYYYY = (dateString) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    return dateString;
+  }
+};
+
+// Helper function to create enhanced QR code value with visit details
+const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
+  return JSON.stringify({
+    visit_code: visitCode,
+    name: visitorName,
+    host: hostName,
+    date: visitDate,
+    purpose: purpose,
+  });
+};
+
 // Get current logged-in user from localStorage or API
 const getCurrentUser = () => {
   try {
@@ -226,19 +251,30 @@ const handleSubmit = async (e) => {
         }
       }
 
+      // Format date to DD/MM/YYYY
+      const formattedDate = formatDateToDDMMYYYY(date);
+
       setGuestDetails({
         name: visitor.name,
         id: visit.code || "",
         host: visit.host_name,
-        date,
+        date: formattedDate,
         time,
         purpose: visit.purpose,
         Contact_info: visitor.contact_number,
         address: visitor.address, 
       });
 
+      // Create enhanced QR code value with all visit details
       if (visit.code) {
-        setQrValue(visit.code);
+        const enhancedQR = createEnhancedQRValue(
+          visit.code,
+          visitor.name,
+          visit.host_name,
+          formattedDate,
+          visit.purpose
+        );
+        setQrValue(enhancedQR);
       }
 
       setFormData({
@@ -400,6 +436,7 @@ const handleSubmit = async (e) => {
                       name="visit_time"
                       value={formData.visit_time}
                       onChange={handleChange}
+                      min={new Date().toISOString().slice(0, 16)}
                       required
                     />
                   </div>
@@ -631,7 +668,7 @@ const handleSubmit = async (e) => {
                     <div>
                       {typeof guestDetails.id === "string" &&
                       guestDetails.id.length > 0 ? (
-                        <QRCode value={guestDetails.id} size={130} />
+                        <QRCode value={qrValue} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>
                       )}

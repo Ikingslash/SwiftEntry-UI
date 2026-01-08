@@ -106,7 +106,10 @@ function SignIn() {
                   className="form-control"
                   placeholder="Enter your company assigned email"
                   required
-                  style={{ color: "rgba(133, 124, 124, 0.5)" }}
+                  style={{ 
+                    color: "rgba(133, 124, 124, 0.5)",
+                    "--placeholder-color": "black"
+                  }}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -119,6 +122,9 @@ function SignIn() {
                   className="form-control"
                   placeholder="Enter password"
                   required
+                  style={{
+                    "--placeholder-color": "black"
+                  }}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

@@ -48,6 +48,7 @@ import AdminVisitors from "./pages/admin/visitorsManagment/AdminVisitors";
 import AdminStaff from "./pages/admin/staffManagment/AdminStaff";
 import AdminFrontdesk from "./pages/admin/staffManagment/AdminFrontdesk";
 import AdminSecurity from "./pages/admin/staffManagment/AdminSecurity";
+import AdminSelfService from "./pages/admin/staffManagment/AdminSelfService";
 import AnalyticalAndReport from "./pages/admin/analytical_report/AnalyticalAndReport";
 import AdminSettings from "./pages/admin/settings/AdminSettings";
 import AdminProfile from "./pages/admin/AdminProfile";
@@ -58,6 +59,9 @@ import AdminNewGuest from "./pages/admin/registerVisit/NewGuest";
 import SetupPassword from "./pages/SetupPassword";
 import FrontdeskSetupPassword from "./pages/FrontdeskSetupPassword";
 import SecuritySetupPassword from "./pages/SecuritySetupPassword";
+import VisitorSelfServiceDashboard from "./pages/VisitorSelfServiceDashboard";
+import VisitorWalkInRegistration from "./pages/VisitorWalkInRegistration";
+import VisitorProfile from "./pages/VisitorProfile";
 
 <Route path="/admin/new-guest" element={<AdminNewGuest />} />
 
@@ -132,6 +136,7 @@ function App() {
              <Route path="staffs" element={<AdminStaff />} />
              <Route path="frontdesk" element={<AdminFrontdesk />} />
              <Route path="security" element={<AdminSecurity />} />
+             <Route path="self-service" element={<AdminSelfService />} />
              <Route
                path="analytical-report"
                element={<AnalyticalAndReport />}
@@ -168,6 +173,32 @@ function App() {
              <Route path="profile" element={<SecurityProfile />} />
              <Route path="security-settings" element={<SecuritySettings />} />
            </Route>
+
+           {/* Visitor Self-Service Routes */}
+           <Route
+             path="/visitor-dashboard/*"
+             element={
+               <PrivateRoute requiredRole="self_service">
+                 <VisitorSelfServiceDashboard />
+               </PrivateRoute>
+             }
+           />
+           <Route
+             path="/visitor-dashboard/register-visit"
+             element={
+               <PrivateRoute requiredRole="self_service">
+                 <VisitorWalkInRegistration />
+               </PrivateRoute>
+             }
+           />
+           <Route
+             path="/visitor-dashboard/profile"
+             element={
+               <PrivateRoute requiredRole="self_service">
+                 <VisitorProfile />
+               </PrivateRoute>
+             }
+           />
          </Routes>
        </NotificationProvider>
      </AuthProvider>

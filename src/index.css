@@ -34,3 +34,9 @@ body {
 .card-highlight {
   background-color: var(--highlight);
 }
+
+/* Sign-In placeholder text styling */
+.form-control::placeholder {
+  color: #000 !important;
+  opacity: 1;
+}

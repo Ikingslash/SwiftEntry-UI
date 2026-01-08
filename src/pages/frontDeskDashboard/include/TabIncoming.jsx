@@ -165,7 +165,16 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
                       </div>
                       <div className="col-6">
                         <small className="text-muted d-block">Duration</small>
-                        <strong>{visit.duration || "Calculating..."}</strong>
+                        <strong>
+                          {visit.check_in
+                            ? (() => {
+                                const diff = new Date() - new Date(visit.check_in);
+                                const hours = Math.floor(diff / (1000 * 60 * 60));
+                                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                return `${hours}h ${minutes}m`;
+                              })()
+                            : "N/A"}
+                        </strong>
                       </div>
                     </div>
 
@@ -189,7 +198,14 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
                     <small className="text-muted">
                       <i className="bi bi-clock-history me-1"></i>
                       Currently visiting for{" "}
-                      {visit.current_duration || "a while"}
+                      {visit.check_in
+                        ? (() => {
+                            const diff = new Date() - new Date(visit.check_in);
+                            const hours = Math.floor(diff / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            return `${hours}h ${minutes}m`;
+                          })()
+                        : "a while"}
                     </small>
                   </div>
                 </div>

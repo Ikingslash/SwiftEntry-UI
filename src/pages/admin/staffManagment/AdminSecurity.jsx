@@ -1,6 +1,7 @@
 import { useState } from "react";
 import NavBar from "../include/NavBar";
 import ManageStaffTable from "./ManageSecurityTable";
+import BulkUploadModal from "../include/BulkUploadModal";
 import api from "../../../context/api";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
@@ -8,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 function AdminSecurity() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newStaffFormData, setNewStaffFormData] = useState({
     name: "",
@@ -169,7 +171,7 @@ function AdminSecurity() {
       {/* Add Staff Button */}
       <div className="position-relative">
         <div
-          className="d-flex justify-content-between align-items-center container"
+          className="d-flex justify-content-between align-items-center container gap-2"
           style={{
             position: "absolute",
             top: "-47px",
@@ -179,7 +181,14 @@ function AdminSecurity() {
           }}
         >
           <button
-            className="btn btn-primary rounded-3 ms-auto"
+            className="btn btn-success rounded-3 ms-auto"
+            onClick={() => setShowBulkUploadModal(true)}
+          >
+            <i className="bi bi-cloud-arrow-up me-2"></i>
+            Bulk Upload
+          </button>
+          <button
+            className="btn btn-primary rounded-3"
             onClick={() => setShowAddModal(true)}
           >
             + Add New Security
@@ -374,6 +383,17 @@ function AdminSecurity() {
           </div>
         </div>
       )}
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        isOpen={showBulkUploadModal}
+        onClose={() => setShowBulkUploadModal(false)}
+        userType="security"
+        onSuccess={() => {
+          setShowBulkUploadModal(false);
+          triggerRefresh();
+        }}
+      />
     </div>
   );
 }

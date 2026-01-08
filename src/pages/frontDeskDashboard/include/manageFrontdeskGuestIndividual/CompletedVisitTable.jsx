@@ -66,6 +66,8 @@ function CompletedVisitTable({ visitType }) {
                   <th>Guest Name</th>
                   <th>Host Name</th>
                   <th>Check-In Time</th>
+                  <th>Check-Out Time</th>
+                  <th>Duration</th>
                   <th>Contact</th>
                   <th>Created At</th>
                   <th>Updated At</th>
@@ -73,18 +75,30 @@ function CompletedVisitTable({ visitType }) {
                 </tr>
               </thead>
               <tbody>
-                {visits.map((visit) => (
-                  <tr key={visit.id}>
-                    <td>{visit.id}</td>
-                    <td>{visit.visitor?.name || "N/A"}</td>
-                    <td>{visit.host_name}</td>
-                    <td>{new Date(visit.check_in).toLocaleString()}</td>
-                    <td>{visit.visitor?.contact_number || "N/A"}</td>
-                    <td>{visit.created_at}</td>
-                    <td>{visit.updated_at}</td>
-                    <td>{visit.visitor?.special_requirements || "None"}</td>
-                  </tr>
-                ))}
+                {visits.map((visit) => {
+                  const calculateDuration = (checkIn, checkOut) => {
+                    if (!checkIn || !checkOut) return 'N/A';
+                    const diff = new Date(checkOut) - new Date(checkIn);
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    return `${hours}h ${minutes}m`;
+                  };
+
+                  return (
+                    <tr key={visit.id}>
+                      <td>{visit.id}</td>
+                      <td>{visit.visitor?.name || "N/A"}</td>
+                      <td>{visit.host_name}</td>
+                      <td>{new Date(visit.check_in).toLocaleString()}</td>
+                      <td>{visit.check_out ? new Date(visit.check_out).toLocaleString() : 'N/A'}</td>
+                      <td>{calculateDuration(visit.check_in, visit.check_out)}</td>
+                      <td>{visit.visitor?.contact_number || "N/A"}</td>
+                      <td>{visit.created_at}</td>
+                      <td>{visit.updated_at}</td>
+                      <td>{visit.visitor?.special_requirements || "None"}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {/* Pagination Controls */}

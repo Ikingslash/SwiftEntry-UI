@@ -5,6 +5,38 @@ import html2pdf from "html2pdf.js";
 import { toast } from "react-toastify";
 import { requestForToken, onMessageListener } from "../../context/firebase";
 
+// Helper function to format date to DD/MM/YYYY
+const formatDateToDDMMYYYY = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return dateString;
+  }
+};
+
+// Helper function to create enhanced QR code value with metadata
+const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
+  try {
+    const qrData = {
+      visit_code: visitCode,
+      name: visitorName,
+      host: hostName,
+      date: visitDate,
+      purpose: purpose,
+    };
+    return JSON.stringify(qrData);
+  } catch {
+    return visitCode;
+  }
+};
+
 export default function RegisterNewGuestIndividual() {
   const [formData, setFormData] = useState({
     name: "",
@@ -194,14 +226,23 @@ const handleChange = (e) => {
             );
             const isoLocal = localFaceValue.toISOString();
             const parts = isoLocal.split("T");
-            date = parts[0];
+            date = formatDateToDDMMYYYY(parts[0]);
             time = parts[1].slice(0, 8);
           } else {
             const visitTimeParts = visit.visit_time.split(" ");
-            date = visitTimeParts[0] || "";
+            date = formatDateToDDMMYYYY(visitTimeParts[0] || "");
             time = visitTimeParts[1] || "";
           }
         }
+        
+        const qrValue = createEnhancedQRValue(
+          visit.code || "",
+          visitor.name,
+          visit.host_name,
+          date,
+          visit.purpose
+        );
+        
         setGuestDetails({
           name: visitor.name,
           id: visit.code || "",
@@ -214,7 +255,7 @@ const handleChange = (e) => {
         });
 
         if (visit.code) {
-          setQrValue(visit.code);
+          setQrValue(qrValue);
         }
 
         setFormData({
@@ -626,7 +667,7 @@ const handleChange = (e) => {
                     <div>
                       {typeof guestDetails.id === "string" &&
                       guestDetails.id.length > 0 ? (
-                        <QRCode value={guestDetails.id} size={130} />
+                        <QRCode value={qrValue} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>
                       )}

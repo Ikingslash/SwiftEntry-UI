@@ -110,8 +110,21 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
                     <td>{visit.host_name}</td>
                     <td>
                       {visit.visit_time
-                        ? new Date(visit.visit_time).toLocaleString()
-                        : "N/A"}
+                        ? (() => {
+                            const date = new Date(visit.visit_time);
+                            if (isNaN(date.getTime())) {
+                              return "Invalid Time";
+                            }
+                            return date.toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            });
+                          })()
+                        : "Not Scheduled"}
                     </td>
                     <td>{visit.visitor?.contact_number}</td>
                     <td>{visit.visitor?.email}</td>

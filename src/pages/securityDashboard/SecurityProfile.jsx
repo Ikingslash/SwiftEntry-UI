@@ -5,29 +5,18 @@ import api from "../../context/api";
 import NavBar from "./include/NavBar";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { IoPencil } from 'react-icons/io5';
 
 export default function SecurityProfile() {
   const navigate = useNavigate();
   const { logout, updateUser } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    position: "",
-  });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
 
   const fetchProfileData = async () => {
     setLoading(true);
     try {
       const response = await api.get("/security/user-profile");
       setProfileData(response.data);
-      setFormData({ position: response.data.position || "" });
-      // Reset image preview when modal is opened with existing data
-      setImagePreview(null);
-      setImageFile(null);
       toast.success("Profile loaded successfully!");
     } catch (error) {
       console.error("Error fetching profile data:", error);
@@ -52,84 +41,7 @@ export default function SecurityProfile() {
     }
   };
 
-  const handleEditClick = () => {
-    setIsModalOpen(true);
-    // Reset image preview when opening modal
-    setImagePreview(null);
-    setImageFile(null);
-  };
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error("Please select a valid image file");
-        return;
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
-        return;
-      }
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    } else {
-      setImageFile(null);
-      setImagePreview(null);
-    }
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      let response;
-      
-      // If image is selected, use FormData
-      if (imageFile) {
-        const formDataToSend = new FormData();
-        formDataToSend.append('position', formData.position || "");
-        formDataToSend.append('profile_picture', imageFile);
-
-        response = await api.put("/security/update-profile", formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-      } else {
-        // If no image, send JSON with only position
-        response = await api.put("/security/update-profile", { position: formData.position || "" });
-      }
-
-      // Get the updated profile data from backend
-      const updatedData = response.data;
-
-      // Update both local and global states
-      setProfileData(updatedData);
-      updateUser(updatedData);
-
-      // Reset image states
-      setImageFile(null);
-      setImagePreview(null);
-
-      // Close modal
-      setIsModalOpen(false);
-
-      // Success message
-      toast.success("Profile updated successfully!");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile. Please try again.");
-    }
-  };
 
   const defaultProfilePicture = "https://placehold.co/120x120/E0E7FF/6B7280?text=No+Image";
 
@@ -222,17 +134,6 @@ export default function SecurityProfile() {
                   </ul>
                 </div>
 
-                {/* Edit Profile Button */}
-                <div className="d-grid mt-4 px-3">
-                  <button
-                    onClick={handleEditClick}
-                    className="btn btn-primary btn-lg rounded-pill fw-bold"
-                  >
-                    <IoPencil className="me-2" />
-                    Edit Profile
-                  </button>
-                </div>
-
                 {/* Log Out Button */}
                 <div className="d-grid mt-3 px-3">
                   <button
@@ -265,95 +166,8 @@ export default function SecurityProfile() {
         </div>
       </div>
 
-      {/* Profile Update Modal */}
-      <div
-        className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
-        tabIndex="-1"
-        style={{
-          backgroundColor: isModalOpen ? "rgba(0, 0, 0, 0.5)" : "transparent",
-        }}
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Edit Profile</h5>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setIsModalOpen(false)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleFormSubmit}>
-                {/* Profile Picture Upload */}
-                <div className="mb-4 text-center">
-                  <label htmlFor="profile_picture" className="form-label d-block">
-                    Profile Picture
-                  </label>
-                  <div className="d-flex flex-column align-items-center">
-                    <img
-                      src={
-                        imagePreview ||
-                        (profileData?.profile_picture && profileData.profile_picture.trim() !== ""
-                          ? profileData.profile_picture
-                          : defaultProfilePicture)
-                      }
-                      alt="Profile Preview"
-                      className="rounded-circle mb-3"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        objectFit: "cover",
-                      }}
-                      onError={(e) => {
-                        e.target.src = defaultProfilePicture;
-                      }}
-                    />
-                    <input
-                      type="file"
-                      className="form-control"
-                      id="profile_picture"
-                      name="profile_picture"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      style={{ maxWidth: "300px" }}
-                    />
-                    <small className="text-muted mt-2">
-                      Accepted formats: JPG, PNG, GIF (Max 5MB)
-                    </small>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="position" className="form-label">
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="position"
-                    name="position"
-                    value={formData.position || ""}
-                    onChange={handleFormChange}
-                  />
-                </div>
-                {/* You can add more fields here if needed */}
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Close
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Save changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+
+
     </>
   );
 }

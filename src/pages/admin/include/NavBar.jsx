@@ -90,6 +90,7 @@ function Navbar() {
                     "/admin-dashboard/staffs",
                     "/admin-dashboard/frontdesk",
                     "/admin-dashboard/security",
+                    "/admin-dashboard/self-service",
                   ].includes(location.pathname)
                     ? "text-white fw-bold"
                     : "text-white-50"
@@ -137,6 +138,21 @@ function Navbar() {
                     to="/admin-dashboard/security"
                   >
                     Security
+                  </NavLink>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
+                <li>
+                  <NavLink
+                    className={`dropdown-item ${
+                      location.pathname === "/admin-dashboard/self-service"
+                        ? "fw-bold text-light"
+                        : ""
+                    }`}
+                    to="/admin-dashboard/self-service"
+                  >
+                    Self-Service Users
                   </NavLink>
                 </li>
               </ul>
