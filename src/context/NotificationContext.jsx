@@ -95,12 +95,12 @@ export const NotificationProvider = ({ children }) => {
     fetchLatestUnread(); // 👈 Fetch dropdown list on load
   }, [fetchNotificationCount, fetchLatestUnread]);
 
-  // Real-time updates
+  // Real-time updates (WebSocket listener)
   useEffect(() => {
     if (user?.id) {
       const channel = echo.private(`notifications.${user.id}`);
       channel.listen(".new-notification", (event) => {
-        console.log("📢 New notification:", event);
+        console.log("📢 New notification (WebSocket):", event);
         addNotification(event.notification);
         setUnreadCount((prev) =>
           event.unreadCount !== undefined ? event.unreadCount : prev + 1
@@ -113,6 +113,25 @@ export const NotificationProvider = ({ children }) => {
       };
     }
   }, [user, fetchLatestUnread]); // 👈 Added dependency
+
+  // POLLING FALLBACK: Fetch notifications every 3 seconds
+  // This ensures users see notifications even if WebSocket is unavailable
+  useEffect(() => {
+    if (!user || !rolePrefix) return;
+
+    console.log("📋 Notification polling STARTED (every 3 seconds)");
+
+    // Then poll every 3 seconds
+    const pollInterval = setInterval(() => {
+      fetchNotificationCount();
+      fetchLatestUnread();
+    }, 3000); // 3000ms = 3 seconds
+
+    return () => {
+      clearInterval(pollInterval);
+      console.log("📋 Notification polling STOPPED");
+    };
+  }, [user, rolePrefix, fetchNotificationCount, fetchLatestUnread]);
 
   return (
     <NotificationContext.Provider
