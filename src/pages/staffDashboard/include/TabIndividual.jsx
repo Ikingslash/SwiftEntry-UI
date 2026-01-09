@@ -4,19 +4,19 @@ import PreScheduledVisitTable from "./manageGuestIndividual/PreScheduledVisitTab
 import CompletedVisitTable from "./manageGuestIndividual/CompletedVisitTable";
 import CancelledVisitTable from "./manageGuestIndividual/CancelledVisitTable";
 import MissedVisitTbale from "./manageGuestIndividual/MissedVisitTbale";
-import HostVisitsTable from "./HostVisitsTable";
+import PendingVisitsTable from "./PendingVisitsTable";
 import {toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
 function TabIndividual() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
-  const [showHostVisits, setShowHostVisits] = useState(false);
   const [counts, setCounts] = useState({
     scheduled: 0,
     completed: 0,
     cancelled: 0,
     missed: 0,
+    pending: 0,
   });
 
   // New, unified endpoint for fetching counts
@@ -30,33 +30,33 @@ function TabIndividual() {
     }
   }, []);
 
+  // Fetch pending visits count separately
+  const fetchPendingCount = useCallback(async () => {
+    try {
+      const res = await api.get("/staff/guests/staff-pending-visits", { params: { per_page: 1, page: 1 } });
+      setCounts((prev) => ({
+        ...prev,
+        pending: res.data.pagination?.total || 0,
+      }));
+    } catch (error) {
+      console.error("Error fetching pending counts:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCounts();
-  }, [fetchCounts]);
+    fetchPendingCount();
+  }, [fetchCounts, fetchPendingCount]);
 
   const handleVisitUpdate = () => {
     // Refresh counts when visits are updated
     fetchCounts();
+    fetchPendingCount();
   };
-  // Function to handle switching to the Host Visits view
-  const handleHostVisitsClick = (e) => {
-    e.preventDefault();
-    setShowHostVisits(true);
-  };
-
-  // Function to handle switching back to the default view
-  const handleBackToTabs = () => {
-    setShowHostVisits(false);
-    setActiveTab("pre-scheduled-visit-table"); // Reset to default tab
-  };
-
-  if (showHostVisits) {
-    return <HostVisitsTable onBack={handleBackToTabs} />;
-  }
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex justify-content-start align-items-center">
         <ul className="nav nav-tabs">
           <li className="nav-item pe-4">
             <button
@@ -68,6 +68,16 @@ function TabIndividual() {
               onClick={() => setActiveTab("pre-scheduled-visit-table")}
             >
               Scheduled Visit ({counts.scheduled})
+            </button>
+          </li>
+          <li className="nav-item pe-4">
+            <button
+              className={`nav-link ${
+                activeTab === "pending-visits" ? "active" : "text-dark"
+              }`}
+              onClick={() => setActiveTab("pending-visits")}
+            >
+              Pending Visits ({counts.pending})
             </button>
           </li>
           <li className="nav-item pe-4">
@@ -101,15 +111,18 @@ function TabIndividual() {
             </button>
           </li>
         </ul>
-        <a href="#" className=" ms-3" onClick={handleHostVisitsClick}>
-          Check Your Visits
-        </a>
       </div>
 
       {/* Content - Passing visitType="individual" */}
       <div className="mt-5">
         {activeTab === "pre-scheduled-visit-table" && (
           <PreScheduledVisitTable
+            visitType="individual"
+            onVisitUpdate={handleVisitUpdate}
+          />
+        )}
+        {activeTab === "pending-visits" && (
+          <PendingVisitsTable
             visitType="individual"
             onVisitUpdate={handleVisitUpdate}
           />
