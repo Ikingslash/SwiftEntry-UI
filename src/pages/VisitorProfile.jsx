@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import VisitorLayout from "../../layout/VisitorLayout";
-import api from "../../context/api";
+import VisitorLayout from "../layout/VisitorLayout";
+import api from "../context/api";
 import { toast } from "react-toastify";
 
 function VisitorProfile() {

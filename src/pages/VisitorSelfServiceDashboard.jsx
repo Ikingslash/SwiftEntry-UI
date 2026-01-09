@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import VisitorLayout from "../../layout/VisitorLayout";
-import api from "../../context/api";
+import VisitorLayout from "../layout/VisitorLayout";
+import api from "../context/api";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import VisitorVisitCard from "./include/VisitorVisitCard";
+import VisitorVisitCard from "./visitorDashboard/include/VisitorVisitCard";
 
 function VisitorSelfServiceDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
