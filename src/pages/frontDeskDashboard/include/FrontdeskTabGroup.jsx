@@ -163,7 +163,3 @@ function FrontdeskTabGroup() {
 }
 
 export default FrontdeskTabGroup;
-  );
-}
-
-export default FrontdeskTabGroup;

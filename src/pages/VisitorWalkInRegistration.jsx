@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
-import api from "../../../context/api";
+import api from "../../context/api";
 import { toast } from "react-toastify";
-import VisitorLayout from "../../../layout/VisitorLayout";
+import VisitorLayout from "../../layout/VisitorLayout";
 import "react-toastify/dist/ReactToastify.css";
 
 // Helper function to format date to DD/MM/YYYY
