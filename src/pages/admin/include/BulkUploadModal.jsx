@@ -201,9 +201,10 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
                         <li><strong>position</strong> - Job position (required)</li>
                         <li><strong>company_name</strong> - Company name (required)</li>
                         <li><strong>department</strong> - Department (required)</li>
+                        <li><strong>role</strong> - Role (required, must match: {userType})</li>
                       </ul>
                       <small className="text-muted d-block mt-2">
-                        <strong>Note:</strong> Employee ID, role, and login credentials will be auto-generated and sent via email.
+                        <strong>Note:</strong> Employee ID and login credentials will be auto-generated and sent via email.
                       </small>
                     </div>
                   </div>
