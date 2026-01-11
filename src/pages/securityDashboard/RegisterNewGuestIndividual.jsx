@@ -205,21 +205,9 @@ export default function RegisterNewGuestIndividual() {
         let time = "";
 
         if (visit?.visit_time) {
-          const utcString = visit.visit_time.replace(" ", "T") + "Z";
-          const utcDate = new Date(utcString);
-          if (!isNaN(utcDate.getTime())) {
-            const localFaceValue = new Date(
-              utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
-            );
-            const isoLocal = localFaceValue.toISOString();
-            const parts = isoLocal.split("T");
-            date = formatDateToDDMMYYYY(parts[0]);
-            time = parts[1].slice(0, 8);
-          } else {
-            const visitTimeParts = visit.visit_time.split(" ");
-            date = formatDateToDDMMYYYY(visitTimeParts[0] || "");
-            time = visitTimeParts[1] || "";
-          }
+          const visitTimeParts = visit.visit_time.split(" ");
+          date = formatDateToDDMMYYYY(visitTimeParts[0] || "");
+          time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
         }
 
         const qrValue = createEnhancedQRValue(

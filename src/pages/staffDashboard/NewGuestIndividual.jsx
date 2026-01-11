@@ -7,295 +7,283 @@ import { toast } from "react-toastify";
 
 
 export default function NewGuestIndividual() {
-const [formData, setFormData] = useState({
-  name: "",
-  contact_number: "",
-  email: "",
-  address: "",
-  visit_time: "",
-  host_name: "",
-  building: "",
-  floor: "",
-  purpose: "",
-  special_requirements: "",
-  emergency_contact: "",
-  details: "",
-});
-
-const [loading, setLoading] = useState(false);
-const [selectedImage, setSelectedImage] = useState(null);
-const [showSuccessModal, setShowSuccessModal] = useState(false);
-const [showVisitCardModal, setShowVisitCardModal] = useState(false);
-const [guestDetails, setGuestDetails] = useState({});
-const [appUsers, setAppUsers] = useState([]);
-const [visitPurposes, setVisitPurposes] = useState([]);
-const [qrValue, setQrValue] = useState("");
-const printRef = useRef();
-
-// Helper function to format date to DD/MM/YYYY
-const formatDateToDDMMYYYY = (dateString) => {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch (error) {
-    return dateString;
-  }
-};
-
-// Helper function to create enhanced QR code value with visit details
-const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
-  return JSON.stringify({
-    visit_code: visitCode,
-    name: visitorName,
-    host: hostName,
-    date: visitDate,
-    purpose: purpose,
+  const [formData, setFormData] = useState({
+    name: "",
+    contact_number: "",
+    email: "",
+    address: "",
+    visit_time: "",
+    host_name: "",
+    building: "",
+    floor: "",
+    purpose: "",
+    special_requirements: "",
+    emergency_contact: "",
+    details: "",
   });
-};
 
-// Get current logged-in user from localStorage or API
-const getCurrentUser = () => {
-  try {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      return JSON.parse(userData);
+  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+  const [guestDetails, setGuestDetails] = useState({});
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
+  const [qrValue, setQrValue] = useState("");
+  const printRef = useRef();
+
+  // Helper function to format date to DD/MM/YYYY
+  const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return dateString;
     }
-    return null;
-  } catch (error) {
-    console.error("Error parsing user data from localStorage:", error);
-    return null;
-  }
-};
+  };
 
-// useEffect to handle Firebase messaging and token registration, AND to fetch users.
-useEffect(() => {
-  // Request permission and get the FCM token
-  requestForToken()
-    .then((fcmToken) => {
-      if (fcmToken) {
-        api.post("/staff/save-fcm-token", { fcm_token: fcmToken }).catch(() => {});
+  // Helper function to create enhanced QR code value with visit details
+  const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
+    return JSON.stringify({
+      visit_code: visitCode,
+      name: visitorName,
+      host: hostName,
+      date: visitDate,
+      purpose: purpose,
+    });
+  };
+
+  // Get current logged-in user from localStorage or API
+  const getCurrentUser = () => {
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        return JSON.parse(userData);
       }
-    })
-    .catch(() => {});
+      return null;
+    } catch (error) {
+      console.error("Error parsing user data from localStorage:", error);
+      return null;
+    }
+  };
 
-  // Fetch the list of visit purposes from the backend
-  api
-    .get("/staff/settings/visit-purposes")
-    .then((response) => {
-      if (response.data && Array.isArray(response.data)) {
-        setVisitPurposes(response.data);
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          api.post("/staff/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
+        }
+      })
+      .catch(() => { });
+
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/staff/settings/visit-purposes")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        }
+      })
+      .catch(() => { });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+
+    if (currentUser && currentUser.id && currentUser.name) {
+      setFormData((prev) => ({
+        ...prev,
+        host_id: currentUser.id,
+        host_role: currentUser.role || "staff",
+        host_name: currentUser.name,
+      }));
+    } else {
+      console.error("No valid user found in localStorage");
+      toast.error("Unable to set host. Please log in again.");
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+
+
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
+
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
       }
-    })
-    .catch(() => {});
 
-  // Set up the listener for incoming messages.
-  const unsubscribe = onMessageListener((payload) => {
-    toast.info(`${payload.notification.title}: ${payload.notification.body}`);
-  });
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message || "Something went wrong. Please try again."
+      );
+    }
+  };
 
-  // Cleanup function to detach the listener when the component unmounts
-  return () => unsubscribe();
-}, []);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-useEffect(() => {
-  const currentUser = getCurrentUser();
-
-  if (currentUser && currentUser.id && currentUser.name) {
-    setFormData((prev) => ({
-      ...prev,
-      host_id: currentUser.id,
-      host_role: currentUser.role || "staff",
-      host_name: currentUser.name,
-    }));
-  } else {
-    console.error("No valid user found in localStorage");
-    toast.error("Unable to set host. Please log in again.");
-  }
-}, []);
-
-const handleChange = (e) => {
-  const { name, value } = e.target;
-  setFormData({ ...formData, [name]: value });
-};
-
-
-
-const showValidationErrors = (error) => {
-  if (error.response && error.response.status === 422) {
-    let validationErrors = error.response.data.errors || error.response.data;
-
-    if (typeof validationErrors === "string") {
-      toast.error(validationErrors);
+    // Validate host data before submission
+    if (!formData.host_id || !formData.host_role || !formData.host_name) {
+      toast.error("Host information is missing. Please refresh the page.");
+      setLoading(false);
       return;
     }
 
-    Object.values(validationErrors).forEach((messages) => {
-      if (Array.isArray(messages)) {
-        messages.forEach((msg) => toast.error(msg));
-      } else if (typeof messages === "string") {
-        toast.error(messages);
+    const formDataToSend = new FormData();
+
+    // Append individual guest fields (not group fields)
+    Object.entries(formData).forEach(([key, value]) => {
+      if (
+        key !== "visit_time" &&
+        key !== "host_id" &&
+        key !== "host_role" &&
+        key !== "host_name"
+      ) {
+        formDataToSend.append(key, value);
       }
     });
-  } else {
-    toast.error(
-      error.response?.data?.message || "Something went wrong. Please try again."
-    );
-  }
-};
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  // Validate host data before submission
-  if (!formData.host_id || !formData.host_role || !formData.host_name) {
-    toast.error("Host information is missing. Please refresh the page.");
-    setLoading(false);
-    return;
-  }
-
-  const formDataToSend = new FormData();
-
-  // Append individual guest fields (not group fields)
-  Object.entries(formData).forEach(([key, value]) => {
-    if (
-      key !== "visit_time" &&
-      key !== "host_id" &&
-      key !== "host_role" &&
-      key !== "host_name"
-    ) {
-      formDataToSend.append(key, value);
+    // Format visit_time - datetime-local already provides local time
+    if (formData.visit_time) {
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
     }
-  });
-
-   // Format visit_time - datetime-local already provides local time
-   if (formData.visit_time) {
-     // datetime-local gives us "YYYY-MM-DDTHH:MM" format
-     // Just replace T with space and add seconds for the API format
-     const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
-     formDataToSend.append("visit_time", formattedVisitTime);
-     console.log("Formatted visit time:", formattedVisitTime);
-   }
 
 
-  // Append host fields
-  formDataToSend.append("host_id", formData.host_id);
-  formDataToSend.append("host_role", formData.host_role);
-  formDataToSend.append("host_name", formData.host_name);
+    // Append host fields
+    formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_role", formData.host_role);
+    formDataToSend.append("host_name", formData.host_name);
 
-  try {
-    const response = await api.post(
-      "/staff/guests/register",
-      formDataToSend,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    if (response.status === 200 || response.status === 201) {
-      const visit = response.data.visit;
-      const visitor = response.data.visitor;
-
-      // Trigger notification to host
-      if (formData.host_id && formData.host_role) {
-        try {
-          await api.post("/genereal-notify-host", {
-            host_id: formData.host_id,
-            host_role: formData.host_role,
-            guest_name: formData.name,
-            purpose: formData.purpose,
-          });
-        } catch (notificationError) {
-          // Notification failure should not block the main flow
-          console.error("Failed to notify host:", notificationError);
+    try {
+      const response = await api.post(
+        "/staff/guests/register",
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      }
+      );
 
-      let date = "";
-      let time = "";
+      if (response.status === 200 || response.status === 201) {
+        const visit = response.data.visit;
+        const visitor = response.data.visitor;
 
-      if (visit?.check_in) {
-        const utcString = visit.check_in.replace(" ", "T") + "Z";
-        const utcDate = new Date(utcString);
-        if (!isNaN(utcDate.getTime())) {
-          const localFaceValue = new Date(
-            utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
-          );
-          const isoLocal = localFaceValue.toISOString();
-          const parts = isoLocal.split("T");
-          date = parts[0];
-          time = parts[1].slice(0, 8);
-        } else {
+        // Trigger notification to host
+        if (formData.host_id && formData.host_role) {
+          try {
+            await api.post("/genereal-notify-host", {
+              host_id: formData.host_id,
+              host_role: formData.host_role,
+              guest_name: formData.name,
+              purpose: formData.purpose,
+            });
+          } catch (notificationError) {
+            // Notification failure should not block the main flow
+            console.error("Failed to notify host:", notificationError);
+          }
+        }
+
+        let date = "";
+        let time = "";
+
+        if (visit?.check_in) {
           const visitTimeParts = visit.check_in.split(" ");
           date = visitTimeParts[0] || "";
-          time = visitTimeParts[1] || "";
+          time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
         }
+
+        // Format date to DD/MM/YYYY
+        const formattedDate = formatDateToDDMMYYYY(date);
+
+        setGuestDetails({
+          name: visitor.name,
+          id: visit.code || "",
+          host: visit.host_name,
+          date: formattedDate,
+          time,
+          purpose: visit.purpose,
+          Contact_info: visitor.contact_number,
+          address: visitor.address,
+        });
+
+        // Create enhanced QR code value with all visit details
+        if (visit.code) {
+          const enhancedQR = createEnhancedQRValue(
+            visit.code,
+            visitor.name,
+            visit.host_name,
+            formattedDate,
+            visit.purpose
+          );
+          setQrValue(enhancedQR);
+        }
+
+        setFormData({
+          name: "",
+          contact_number: "",
+          email: "",
+          address: "",
+          visit_time: "",
+          host_name: formData.host_name,
+          host_id: formData.host_id,
+          host_role: formData.host_role,
+          building: "",
+          floor: "",
+          purpose: "",
+          special_requirements: "",
+          emergency_contact: "",
+          details: "",
+        });
+        setSelectedImage(null);
+        toast.success("Group visitor registered!");
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setShowVisitCardModal(true);
+        }, 2500);
+      } else {
+        toast.error("Unexpected error occurred");
       }
-
-      // Format date to DD/MM/YYYY
-      const formattedDate = formatDateToDDMMYYYY(date);
-
-      setGuestDetails({
-        name: visitor.name,
-        id: visit.code || "",
-        host: visit.host_name,
-        date: formattedDate,
-        time,
-        purpose: visit.purpose,
-        Contact_info: visitor.contact_number,
-        address: visitor.address, 
-      });
-
-      // Create enhanced QR code value with all visit details
-      if (visit.code) {
-        const enhancedQR = createEnhancedQRValue(
-          visit.code,
-          visitor.name,
-          visit.host_name,
-          formattedDate,
-          visit.purpose
-        );
-        setQrValue(enhancedQR);
-      }
-
-      setFormData({
-        name: "",
-        contact_number: "",
-        email: "",
-        address: "",
-        visit_time: "",
-        host_name: formData.host_name,
-        host_id: formData.host_id,
-        host_role: formData.host_role,
-        building: "",
-        floor: "",
-        purpose: "",
-        special_requirements: "",
-        emergency_contact: "",
-        details: "",
-      });
-      setSelectedImage(null);
-      toast.success("Group visitor registered!");
-      setShowSuccessModal(true);
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        setShowVisitCardModal(true);
-      }, 2500);
-    } else {
-      toast.error("Unexpected error occurred");
+    } catch (error) {
+      showValidationErrors(error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    showValidationErrors(error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const handlePrint = () => {
@@ -344,9 +332,8 @@ const handleSubmit = async (e) => {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -654,7 +641,7 @@ const handleSubmit = async (e) => {
                     </div>
                     <div>
                       {typeof guestDetails.id === "string" &&
-                      guestDetails.id.length > 0 ? (
+                        guestDetails.id.length > 0 ? (
                         <QRCode value={qrValue} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>
