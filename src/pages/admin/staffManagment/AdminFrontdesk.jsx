@@ -2,6 +2,7 @@ import { useState } from "react";
 import NavBar from "../include/NavBar";
 import ManageStaffTable from "./ManageFrontdeskTable";
 import BulkUploadModal from "../include/BulkUploadModal";
+import BulkDeleteConfirmModal from "../include/BulkDeleteConfirmModal";
 import api from "../../../context/api";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
@@ -10,6 +11,8 @@ function AdminFrontdesk() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newStaffFormData, setNewStaffFormData] = useState({
     name: "",
@@ -82,8 +85,8 @@ function AdminFrontdesk() {
     } else {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -116,6 +119,18 @@ function AdminFrontdesk() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSelectionChange = (users) => {
+    setSelectedUsers(users);
+  };
+
+  const handleBulkDeleteClick = () => {
+    if (selectedUsers.length === 0) {
+      toast.warning("Please select at least one user to delete");
+      return;
+    }
+    setShowBulkDeleteModal(true);
   };
 
   return (
@@ -181,7 +196,15 @@ function AdminFrontdesk() {
           }}
         >
           <button
-            className="btn btn-success rounded-3 ms-auto"
+            className="btn btn-danger rounded-3 ms-auto"
+            onClick={handleBulkDeleteClick}
+            disabled={selectedUsers.length === 0}
+          >
+            <i className="bi bi-trash me-2"></i>
+            Bulk Delete {selectedUsers.length > 0 && `(${selectedUsers.length})`}
+          </button>
+          <button
+            className="btn btn-success rounded-3"
             onClick={() => setShowBulkUploadModal(true)}
           >
             <i className="bi bi-cloud-arrow-up me-2"></i>
@@ -201,6 +224,7 @@ function AdminFrontdesk() {
         <ManageStaffTable
           refreshKey={refreshKey}
           triggerRefresh={triggerRefresh}
+          onSelectionChange={handleSelectionChange}
         />
       </div>
 
@@ -391,6 +415,19 @@ function AdminFrontdesk() {
         userType="frontdesk"
         onSuccess={() => {
           setShowBulkUploadModal(false);
+          triggerRefresh();
+        }}
+      />
+
+      {/* Bulk Delete Modal */}
+      <BulkDeleteConfirmModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        selectedUsers={selectedUsers}
+        userType="frontdesk"
+        onSuccess={() => {
+          setShowBulkDeleteModal(false);
+          setSelectedUsers([]);
           triggerRefresh();
         }}
       />

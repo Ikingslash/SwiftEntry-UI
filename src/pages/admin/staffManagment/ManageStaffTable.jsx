@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import api from "../../../context/api";
 import { toast } from "react-toastify";
 
-function ManageStaffTable({ refreshKey, triggerRefresh }) {
+function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
   const [staff, setStaff] = useState([]); // Stores staff data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
   const [page, setPage] = useState(1); // State for current page
+  const [selectedUsers, setSelectedUsers] = useState([]); // For bulk delete
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false); // For "View Detail"
@@ -170,6 +171,32 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
     }
   };
 
+  // Bulk delete selection handlers
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedUsers(staff);
+      if (onSelectionChange) onSelectionChange(staff);
+    } else {
+      setSelectedUsers([]);
+      if (onSelectionChange) onSelectionChange([]);
+    }
+  };
+
+  const handleSelectUser = (user, isChecked) => {
+    let updatedSelection;
+    if (isChecked) {
+      updatedSelection = [...selectedUsers, user];
+    } else {
+      updatedSelection = selectedUsers.filter((u) => u.id !== user.id);
+    }
+    setSelectedUsers(updatedSelection);
+    if (onSelectionChange) onSelectionChange(updatedSelection);
+  };
+
+  const isUserSelected = (userId) => {
+    return selectedUsers.some((u) => u.id === userId);
+  };
+
   if (loading) {
     return <p className="text-center mt-5">Loading staff data...</p>;
   }
@@ -184,6 +211,14 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
         <table className="table table-bordered table-hover">
           <thead className="bg-white">
             <tr>
+              <th style={{ width: "50px" }}>
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  onChange={handleSelectAll}
+                  checked={staff.length > 0 && selectedUsers.length === staff.length}
+                />
+              </th>
               <th>Name</th>
               <th>Role</th>
               <th>Department</th>
@@ -195,7 +230,7 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
           <tbody>
             {staff.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center text-muted py-4">
+                <td colSpan="7" className="text-center text-muted py-4">
                   No staff found.
                 </td>
               </tr>
@@ -204,6 +239,14 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
                 <tr key={s.id || idx}>
                   {" "}
                   {/* Use s.id for unique key */}
+                  <td>
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={isUserSelected(s.id)}
+                      onChange={(e) => handleSelectUser(s, e.target.checked)}
+                    />
+                  </td>
                   <td>{s.name}</td>
                   <td>{s.role}</td>
                   <td>{s.department}</td>
@@ -244,9 +287,8 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
                         </li>
                         <li>
                           <button
-                            className={`dropdown-item ${
-                              s.status ? "text-warning" : "text-success"
-                            }`}
+                            className={`dropdown-item ${s.status ? "text-warning" : "text-success"
+                              }`}
                             onClick={() =>
                               handleDeactivateActivate(s.id, s.status)
                             }
@@ -573,6 +615,6 @@ function ManageStaffTable({ refreshKey, triggerRefresh }) {
       )}
     </div>
   );
-  }
+}
 
 export default ManageStaffTable;

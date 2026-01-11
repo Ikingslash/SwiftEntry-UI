@@ -35,7 +35,7 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
 
   const downloadTemplate = async () => {
     try {
-      const response = await api.get(`/admin/users/bulk-template/${userType}`, {
+      const response = await api.get(`/admin/${userType}/bulk-template`, {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -44,7 +44,7 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
       link.setAttribute("download", `bulk_users_template_${userType}.csv`);
       document.body.appendChild(link);
       link.click();
-      link.parentChild.removeChild(link);
+      link.parentNode.removeChild(link);
       toast.success("Template downloaded successfully");
     } catch (error) {
       toast.error("Failed to download template");
@@ -68,7 +68,7 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
       formData.append("user_type", userType);
 
       const response = await api.post(
-        "/admin/users/bulk-upload/" + userType,
+        `/admin/${userType}/bulk-upload`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
