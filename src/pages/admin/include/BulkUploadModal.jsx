@@ -87,8 +87,21 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
         }
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message || "Upload failed";
-      toast.error(errorMsg);
+      // Handle 422 validation errors specially
+      if (error.response?.status === 422 && error.response?.data) {
+        const data = error.response.data;
+        // Show as results even if failed
+        if (data.errors && data.summary) {
+          setResults(data);
+          toast.warning(data.message || "Some users could not be created");
+        } else {
+          const errorMsg = data.message || data.error || "Upload failed";
+          toast.error(errorMsg);
+        }
+      } else {
+        const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || "Upload failed";
+        toast.error(errorMsg);
+      }
       if (error.response?.data?.errors) {
         console.error("Validation errors:", error.response.data.errors);
       }
@@ -187,11 +200,11 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
                         <li><strong>email</strong> - Email address (required, must be unique)</li>
                         <li><strong>position</strong> - Job position (required)</li>
                         <li><strong>company_name</strong> - Company name (required)</li>
-                        <li><strong>employee_id</strong> - Employee ID (required)</li>
                         <li><strong>department</strong> - Department (required)</li>
-                        <li><strong>role</strong> - Role (required, must match: {userType})</li>
-                        <li><strong>fcm_token</strong> - FCM token (optional)</li>
                       </ul>
+                      <small className="text-muted d-block mt-2">
+                        <strong>Note:</strong> Employee ID, role, and login credentials will be auto-generated and sent via email.
+                      </small>
                     </div>
                   </div>
 
