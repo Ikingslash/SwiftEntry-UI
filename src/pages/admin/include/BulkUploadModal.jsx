@@ -35,7 +35,7 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
 
   const downloadTemplate = async () => {
     try {
-      const response = await api.get(`/admin/${userType}/bulk-template`, {
+      const response = await api.get(`/admin/users/bulk-template/${userType}`, {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -68,7 +68,7 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
       formData.append("user_type", userType);
 
       const response = await api.post(
-        `/admin/${userType}/bulk-upload`,
+        `/admin/users/bulk-upload/${userType}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
