@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../../../context/api";
-import {toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
   const [visits, setVisits] = useState([]);
@@ -20,7 +20,7 @@ function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
 
       setVisits(response.data.visits || []);
       setPagination(response.data.pagination || {});
-      setPendingCount((response.data.visits || []).length);
+      setPendingCount(response.data.pagination?.total || 0);
     } catch (error) {
       console.error("Error fetching pending visits:", error);
       const errorMessage = error.response?.data?.error || "Failed to load pending visits.";
@@ -38,55 +38,55 @@ function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
 
   const handleAction = async (visitId, action) => {
     const newStatus = action === 'accept' ? 'approved' : 'rejected';
-    
+
     // Optimistic UI update
     setVisits((currentVisits) =>
-        currentVisits.map((visit) =>
-            visit.id === visitId
-                ? {
-                      ...visit,
-                      temp_status: newStatus,
-                      is_processing: true,
-                  }
-                : visit
-        )
+      currentVisits.map((visit) =>
+        visit.id === visitId
+          ? {
+            ...visit,
+            temp_status: newStatus,
+            is_processing: true,
+          }
+          : visit
+      )
     );
 
     try {
-        const endpoint =
-            action === "accept"
-                ? `front-desk/guests/visit/${visitId}/approve-frontdesk-host`
-                : `front-desk/guests/visit/${visitId}/reject-frontdesk-host`;
+      const endpoint =
+        action === "accept"
+          ? `front-desk/guests/visit/${visitId}/approve-frontdesk-host`
+          : `front-desk/guests/visit/${visitId}/reject-frontdesk-host`;
 
-        await api.post(endpoint);
+      await api.post(endpoint);
 
-        toast.success(`Visit ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully. Notification sent to visitor.`);
+      toast.success(`Visit ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully. Notification sent to visitor.`);
 
-        // Remove the visit from the list after successful action
-        setVisits((currentVisits) =>
-            currentVisits.filter((visit) => visit.id !== visitId)
-        );
-        
-        // Update pending count
-        setPendingCount((prev) => Math.max(0, prev - 1));
-        
-        // Call the parent callback to refresh counts
-        if (onVisitUpdate) {
-          onVisitUpdate();
-        }
+      // Remove the visit from the list after successful action
+      setVisits((currentVisits) =>
+        currentVisits.filter((visit) => visit.id !== visitId)
+      );
+
+      // Update pending count
+      setPendingCount((prev) => Math.max(0, prev - 1));
+
+      // Call the parent callback to refresh counts
+      if (onVisitUpdate) {
+        onVisitUpdate();
+      }
 
     } catch (error) {
-         console.error(`Error ${action}ing visit:`, error);
-        toast.error(`Failed to ${action} visit: ${error.response?.data?.error || 'Server error'}`);
+      console.error(`Error ${action}ing visit:`, error);
+      toast.error(`Failed to ${action} visit: ${error.response?.data?.error || 'Server error'}`);
 
-        // Rollback UI on failure
-        setVisits((currentVisits) =>
-            currentVisits.map((visit) =>
-                visit.id === visitId
-                    ? { ...visit, temp_status: undefined, is_processing: false }
-                    : visit
-            )
-        );
+      // Rollback UI on failure
+      setVisits((currentVisits) =>
+        currentVisits.map((visit) =>
+          visit.id === visitId
+            ? { ...visit, temp_status: undefined, is_processing: false }
+            : visit
+        )
+      );
     }
   };
 
@@ -165,7 +165,7 @@ function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
                 ))}
               </tbody>
             </table>
-            
+
             {/* Pagination Controls */}
             {pagination.last_page > 1 && (
               <div className="d-flex justify-content-between align-items-center mt-3">
