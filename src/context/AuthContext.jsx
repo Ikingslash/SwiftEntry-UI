@@ -36,6 +36,13 @@ const AUTH_PATHS = {
     reset: "/front-desk/auth/reset-password",
     profile: "/front-desk/profile",
   },
+  self_service: {
+    login: "/self-service/login",
+    forgot: null,
+    verify: null,
+    reset: null,
+    profile: "/self-service/profile",
+  },
 };
 
 const normalizeUser = (rawUser) => {
@@ -57,15 +64,15 @@ const normalizeUser = (rawUser) => {
   if (profile) {
     // Try to get ID from multiple possible sources
     const userId = rawUser.id ??
-                   profile.id ??
-                   (storedUser && storedUser.id) ??
-                   null;
+      profile.id ??
+      (storedUser && storedUser.id) ??
+      null;
 
     // Try to get role from multiple possible sources
     const userRole = rawUser.role ??
-                     profile.role ??
-                     (storedUser && storedUser.role) ??
-                     "";
+      profile.role ??
+      (storedUser && storedUser.role) ??
+      "";
 
     if (!userId) {
       console.warn("normalizeUser: Could not determine user ID", {
@@ -142,202 +149,205 @@ export const AuthProvider = ({ children }) => {
 
   const getProfileEndpoint = (userRole) => AUTH_PATHS[userRole]?.profile;
 
-useEffect(() => {
-  const checkAuth = async () => {
-    const storedToken = localStorage.getItem("token");
-    const storedRole = localStorage.getItem("userRole");
-    const storedUserRaw = localStorage.getItem("user");
+  useEffect(() => {
+    const checkAuth = async () => {
+      const storedToken = localStorage.getItem("token");
+      const storedRole = localStorage.getItem("userRole");
+      const storedUserRaw = localStorage.getItem("user");
 
-    // No auth data → stop and exit
-    if (!storedToken || !storedRole || !storedUserRaw) {
-      console.log("checkAuth: Missing auth data in localStorage");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Parse stored user first
-      let storedUser = null;
-      try {
-        storedUser = JSON.parse(storedUserRaw);
-      } catch (e) {
-        console.error("Failed to parse stored user:", e);
-        logout();
-        return;
-      }
-
-      // Attach token for API requests
-      api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
-
-      const profileEndpoint = getProfileEndpoint(storedRole);
-
-      if (!profileEndpoint) {
-        console.warn("No profile endpoint for role:", storedRole);
-
-        // Use stored user data
-        const normalized = normalizeUser(storedUser);
-
-        if (normalized?.id) {
-          setUser(normalized);
-          setToken(storedToken);
-          setRole(storedRole);
-          console.log("checkAuth: Using stored user data", normalized);
-        } else {
-          console.error("checkAuth: Invalid stored user data");
-          logout();
-        }
-
+      // No auth data → stop and exit
+      if (!storedToken || !storedRole || !storedUserRaw) {
+        console.log("checkAuth: Missing auth data in localStorage");
         setLoading(false);
         return;
       }
 
       try {
-        // Fetch profile from backend
-        const response = await api.get(profileEndpoint);
-        const rawUser = response.data.user ?? response.data;
-
-        // Merge with stored user data to ensure we have ID and role
-        const mergedUser = {
-          ...storedUser,
-          ...rawUser,
-          id: rawUser.id ?? storedUser.id,
-          role: rawUser.role ?? storedRole, // Use storedRole as fallback
-        };
-
-        const normalized = normalizeUser(mergedUser);
-
-        if (!normalized || !normalized.id) {
-          console.error("Invalid normalized user after profile fetch:", normalized);
-          // Try with just stored data as fallback
-          const fallbackNormalized = normalizeUser(storedUser);
-          if (fallbackNormalized?.id) {
-            console.log("Using fallback stored user data");
-            setUser(fallbackNormalized);
-            setToken(storedToken);
-            setRole(storedRole);
-          } else {
-            logout();
-          }
+        // Parse stored user first
+        let storedUser = null;
+        try {
+          storedUser = JSON.parse(storedUserRaw);
+        } catch (e) {
+          console.error("Failed to parse stored user:", e);
+          logout();
           return;
         }
 
-        // Store fresh normalized user
-        setUser(normalized);
-        setToken(storedToken);
-        setRole(storedRole);
+        // Attach token for API requests
+        api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
 
-        // Update localStorage with the fresh data
-        localStorage.setItem("user", JSON.stringify(normalized));
+        const profileEndpoint = getProfileEndpoint(storedRole);
 
-        console.log("User authenticated via profile endpoint:", normalized);
-      } catch (profileError) {
-        console.error("Profile fetch failed:", profileError);
+        if (!profileEndpoint) {
+          console.warn("No profile endpoint for role:", storedRole);
 
-        // If profile fetch fails, use stored user data
-        const normalized = normalizeUser(storedUser);
-        if (normalized?.id) {
+          // Use stored user data
+          const normalized = normalizeUser(storedUser);
+
+          if (normalized?.id) {
+            setUser(normalized);
+            setToken(storedToken);
+            setRole(storedRole);
+            console.log("checkAuth: Using stored user data", normalized);
+          } else {
+            console.error("checkAuth: Invalid stored user data");
+            logout();
+          }
+
+          setLoading(false);
+          return;
+        }
+
+        try {
+          // Fetch profile from backend
+          const response = await api.get(profileEndpoint);
+          const rawUser = response.data.user ?? response.data;
+
+          // Merge with stored user data to ensure we have ID and role
+          const mergedUser = {
+            ...storedUser,
+            ...rawUser,
+            id: rawUser.id ?? storedUser.id,
+            role: rawUser.role ?? storedRole, // Use storedRole as fallback
+          };
+
+          const normalized = normalizeUser(mergedUser);
+
+          if (!normalized || !normalized.id) {
+            console.error("Invalid normalized user after profile fetch:", normalized);
+            // Try with just stored data as fallback
+            const fallbackNormalized = normalizeUser(storedUser);
+            if (fallbackNormalized?.id) {
+              console.log("Using fallback stored user data");
+              setUser(fallbackNormalized);
+              setToken(storedToken);
+              setRole(storedRole);
+            } else {
+              logout();
+            }
+            return;
+          }
+
+          // Store fresh normalized user
           setUser(normalized);
           setToken(storedToken);
           setRole(storedRole);
-          console.log("Using stored user after profile fetch failure", normalized);
-        } else {
-          logout();
-        }
-      }
 
-    } catch (error) {
-      console.error("Auth refresh failed:", error);
-      logout();
-    }
+          // Update localStorage with the fresh data
+          localStorage.setItem("user", JSON.stringify(normalized));
 
-    setLoading(false);
-  };
+          console.log("User authenticated via profile endpoint:", normalized);
+        } catch (profileError) {
+          console.error("Profile fetch failed:", profileError);
 
-  checkAuth();
-}, []);
-
-
-const login = async (email, password) => {
-  const roles = ["admin", "staff", "security", "front_desk"];
-  let dashboard = "/";
-
-  try {
-    for (const role of roles) {
-      const path = AUTH_PATHS[role].login;
-      try {
-        const response = await api.post(path, { email, password });
-
-        if (response.data.token) {
-          const rawUser = response.data.user || response.data;
-
-          // Ensure the user object has role and id
-          const userWithRole = {
-            ...rawUser,
-            role: role,
-            // Make sure ID is included
-            id: rawUser.id || rawUser.user_id || null,
-          };
-
-          const userData = normalizeUser(userWithRole);
-
-          // Validate that we have an ID
-          if (!userData.id) {
-            console.error("Login succeeded but user ID is missing:", userData);
-            toast.error("Login failed: User data incomplete");
-            return false;
+          // If profile fetch fails, use stored user data
+          const normalized = normalizeUser(storedUser);
+          if (normalized?.id) {
+            setUser(normalized);
+            setToken(storedToken);
+            setRole(storedRole);
+            console.log("Using stored user after profile fetch failure", normalized);
+          } else {
+            logout();
           }
-
-          setUser(userData);
-          setToken(response.data.token);
-          setRole(role);
-
-          switch (role) {
-            case "admin":
-              dashboard = "/admin-dashboard";
-              break;
-            case "staff":
-              dashboard = "/staff-dashboard";
-              break;
-            case "security":
-              dashboard = "/security-dashboard";
-              break;
-            case "front_desk":
-              dashboard = "/front-desk-dashboard";
-              break;
-            default:
-              dashboard = "/";
-          }
-
-          // Store in localStorage
-          localStorage.setItem("token", response.data.token);
-          localStorage.setItem("userRole", role);
-          localStorage.setItem("user", JSON.stringify(userData));
-
-          // Set authorization header
-          api.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${response.data.token}`;
-
-          navigate(dashboard);
-          toast.success("Login successful!");
-          return true;
         }
+
       } catch (error) {
-        console.error(
-          `Failed login attempt at ${path}`,
-          error.response?.data || error.message
-        );
+        console.error("Auth refresh failed:", error);
+        logout();
       }
-    }
 
-    toast.error("Invalid credentials or user not found.");
-    return false;
-  } catch (error) {
-    console.error("Login failed due to unexpected error:", error);
-    toast.error("An error occurred. Please try again.");
-    return false;
-  }
-};
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+
+  const login = async (email, password) => {
+    const roles = ["admin", "staff", "security", "front_desk", "self_service"];
+    let dashboard = "/";
+
+    try {
+      for (const role of roles) {
+        const path = AUTH_PATHS[role].login;
+        try {
+          const response = await api.post(path, { email, password });
+
+          if (response.data.token) {
+            const rawUser = response.data.user || response.data;
+
+            // Ensure the user object has role and id
+            const userWithRole = {
+              ...rawUser,
+              role: role,
+              // Make sure ID is included
+              id: rawUser.id || rawUser.user_id || null,
+            };
+
+            const userData = normalizeUser(userWithRole);
+
+            // Validate that we have an ID
+            if (!userData.id) {
+              console.error("Login succeeded but user ID is missing:", userData);
+              toast.error("Login failed: User data incomplete");
+              return false;
+            }
+
+            setUser(userData);
+            setToken(response.data.token);
+            setRole(role);
+
+            switch (role) {
+              case "admin":
+                dashboard = "/admin-dashboard";
+                break;
+              case "staff":
+                dashboard = "/staff-dashboard";
+                break;
+              case "security":
+                dashboard = "/security-dashboard";
+                break;
+              case "front_desk":
+                dashboard = "/front-desk-dashboard";
+                break;
+              case "self_service":
+                dashboard = "/visitor-dashboard";
+                break;
+              default:
+                dashboard = "/";
+            }
+
+            // Store in localStorage
+            localStorage.setItem("token", response.data.token);
+            localStorage.setItem("userRole", role);
+            localStorage.setItem("user", JSON.stringify(userData));
+
+            // Set authorization header
+            api.defaults.headers.common[
+              "Authorization"
+            ] = `Bearer ${response.data.token}`;
+
+            navigate(dashboard);
+            toast.success("Login successful!");
+            return true;
+          }
+        } catch (error) {
+          console.error(
+            `Failed login attempt at ${path}`,
+            error.response?.data || error.message
+          );
+        }
+      }
+
+      toast.error("Invalid credentials or user not found.");
+      return false;
+    } catch (error) {
+      console.error("Login failed due to unexpected error:", error);
+      toast.error("An error occurred. Please try again.");
+      return false;
+    }
+  };
   const logout = () => {
     console.log("Logging out user...");
     setUser(null);
@@ -458,97 +468,97 @@ const login = async (email, password) => {
     }
   };
 
- const resetPassword = async (
-  email,
-  resetToken,
-  password,
-  confirmPassword
-) => {
-  const { userRole } = resetFlowData;
+  const resetPassword = async (
+    email,
+    resetToken,
+    password,
+    confirmPassword
+  ) => {
+    const { userRole } = resetFlowData;
 
-  if (!email || !resetToken || !userRole) {
-    console.error("Missing reset flow data:", {
-      email,
-      resetToken,
-      userRole,
-    });
-    toast.error("Password reset process failed. Please restart.");
-    navigate("/forgot-password");
-    return false;
-  }
+    if (!email || !resetToken || !userRole) {
+      console.error("Missing reset flow data:", {
+        email,
+        resetToken,
+        userRole,
+      });
+      toast.error("Password reset process failed. Please restart.");
+      navigate("/forgot-password");
+      return false;
+    }
 
-  try {
-    const path = AUTH_PATHS[userRole].reset;
-    console.log("Reset password attempt:", {
-      email,
-      userRole,
-      path,
-      token_length: resetToken.length,
-      token_prefix: resetToken.substring(0, 10) + "...",
-    });
+    try {
+      const path = AUTH_PATHS[userRole].reset;
+      console.log("Reset password attempt:", {
+        email,
+        userRole,
+        path,
+        token_length: resetToken.length,
+        token_prefix: resetToken.substring(0, 10) + "...",
+      });
 
-    // Prepare request data based on role
-    const requestData = userRole === "security"
-      ? {
+      // Prepare request data based on role
+      const requestData = userRole === "security"
+        ? {
           email,
           reset_token: resetToken,
           password,
           password_confirmation: confirmPassword,
         }
-      : {
+        : {
           email,
           token: resetToken, // Other roles might use 'token' instead of 'reset_token'
           password,
           password_confirmation: confirmPassword,
         };
 
-    console.log("Sending request data:", {
-      ...requestData,
-      password: "***", // Hide password in logs
-      password_confirmation: "***"
-    });
+      console.log("Sending request data:", {
+        ...requestData,
+        password: "***", // Hide password in logs
+        password_confirmation: "***"
+      });
 
-    // Use appropriate method based on role
-    const response = userRole === "security"
-      ? await api.put(path, requestData)
-      : await api.post(path, requestData);
+      // Use appropriate method based on role
+      const response = userRole === "security"
+        ? await api.put(path, requestData)
+        : await api.post(path, requestData);
 
-    console.log("Reset password response:", response.data);
+      console.log("Reset password response:", response.data);
 
-    if (response.data.message) {
-      // Clear all reset flow data upon success
-      setResetFlowData({ email: null, resetToken: null, userRole: null });
-      toast.success("Password successfully reset! Please sign in.");
-      return true;
+      if (response.data.message) {
+        // Clear all reset flow data upon success
+        setResetFlowData({ email: null, resetToken: null, userRole: null });
+        toast.success("Password successfully reset! Please sign in.");
+        return true;
+      }
+    } catch (error) {
+      console.error("Password reset failed:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        config: error.config?.data ? JSON.parse(error.config.data) : null
+      });
+
+      let errorMessage = "Failed to reset password. Token may have expired.";
+
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.status === 401) {
+        errorMessage = "Invalid or expired reset token. Please start the process again.";
+      } else if (error.response?.status === 422) {
+        errorMessage = "Validation failed: " + JSON.stringify(error.response.data.errors);
+      }
+
+      toast.error(errorMessage);
+
+      // If token is invalid, clear reset flow data
+      if (error.response?.status === 401) {
+        setResetFlowData({ email: null, resetToken: null, userRole: null });
+      }
+
+      return false;
     }
-  } catch (error) {
-    console.error("Password reset failed:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      config: error.config?.data ? JSON.parse(error.config.data) : null
-    });
-
-    let errorMessage = "Failed to reset password. Token may have expired.";
-
-    if (error.response?.data?.error) {
-      errorMessage = error.response.data.error;
-    } else if (error.response?.status === 401) {
-      errorMessage = "Invalid or expired reset token. Please start the process again.";
-    } else if (error.response?.status === 422) {
-      errorMessage = "Validation failed: " + JSON.stringify(error.response.data.errors);
-    }
-
-    toast.error(errorMessage);
-
-    // If token is invalid, clear reset flow data
-    if (error.response?.status === 401) {
-      setResetFlowData({ email: null, resetToken: null, userRole: null });
-    }
-
-    return false;
-  }
-};
+  };
 
   return (
     <AuthContext.Provider
