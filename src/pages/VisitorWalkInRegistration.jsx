@@ -59,7 +59,7 @@ export default function VisitorWalkInRegistration() {
           setVisitPurposes(response.data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleChange = (e) => {
@@ -86,8 +86,8 @@ export default function VisitorWalkInRegistration() {
     } else {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -104,23 +104,12 @@ export default function VisitorWalkInRegistration() {
       }
     });
 
-    // Format visit time
+    // Format visit_time - datetime-local already provides local time
     if (formData.visit_time) {
-      const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime.getTime())) {
-        const utcTime = new Date(
-          visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-        );
-        const formattedVisitTime = utcTime
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ");
-        formDataToSend.append("visit_time", formattedVisitTime);
-      } else {
-        toast.error("Invalid visit time format.");
-        setLoading(false);
-        return;
-      }
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
     }
 
     try {

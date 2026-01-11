@@ -172,26 +172,13 @@ const handleSubmit = async (e) => {
     }
   });
 
-   // Fix for timezone issue
+   // Format visit_time - datetime-local already provides local time
    if (formData.visit_time) {
-     const visitTime = new Date(formData.visit_time);
-     if (!isNaN(visitTime.getTime())) {
-       // Convert to UTC to avoid timezone issues
-       const utcTime = new Date(
-         visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-       );
-       const formattedVisitTime = utcTime
-         .toISOString()
-         .slice(0, 19)
-         .replace("T", " ");
-       formDataToSend.append("visit_time", formattedVisitTime);
-       console.log("Original time:", formData.visit_time);
-       console.log("Sending UTC time:", formattedVisitTime);
-     } else {
-       toast.error("Invalid visit time format.");
-       setLoading(false);
-       return;
-     }
+     // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+     // Just replace T with space and add seconds for the API format
+     const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+     formDataToSend.append("visit_time", formattedVisitTime);
+     console.log("Formatted visit time:", formattedVisitTime);
    }
 
 

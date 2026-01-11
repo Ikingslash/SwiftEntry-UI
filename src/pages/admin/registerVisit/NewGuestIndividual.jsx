@@ -51,10 +51,10 @@ export default function NewGuestIndividual() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          api.post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => {});
+          api.post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Fetch the list of visit purposes from the backend
     api
@@ -64,7 +64,7 @@ export default function NewGuestIndividual() {
           setVisitPurposes(response.data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
@@ -117,7 +117,7 @@ export default function NewGuestIndividual() {
     } else {
       toast.error(
         error.response?.data?.message ||
-          "Something went wrong. Please try again."
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -147,27 +147,14 @@ export default function NewGuestIndividual() {
       }
     });
 
-      // Fix for timezone issue
-      if (formData.visit_time) {
-        const visitTime = new Date(formData.visit_time);
-        if (!isNaN(visitTime.getTime())) {
-          // Convert to UTC to avoid timezone issues
-          const utcTime = new Date(
-            visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-          );
-          const formattedVisitTime = utcTime
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ");
-          formDataToSend.append("visit_time", formattedVisitTime);
-          console.log("Original time:", formData.visit_time);
-          console.log("Sending UTC time:", formattedVisitTime);
-        } else {
-          toast.error("Invalid visit time format.");
-          setLoading(false);
-          return;
-        }
-      }
+    // Format visit_time - datetime-local already provides local time
+    if (formData.visit_time) {
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
+    }
 
     // Append host fields
     formDataToSend.append("host_id", formData.host_id);
@@ -258,7 +245,7 @@ export default function NewGuestIndividual() {
           details: "",
         });
         setSelectedImage(null);
-         toast.success("Group visitor registered!");
+        toast.success("Group visitor registered!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
@@ -314,9 +301,8 @@ export default function NewGuestIndividual() {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -614,7 +600,7 @@ export default function NewGuestIndividual() {
                     </div>
                     <div>
                       {typeof guestDetails.id === "string" &&
-                      guestDetails.id.length > 0 ? (
+                        guestDetails.id.length > 0 ? (
                         <QRCode value={guestDetails.id} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>

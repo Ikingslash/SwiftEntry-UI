@@ -72,7 +72,7 @@ export default function RegisterNewGuestIndividual() {
             .post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
         }
       })
-      .catch(() => {  });
+      .catch(() => { });
 
     // Fetch the list of all app users (staff, security, front desk)
     api
@@ -90,7 +90,7 @@ export default function RegisterNewGuestIndividual() {
           setVisitPurposes(response.data);
         }
       })
-      .catch(() => {  });
+      .catch(() => { });
 
     // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
@@ -102,9 +102,9 @@ export default function RegisterNewGuestIndividual() {
   }, []);
 
 
-const handleChange = (e) => {
-  const { name, value, selectedOptions } = e.target;
-  if (name === "host_id") {
+  const handleChange = (e) => {
+    const { name, value, selectedOptions } = e.target;
+    if (name === "host_id") {
       const [role, id] = value.split("-");
 
       // Normalize role to snake_case for backend compatibility
@@ -118,9 +118,9 @@ const handleChange = (e) => {
         host_name: selectedHostName,
       });
     } else {
-    setFormData({ ...formData, [name]: value });
-  }
-};
+      setFormData({ ...formData, [name]: value });
+    }
+  };
 
   const showValidationErrors = (error) => {
     if (error.response && error.response.status === 422) {
@@ -141,8 +141,8 @@ const handleChange = (e) => {
     } else {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -160,26 +160,13 @@ const handleChange = (e) => {
       }
     });
 
-    // Fix for timezone issue
+    // Format visit_time - datetime-local already provides local time
     if (formData.visit_time) {
-      const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime.getTime())) {
-        // Convert to UTC to avoid timezone issues
-        const utcTime = new Date(
-          visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-        );
-        const formattedVisitTime = utcTime
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ");
-        formDataToSend.append("visit_time", formattedVisitTime);
-        console.log("Original time:", formData.visit_time);
-        console.log("Sending UTC time:", formattedVisitTime);
-      } else {
-        toast.error("Invalid visit time format.");
-        setLoading(false);
-        return;
-      }
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
     }
 
     // Append host_id and host_role
@@ -234,7 +221,7 @@ const handleChange = (e) => {
             time = visitTimeParts[1] || "";
           }
         }
-        
+
         const qrValue = createEnhancedQRValue(
           visit.code || "",
           visitor.name,
@@ -242,7 +229,7 @@ const handleChange = (e) => {
           date,
           visit.purpose
         );
-        
+
         setGuestDetails({
           name: visitor.name,
           id: visit.code || "",
@@ -346,9 +333,8 @@ const handleChange = (e) => {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -434,9 +420,8 @@ const handleChange = (e) => {
                       className="form-select rounded-pill"
                       id="host_id"
                       name="host_id"
-                      value={`${formData.host_role || ""}-${
-                        formData.host_id || ""
-                      }`}
+                      value={`${formData.host_role || ""}-${formData.host_id || ""
+                        }`}
                       onChange={handleChange}
                       required
                     >
@@ -666,7 +651,7 @@ const handleChange = (e) => {
                     </div>
                     <div>
                       {typeof guestDetails.id === "string" &&
-                      guestDetails.id.length > 0 ? (
+                        guestDetails.id.length > 0 ? (
                         <QRCode value={qrValue} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>

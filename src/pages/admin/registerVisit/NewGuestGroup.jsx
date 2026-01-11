@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 
 function NewGuestGroup() {
   const [formData, setFormData] = useState({
-  group_leader_name: "",
+    group_leader_name: "",
     group_leader_contact: "",
     group_leader_email: "",
     organization_name: "",
@@ -48,10 +48,10 @@ function NewGuestGroup() {
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
-          api.post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => {});
+          api.post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Fetch visit purposes
     api
@@ -61,7 +61,7 @@ function NewGuestGroup() {
           setVisitPurposes(response.data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Set up the listener for incoming messages
     const unsubscribe = onMessageListener((payload) => {
@@ -113,7 +113,7 @@ function NewGuestGroup() {
     } else {
       toast.error(
         error.response?.data?.message ||
-          "Something went wrong. Please try again."
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -143,30 +143,17 @@ function NewGuestGroup() {
       }
     });
 
-    // Fix for timezone issue
+    // Format visit_time - datetime-local already provides local time
     if (formData.visit_time) {
-      const visitTime = new Date(formData.visit_time);
-      if (!isNaN(visitTime.getTime())) {
-        // Convert to UTC to avoid timezone issues
-        const utcTime = new Date(
-          visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-        );
-        const formattedVisitTime = utcTime
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ");
-        formDataToSend.append("visit_time", formattedVisitTime);
-        console.log("Original time:", formData.visit_time);
-        console.log("Sending UTC time:", formattedVisitTime);
-      } else {
-        toast.error("Invalid visit time format.");
-        setLoading(false);
-        return;
-      }
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
     }
 
     // host fields
-     formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_id", formData.host_id);
     formDataToSend.append("host_role", formData.host_role);
     formDataToSend.append("host_name", formData.host_name);
 
@@ -192,7 +179,7 @@ function NewGuestGroup() {
               guest_name: formData.group_leader_name,
               purpose: formData.purpose,
             });
-          }  catch (notificationError) {
+          } catch (notificationError) {
             // Notification failure should not block the main flow
             console.error("Failed to notify host:", notificationError);
           }
@@ -312,9 +299,8 @@ function NewGuestGroup() {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -363,7 +349,7 @@ function NewGuestGroup() {
                       </div>
                     </div>
                   </div>
-                   <div className="mb-3">
+                  <div className="mb-3">
                     <label className="form-label">Address</label>
                     <input
                       type="text"

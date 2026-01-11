@@ -38,98 +38,98 @@ const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purp
 };
 
 function RegisterGuestGroup() {
- const [formData, setFormData] = useState({
-   group_leader_name: "",
-   group_leader_contact: "",
-   group_leader_email: "",
-   organization_name: "",
-   address: "",
-   group_size: "",
-   visit_time: "",
-   host_name: "",
-   building: "",
-   floor: "",
-   purpose: "",
-   special_requirements: "",
-   emergency_contact: "",
-   previsit_instruction: "",
-   details: "",
- });
- const [loading, setLoading] = useState(false);
- const [showSuccessModal, setShowSuccessModal] = useState(false);
- const [showVisitCardModal, setShowVisitCardModal] = useState(false);
- const [guestDetails, setGuestDetails] = useState({});
- const [qrValue, setQrValue] = useState("");
- const printRef = useRef();
- const [appUsers, setAppUsers] = useState([]);
- const [visitPurposes, setVisitPurposes] = useState([]);
+  const [formData, setFormData] = useState({
+    group_leader_name: "",
+    group_leader_contact: "",
+    group_leader_email: "",
+    organization_name: "",
+    address: "",
+    group_size: "",
+    visit_time: "",
+    host_name: "",
+    building: "",
+    floor: "",
+    purpose: "",
+    special_requirements: "",
+    emergency_contact: "",
+    previsit_instruction: "",
+    details: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+  const [guestDetails, setGuestDetails] = useState({});
+  const [qrValue, setQrValue] = useState("");
+  const printRef = useRef();
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
 
- // useEffect to handle Firebase messaging and token registration, AND to fetch users.
- useEffect(() => {
-   // Request permission and get the FCM token
-   requestForToken()
-     .then((fcmToken) => {
-       if (fcmToken) {
-         console.log("FCM token:", fcmToken);
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          console.log("FCM token:", fcmToken);
 
-         api
-           .post("/save-fcm-token", { fcm_token: fcmToken })
-           .then((response) => {
-             console.log("FCM token saved on backend:", response.data);
-           })
-           .catch((error) => {
-             console.error("Failed to save FCM token on backend:", error);
-           });
-       }
-     })
-     .catch((err) => {
-       console.error("An error occurred while retrieving token. ", err);
-     });
+          api
+            .post("/save-fcm-token", { fcm_token: fcmToken })
+            .then((response) => {
+              console.log("FCM token saved on backend:", response.data);
+            })
+            .catch((error) => {
+              console.error("Failed to save FCM token on backend:", error);
+            });
+        }
+      })
+      .catch((err) => {
+        console.error("An error occurred while retrieving token. ", err);
+      });
 
-   // Fetch the list of all app users (staff, security, front desk)
-   api
-     .get("/frontdesk-app-users")
-     .then((response) => {
-       // Assuming the response is an array of user names
-       if (response.data && Array.isArray(response.data.users)) {
-         setAppUsers(response.data.users);
-       } else {
-         console.error(
-           "API response for users is not an array:",
-           response.data
-         );
-       }
-     })
-     .catch((error) => {
-       console.error("Failed to fetch app users:", error);
-     });
-   // Fetch the list of visit purposes from the backend
-   api
-     .get("/front-desk/guests/settings/visit-purposes")
-     .then((response) => {
-       if (response.data && Array.isArray(response.data)) {
-         setVisitPurposes(response.data);
-       } else {
-         console.error(
-           "API response for purposes is not an array:",
-           response.data
-         );
-       }
-     })
-     .catch((error) => {
-       console.error("Failed to fetch visit purposes:", error);
-     });
+    // Fetch the list of all app users (staff, security, front desk)
+    api
+      .get("/frontdesk-app-users")
+      .then((response) => {
+        // Assuming the response is an array of user names
+        if (response.data && Array.isArray(response.data.users)) {
+          setAppUsers(response.data.users);
+        } else {
+          console.error(
+            "API response for users is not an array:",
+            response.data
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch app users:", error);
+      });
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/front-desk/guests/settings/visit-purposes")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        } else {
+          console.error(
+            "API response for purposes is not an array:",
+            response.data
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch visit purposes:", error);
+      });
 
-   // Set up the listener for incoming messages.
-   const unsubscribe = onMessageListener((payload) => {
-     toast.info(`${payload.notification.title}: ${payload.notification.body}`);
-   });
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
 
-   // Cleanup function to detach the listener when the component unmounts
-   return () => unsubscribe();
- }, []);
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
 
- const handleChange = (e) => {
+  const handleChange = (e) => {
     const { name, value, selectedOptions } = e.target;
     if (name === "host_id") {
       const [role, id] = value.split("-");
@@ -149,182 +149,169 @@ function RegisterGuestGroup() {
     }
   };
 
- const showValidationErrors = (error) => {
-   if (error.response && error.response.status === 422) {
-     let validationErrors = error.response.data.errors || error.response.data;
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
 
-     if (typeof validationErrors === "string") {
-       toast.error(validationErrors);
-       return;
-     }
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
+      }
 
-     Object.values(validationErrors).forEach((messages) => {
-       if (Array.isArray(messages)) {
-         messages.forEach((msg) => toast.error(msg));
-       } else if (typeof messages === "string") {
-         toast.error(messages);
-       }
-     });
-   } else {
-     toast.error(
-       error.response?.data?.message ||
-         error.message ||
-         "Something went wrong. Please try again."
-     );
-   }
- };
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong. Please try again."
+      );
+    }
+  };
 
- const handleSubmit = async (e) => {
-   e.preventDefault();
-   setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-   const formDataToSend = new FormData();
+    const formDataToSend = new FormData();
 
-   Object.entries(formData).forEach(([key, value]) => {
-     if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
-       formDataToSend.append(key, value);
-     }
-   });
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
+        formDataToSend.append(key, value);
+      }
+    });
 
-   // Fix for timezone issue
-   if (formData.visit_time) {
-     const visitTime = new Date(formData.visit_time);
-     if (!isNaN(visitTime.getTime())) {
-       // Convert to UTC to avoid timezone issues
-       const utcTime = new Date(
-         visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-       );
-       const formattedVisitTime = utcTime
-         .toISOString()
-         .slice(0, 19)
-         .replace("T", " ");
-       formDataToSend.append("visit_time", formattedVisitTime);
-       console.log("Original time:", formData.visit_time);
-       console.log("Sending UTC time:", formattedVisitTime);
-     } else {
-       toast.error("Invalid visit time format.");
-       setLoading(false);
-       return;
-     }
-   }
-   // Append host_id and host_role
-   formDataToSend.append("host_id", formData.host_id);
-   formDataToSend.append("host_role", formData.host_role);
+    // Format visit_time - datetime-local already provides local time
+    if (formData.visit_time) {
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
+    }
+    // Append host_id and host_role
+    formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_role", formData.host_role);
 
-   try {
-     const response = await api.post(
-       "/front-desk/guests/register-group",
-       formDataToSend,
-       {
-         headers: { "Content-Type": "multipart/form-data" },
-       }
-     );
+    try {
+      const response = await api.post(
+        "/front-desk/guests/register-group",
+        formDataToSend,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-     if (response.status === 200 || response.status === 201) {
-       const visit = response.data.visit;
-       const visitor = response.data.visitor;
+      if (response.status === 200 || response.status === 201) {
+        const visit = response.data.visit;
+        const visitor = response.data.visitor;
 
-       if (formData.host_id && formData.host_role) {
-         try {
-           await api.post("/genereal-notify-host", {
-             host_id: formData.host_id,
-             host_role: formData.host_role,
-             guest_name: formData.group_leader_name,
-             purpose: formData.purpose,
-           });
-           console.log("Notification trigger sent to backend.");
-           toast.success("Notification sent to host successfully.");
-         } catch (notificationError) {
-           console.error(
-             "Failed to trigger notification:" +
-               (notificationError.response?.data?.message || "Server error."),
-             notificationError
-           );
-         }
-       } else {
-         console.warn("Host ID or Role missing, skipping host notification.");
-       }
-       let date = "";
-       let time = "";
+        if (formData.host_id && formData.host_role) {
+          try {
+            await api.post("/genereal-notify-host", {
+              host_id: formData.host_id,
+              host_role: formData.host_role,
+              guest_name: formData.group_leader_name,
+              purpose: formData.purpose,
+            });
+            console.log("Notification trigger sent to backend.");
+            toast.success("Notification sent to host successfully.");
+          } catch (notificationError) {
+            console.error(
+              "Failed to trigger notification:" +
+              (notificationError.response?.data?.message || "Server error."),
+              notificationError
+            );
+          }
+        } else {
+          console.warn("Host ID or Role missing, skipping host notification.");
+        }
+        let date = "";
+        let time = "";
 
-       if (visit?.visit_time) {
-         const utcString = visit.visit_time.replace(" ", "T") + "Z";
-         const utcDate = new Date(utcString);
-         if (!isNaN(utcDate.getTime())) {
-           const localFaceValue = new Date(
-             utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
-           );
-           const isoLocal = localFaceValue.toISOString();
-           const parts = isoLocal.split("T");
-           date = formatDateToDDMMYYYY(parts[0]);
-           time = parts[1].slice(0, 8);
-         } else {
-           const visitTimeParts = visit.visit_time.split(" ");
-           date = formatDateToDDMMYYYY(visitTimeParts[0] || "");
-           time = visitTimeParts[1] || "";
-         }
-       }
+        if (visit?.visit_time) {
+          const utcString = visit.visit_time.replace(" ", "T") + "Z";
+          const utcDate = new Date(utcString);
+          if (!isNaN(utcDate.getTime())) {
+            const localFaceValue = new Date(
+              utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
+            );
+            const isoLocal = localFaceValue.toISOString();
+            const parts = isoLocal.split("T");
+            date = formatDateToDDMMYYYY(parts[0]);
+            time = parts[1].slice(0, 8);
+          } else {
+            const visitTimeParts = visit.visit_time.split(" ");
+            date = formatDateToDDMMYYYY(visitTimeParts[0] || "");
+            time = visitTimeParts[1] || "";
+          }
+        }
 
-       const qrValue = createEnhancedQRValue(
-         visit.code || "",
-         visitor.name,
-         visit.host_name,
-         date,
-         visit.purpose
-       );
+        const qrValue = createEnhancedQRValue(
+          visit.code || "",
+          visitor.name,
+          visit.host_name,
+          date,
+          visit.purpose
+        );
 
-       setGuestDetails({
-         name: visitor.name,
-         id: visit.code || "",
-         host: visit.host_name,
-         date,
-         time,
-         purpose: visit.purpose,
-         Contact_info: visitor.contact_number,
-         address: visitor.address,
-       });
+        setGuestDetails({
+          name: visitor.name,
+          id: visit.code || "",
+          host: visit.host_name,
+          date,
+          time,
+          purpose: visit.purpose,
+          Contact_info: visitor.contact_number,
+          address: visitor.address,
+        });
 
-       if (visit.code) {
-         setQrValue(qrValue);
-       }
-       setFormData({
-         group_leader_name: "",
-         group_leader_contact: "",
-         group_leader_email: "",
-         organization_name: "",
-         address: "",
-         group_size: "",
-         visit_time: "",
-         host_name: "",
-         host_id: "",
-         building: "",
-         floor: "",
-         purpose: "",
-         special_requirements: "",
-         emergency_contact: "",
-         previsit_instruction: "",
-         details: "",
-       });
+        if (visit.code) {
+          setQrValue(qrValue);
+        }
+        setFormData({
+          group_leader_name: "",
+          group_leader_contact: "",
+          group_leader_email: "",
+          organization_name: "",
+          address: "",
+          group_size: "",
+          visit_time: "",
+          host_name: "",
+          host_id: "",
+          building: "",
+          floor: "",
+          purpose: "",
+          special_requirements: "",
+          emergency_contact: "",
+          previsit_instruction: "",
+          details: "",
+        });
 
-       // toast.success("Visitor group registered successfully!");
-       setShowSuccessModal(true);
-       setTimeout(() => {
-         setShowSuccessModal(false);
-         setShowVisitCardModal(true);
-       }, 2500);
-     } else {
-       console.error(
-         "Error: " + (response.data.message || "Something went wrong")
-       );
-       toast.error("Failed to register guest.");
-     }
-   } catch (error) {
-     showValidationErrors(error);
-     console.log("Validation errors:", error.response?.data);
-   } finally {
-     setLoading(false);
-   }
- };
+        // toast.success("Visitor group registered successfully!");
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setShowVisitCardModal(true);
+        }, 2500);
+      } else {
+        console.error(
+          "Error: " + (response.data.message || "Something went wrong")
+        );
+        toast.error("Failed to register guest.");
+      }
+    } catch (error) {
+      showValidationErrors(error);
+      console.log("Validation errors:", error.response?.data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePrint = () => {
     // Get the HTML content of the visit card
@@ -380,9 +367,8 @@ function RegisterGuestGroup() {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -486,9 +472,8 @@ function RegisterGuestGroup() {
                       className="form-select rounded-pill"
                       id="host_id"
                       name="host_id"
-                      value={`${formData.host_role || ""}-${
-                        formData.host_id || ""
-                      }`}
+                      value={`${formData.host_role || ""}-${formData.host_id || ""
+                        }`}
                       onChange={handleChange}
                       required
                     >

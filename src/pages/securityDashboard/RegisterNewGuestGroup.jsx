@@ -130,9 +130,9 @@ function RegisterNewGuestGroup() {
   }, []);
 
 
-const handleChange = (e) => {
-  const { name, value, selectedOptions } = e.target;
-  if (name === "host_id") {
+  const handleChange = (e) => {
+    const { name, value, selectedOptions } = e.target;
+    if (name === "host_id") {
       const [role, id] = value.split("-");
 
       // Normalize role to snake_case for backend compatibility
@@ -146,9 +146,9 @@ const handleChange = (e) => {
         host_name: selectedHostName,
       });
     } else {
-    setFormData({ ...formData, [name]: value });
-  }
-};
+      setFormData({ ...formData, [name]: value });
+    }
+  };
 
 
   const showValidationErrors = (error) => {
@@ -170,8 +170,8 @@ const handleChange = (e) => {
     } else {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -193,27 +193,14 @@ const handleChange = (e) => {
       }
     });
 
-      // Fix for timezone issue
-      if (formData.visit_time) {
-        const visitTime = new Date(formData.visit_time);
-        if (!isNaN(visitTime.getTime())) {
-          // Convert to UTC to avoid timezone issues
-          const utcTime = new Date(
-            visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-          );
-          const formattedVisitTime = utcTime
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ");
-          formDataToSend.append("visit_time", formattedVisitTime);
-          console.log("Original time:", formData.visit_time);
-          console.log("Sending UTC time:", formattedVisitTime);
-        } else {
-          toast.error("Invalid visit time format.");
-          setLoading(false);
-          return;
-        }
-      }
+    // Format visit_time - datetime-local already provides local time
+    if (formData.visit_time) {
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
+    }
     // Append host_id and host_role
     formDataToSend.append("host_id", formData.host_id);
     formDataToSend.append("host_role", formData.host_role);
@@ -242,8 +229,8 @@ const handleChange = (e) => {
             console.log("Notification trigger sent to backend.");
             toast.success("Notification sent to host successfully.");
           } catch (notificationError) {
-            console.error("Failed to trigger notification:"+
-                (notificationError.response?.data?.message || "Server error."), notificationError);
+            console.error("Failed to trigger notification:" +
+              (notificationError.response?.data?.message || "Server error."), notificationError);
 
           }
         } else {
@@ -318,9 +305,9 @@ const handleChange = (e) => {
           setShowVisitCardModal(true);
         }, 2500);
       } else {
-          console.error(
+        console.error(
           "Error: " + (response.data.message || "Something went wrong")
-          );
+        );
         toast.error("Failed to register guest.");
       }
     } catch (error) {
@@ -331,31 +318,31 @@ const handleChange = (e) => {
     }
   };
 
-   const handlePrint = () => {
-     // Get the HTML content of the visit card
-     const element = printRef.current;
+  const handlePrint = () => {
+    // Get the HTML content of the visit card
+    const element = printRef.current;
 
-     // Create a new window to print
-     const printWindow = window.open("", "", "height=600,width=800");
-     printWindow.document.write("<html><head><title>Visitor Badge</title>");
-     // Include Bootstrap CSS for styling in the print window
-     printWindow.document.write(
-       '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-     );
-     printWindow.document.write("</head><body >");
-     printWindow.document.write('<div class="p-5">');
-     printWindow.document.write(element.outerHTML);
-     printWindow.document.write("</div>");
-     printWindow.document.write("</body></html>");
-     printWindow.document.close();
+    // Create a new window to print
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Visitor Badge</title>");
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write(
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+    );
+    printWindow.document.write("</head><body >");
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write("</div>");
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
 
-     // Wait for the content to load and then print
-     printWindow.onload = function () {
-       printWindow.focus();
-       printWindow.print();
-       printWindow.close();
-     };
-   };
+    // Wait for the content to load and then print
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
+  };
 
 
   const downloadBadgeAsPDF = () => {
@@ -385,9 +372,8 @@ const handleChange = (e) => {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -483,9 +469,8 @@ const handleChange = (e) => {
                       className="form-select rounded-pill"
                       id="host_id"
                       name="host_id"
-                      value={`${formData.host_role || ""}-${
-                        formData.host_id || ""
-                      }`}
+                      value={`${formData.host_role || ""}-${formData.host_id || ""
+                        }`}
                       onChange={handleChange}
                       required
                     >

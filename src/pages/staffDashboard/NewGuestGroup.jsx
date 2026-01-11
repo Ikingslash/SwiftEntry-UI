@@ -7,146 +7,146 @@ import { toast } from "react-toastify";
 // import showValidationErrors from "./include/components/showValidationErrors";
 
 function NewGuestGroup() {
-const [formData, setFormData] = useState({
-  name: "",
-  contact_number: "",
-  email: "",
-  address: "",
-  visit_time: "",
-  host_name: "",
-  building: "",
-  floor: "",
-  purpose: "",
-  special_requirements: "",
-  emergency_contact: "",
-  details: "",
-  photo: "",
-});
-
-const [loading, setLoading] = useState(false);
-const [selectedImage, setSelectedImage] = useState(null);
-const [showSuccessModal, setShowSuccessModal] = useState(false);
-const [showVisitCardModal, setShowVisitCardModal] = useState(false);
-const [guestDetails, setGuestDetails] = useState({});
-const [appUsers, setAppUsers] = useState([]);
-const [visitPurposes, setVisitPurposes] = useState([]);
-const [qrValue, setQrValue] = useState("");
-const printRef = useRef();
-
-// Helper function to format date to DD/MM/YYYY
-const formatDateToDDMMYYYY = (dateString) => {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch (error) {
-    return dateString;
-  }
-};
-
-// Helper function to create enhanced QR code value with visit details
-const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
-  return JSON.stringify({
-    visit_code: visitCode,
-    name: visitorName,
-    host: hostName,
-    date: visitDate,
-    purpose: purpose,
-  });
-};
-
-// Get current logged-in user from localStorage or API
-const getCurrentUser = () => {
-  try {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      return JSON.parse(userData);
-    }
-    return null;
-  } catch (error) {
-    console.error("Error parsing user data from localStorage:", error);
-    return null;
-  }
-};
-
-// useEffect to handle Firebase messaging and token registration, AND to fetch users.
-useEffect(() => {
-  // Request permission and get the FCM token
-  requestForToken()
-    .then((fcmToken) => {
-      if (fcmToken) {
-        api
-          .post("/staff/save-fcm-token", { fcm_token: fcmToken })
-          .catch(() => {});
-      }
-    })
-    .catch(() => {});
-
-  // Fetch the list of visit purposes from the backend
-  api
-    .get("/staff/settings/visit-purposes")
-    .then((response) => {
-      if (response.data && Array.isArray(response.data)) {
-        setVisitPurposes(response.data);
-      }
-    })
-    .catch(() => {});
-
-  // Set up the listener for incoming messages.
-  const unsubscribe = onMessageListener((payload) => {
-    toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+  const [formData, setFormData] = useState({
+    name: "",
+    contact_number: "",
+    email: "",
+    address: "",
+    visit_time: "",
+    host_name: "",
+    building: "",
+    floor: "",
+    purpose: "",
+    special_requirements: "",
+    emergency_contact: "",
+    details: "",
+    photo: "",
   });
 
-  // Cleanup function to detach the listener when the component unmounts
-  return () => unsubscribe();
-}, []);
+  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showVisitCardModal, setShowVisitCardModal] = useState(false);
+  const [guestDetails, setGuestDetails] = useState({});
+  const [appUsers, setAppUsers] = useState([]);
+  const [visitPurposes, setVisitPurposes] = useState([]);
+  const [qrValue, setQrValue] = useState("");
+  const printRef = useRef();
 
-useEffect(() => {
-  const currentUser = getCurrentUser();
-
-  if (currentUser && currentUser.id && currentUser.name) {
-    setFormData((prev) => ({
-      ...prev,
-      host_id: currentUser.id,
-      host_role: currentUser.role || "staff",
-      host_name: currentUser.name,
-    }));
-  } else {
-    console.error("No valid user found in localStorage");
-    toast.error("Unable to set host. Please log in again.");
-  }
-}, []);
-
-const handleChange = (e) => {
-  const { name, value } = e.target;
-  setFormData({ ...formData, [name]: value });
-};
-
-const showValidationErrors = (error) => {
-  if (error.response && error.response.status === 422) {
-    let validationErrors = error.response.data.errors || error.response.data;
-
-    if (typeof validationErrors === "string") {
-      toast.error(validationErrors);
-      return;
+  // Helper function to format date to DD/MM/YYYY
+  const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return dateString;
     }
+  };
 
-    Object.values(validationErrors).forEach((messages) => {
-      if (Array.isArray(messages)) {
-        messages.forEach((msg) => toast.error(msg));
-      } else if (typeof messages === "string") {
-        toast.error(messages);
-      }
+  // Helper function to create enhanced QR code value with visit details
+  const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
+    return JSON.stringify({
+      visit_code: visitCode,
+      name: visitorName,
+      host: hostName,
+      date: visitDate,
+      purpose: purpose,
     });
-  } else {
-    toast.error(
-      error.response?.data?.message || "Something went wrong. Please try again."
-    );
-  }
-};
+  };
+
+  // Get current logged-in user from localStorage or API
+  const getCurrentUser = () => {
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        return JSON.parse(userData);
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user data from localStorage:", error);
+      return null;
+    }
+  };
+
+  // useEffect to handle Firebase messaging and token registration, AND to fetch users.
+  useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          api
+            .post("/staff/save-fcm-token", { fcm_token: fcmToken })
+            .catch(() => { });
+        }
+      })
+      .catch(() => { });
+
+    // Fetch the list of visit purposes from the backend
+    api
+      .get("/staff/settings/visit-purposes")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setVisitPurposes(response.data);
+        }
+      })
+      .catch(() => { });
+
+    // Set up the listener for incoming messages.
+    const unsubscribe = onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+
+    if (currentUser && currentUser.id && currentUser.name) {
+      setFormData((prev) => ({
+        ...prev,
+        host_id: currentUser.id,
+        host_role: currentUser.role || "staff",
+        host_name: currentUser.name,
+      }));
+    } else {
+      console.error("No valid user found in localStorage");
+      toast.error("Unable to set host. Please log in again.");
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const showValidationErrors = (error) => {
+    if (error.response && error.response.status === 422) {
+      let validationErrors = error.response.data.errors || error.response.data;
+
+      if (typeof validationErrors === "string") {
+        toast.error(validationErrors);
+        return;
+      }
+
+      Object.values(validationErrors).forEach((messages) => {
+        if (Array.isArray(messages)) {
+          messages.forEach((msg) => toast.error(msg));
+        } else if (typeof messages === "string") {
+          toast.error(messages);
+        }
+      });
+    } else {
+      toast.error(
+        error.response?.data?.message || "Something went wrong. Please try again."
+      );
+    }
+  };
 
   // SUBMIT HANDLER
   const handleSubmit = async (e) => {
@@ -173,31 +173,18 @@ const showValidationErrors = (error) => {
       }
     });
 
-   // Fix for timezone issue
-   if (formData.visit_time) {
-     const visitTime = new Date(formData.visit_time);
-     if (!isNaN(visitTime.getTime())) {
-       // Convert to UTC to avoid timezone issues
-       const utcTime = new Date(
-         visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-       );
-       const formattedVisitTime = utcTime
-         .toISOString()
-         .slice(0, 19)
-         .replace("T", " ");
-       formDataToSend.append("visit_time", formattedVisitTime);
-       console.log("Original time:", formData.visit_time);
-       console.log("Sending UTC time:", formattedVisitTime);
-     } else {
-       toast.error("Invalid visit time format.");
-       setLoading(false);
-       return;
-     }
-   }
+    // Format visit_time - datetime-local already provides local time
+    if (formData.visit_time) {
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
+    }
 
 
     // host fields
-     formDataToSend.append("host_id", formData.host_id);
+    formDataToSend.append("host_id", formData.host_id);
     formDataToSend.append("host_role", formData.host_role);
     formDataToSend.append("host_name", formData.host_name);
 
@@ -223,35 +210,35 @@ const showValidationErrors = (error) => {
               guest_name: formData.group_leader_name,
               purpose: formData.purpose,
             });
-          }  catch (notificationError) {
+          } catch (notificationError) {
             // Notification failure should not block the main flow
             console.error("Failed to notify host:", notificationError);
           }
         }
 
         let date = "";
-      let time = "";
+        let time = "";
 
-      if (visit?.visit_time) {
-        const utcString = visit.visit_time.replace(" ", "T") + "Z";
-        const utcDate = new Date(utcString);
-        if (!isNaN(utcDate.getTime())) {
-          const localFaceValue = new Date(
-            utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
-          );
-          const isoLocal = localFaceValue.toISOString();
-          const parts = isoLocal.split("T");
-          date = parts[0];
-          time = parts[1].slice(0, 8);
-        } else {
-          const visitTimeParts = visit.visit_time.split(" ");
-          date = visitTimeParts[0] || "";
-          time = visitTimeParts[1] || "";
+        if (visit?.visit_time) {
+          const utcString = visit.visit_time.replace(" ", "T") + "Z";
+          const utcDate = new Date(utcString);
+          if (!isNaN(utcDate.getTime())) {
+            const localFaceValue = new Date(
+              utcDate.getTime() - utcDate.getTimezoneOffset() * 60000
+            );
+            const isoLocal = localFaceValue.toISOString();
+            const parts = isoLocal.split("T");
+            date = parts[0];
+            time = parts[1].slice(0, 8);
+          } else {
+            const visitTimeParts = visit.visit_time.split(" ");
+            date = visitTimeParts[0] || "";
+            time = visitTimeParts[1] || "";
+          }
         }
-      }
 
-      // Format date to DD/MM/YYYY
-      const formattedDate = formatDateToDDMMYYYY(date);
+        // Format date to DD/MM/YYYY
+        const formattedDate = formatDateToDDMMYYYY(date);
 
         setGuestDetails({
           name: visitor.name,
@@ -357,9 +344,8 @@ const showValidationErrors = (error) => {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">

@@ -72,7 +72,7 @@ export default function RegisterGuestIndividual() {
             .post("/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
         }
       })
-      .catch(() => {  });
+      .catch(() => { });
 
     // Fetch the list of all app users (staff, security, front desk)
     api
@@ -90,7 +90,7 @@ export default function RegisterGuestIndividual() {
           setVisitPurposes(response.data);
         }
       })
-      .catch(() => {  });
+      .catch(() => { });
 
     // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
@@ -142,8 +142,8 @@ export default function RegisterGuestIndividual() {
     } else {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -152,11 +152,11 @@ export default function RegisterGuestIndividual() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  console.log("Form data before sending:", {
-    host_id: formData.host_id,
-    host_role: formData.host_role,
-    host_name: formData.host_name,
-  });
+    console.log("Form data before sending:", {
+      host_id: formData.host_id,
+      host_role: formData.host_role,
+      host_name: formData.host_name,
+    });
     const formDataToSend = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
@@ -169,27 +169,14 @@ export default function RegisterGuestIndividual() {
       }
     });
 
-   // Fix for timezone issue
-   if (formData.visit_time) {
-     const visitTime = new Date(formData.visit_time);
-     if (!isNaN(visitTime.getTime())) {
-       // Convert to UTC to avoid timezone issues
-       const utcTime = new Date(
-         visitTime.getTime() - visitTime.getTimezoneOffset() * 60000
-       );
-       const formattedVisitTime = utcTime
-         .toISOString()
-         .slice(0, 19)
-         .replace("T", " ");
-       formDataToSend.append("visit_time", formattedVisitTime);
-       console.log("Original time:", formData.visit_time);
-       console.log("Sending UTC time:", formattedVisitTime);
-     } else {
-       toast.error("Invalid visit time format.");
-       setLoading(false);
-       return;
-     }
-   }
+    // Format visit_time - datetime-local already provides local time
+    if (formData.visit_time) {
+      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+      // Just replace T with space and add seconds for the API format
+      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", formattedVisitTime);
+      console.log("Formatted visit time:", formattedVisitTime);
+    }
 
     // Append host_id and host_role
     formDataToSend.append("host_id", formData.host_id);
@@ -355,9 +342,8 @@ export default function RegisterGuestIndividual() {
   return (
     <>
       <div
-        className={`container mt-4 ${
-          showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
       >
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="row">
@@ -445,9 +431,8 @@ export default function RegisterGuestIndividual() {
                       className="form-select rounded-pill"
                       id="host_id"
                       name="host_id"
-                      value={`${formData.host_role || ""}-${
-                        formData.host_id || ""
-                      }`}
+                      value={`${formData.host_role || ""}-${formData.host_id || ""
+                        }`}
                       onChange={handleChange}
                       required
                     >
@@ -678,7 +663,7 @@ export default function RegisterGuestIndividual() {
                     </div>
                     <div>
                       {typeof guestDetails.id === "string" &&
-                      guestDetails.id.length > 0 ? (
+                        guestDetails.id.length > 0 ? (
                         <QRCode value={qrValue} size={130} level="H" />
                       ) : (
                         <div className="text-muted">QR not ready</div>
