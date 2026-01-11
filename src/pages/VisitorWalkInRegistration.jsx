@@ -348,9 +348,10 @@ export default function VisitorWalkInRegistration() {
                         required
                       >
                         <option value="">Select purpose</option>
-                        {visitPurposes.map((purpose) => (
-                          <option key={purpose.id} value={purpose.purpose}>
-                            {purpose.purpose}
+                         <option value="">Select Purpose</option>
+                        {visitPurposes.map((purpose, index) => (
+                          <option key={index} value={purpose}>
+                            {purpose}
                           </option>
                         ))}
                       </select>
