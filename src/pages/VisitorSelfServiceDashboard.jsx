@@ -56,7 +56,7 @@ function VisitorSelfServiceDashboard() {
     <VisitorLayout>
       <div className="container-fluid">
         <div className="row mb-4">
-          <div className="col-md-12">
+          <div className="col-md-12 text-center">
             <h2 className="fw-bold" style={{ color: "#053561" }}>
               Search Your Visit
             </h2>

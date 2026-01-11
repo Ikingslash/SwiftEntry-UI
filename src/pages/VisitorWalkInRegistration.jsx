@@ -3,6 +3,7 @@ import api from "../context/api";
 import { toast } from "react-toastify";
 import VisitorLayout from "../layout/VisitorLayout";
 import "react-toastify/dist/ReactToastify.css";
+import { requestForToken, onMessageListener } from "../context/firebase";
 
 // Helper function to format date to DD/MM/YYYY
 const formatDateToDDMMYYYY = (dateString) => {
@@ -37,6 +38,8 @@ export default function VisitorWalkInRegistration() {
     address: "",
     visit_time: "",
     host_name: "",
+    host_id: "",
+    host_role: "",
     building: "building 1",
     floor: "1st floor",
     purpose: "",
@@ -49,8 +52,24 @@ export default function VisitorWalkInRegistration() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [visitCode, setVisitCode] = useState("");
   const [visitPurposes, setVisitPurposes] = useState([]);
+  const [appUsers, setAppUsers] = useState([]);
 
   useEffect(() => {
+    // Request permission and get the FCM token
+    requestForToken()
+      .then((fcmToken) => {
+        if (fcmToken) {
+          api
+            .post("/self-service/save-fcm-token", { fcm_token: fcmToken }).catch(() => { });
+        }
+      })
+      .catch(() => { });
+
+    // Set up the listener for incoming messages
+    onMessageListener((payload) => {
+      toast.info(`${payload.notification.title}: ${payload.notification.body}`);
+    });
+
     // Fetch visit purposes
     api
       .get("/self-service/visits/purposes")
@@ -60,11 +79,38 @@ export default function VisitorWalkInRegistration() {
         }
       })
       .catch(() => { });
+
+    // Fetch hosts (app users)
+    api
+      .get("/self-service/visits/app-users")
+      .then((response) => {
+        if (response.data && Array.isArray(response.data.users)) {
+          setAppUsers(response.data.users);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch hosts:", error);
+      });
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, selectedOptions } = e.target;
+
+    if (name === "host_id") {
+      const [role, id] = value.split("-");
+      // Normalize role to snake_case for backend compatibility
+      const backendRole = role.toLowerCase().replace(/\s+/g, '_');
+      const selectedHostName = selectedOptions[0]?.text.trim();
+
+      setFormData({
+        ...formData,
+        host_id: id,
+        host_role: backendRole,
+        host_name: selectedHostName,
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const showValidationErrors = (error) => {
@@ -99,17 +145,21 @@ export default function VisitorWalkInRegistration() {
     const formDataToSend = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "visit_time") {
+      if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
         formDataToSend.append(key, value);
       }
     });
+
+    // Append host_id and host_role explicitly
+    if (formData.host_id) formDataToSend.append("host_id", formData.host_id);
+    if (formData.host_role) formDataToSend.append("host_role", formData.host_role);
 
     // Format visit_time - datetime-local already provides local time
     if (formData.visit_time) {
       // datetime-local gives us "YYYY-MM-DDTHH:MM" format
       // Just replace T with space and add seconds for the API format
-      const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
-      formDataToSend.append("visit_time", formattedVisitTime);
+      const visitedTime = formData.visit_time.replace("T", " ") + ":00";
+      formDataToSend.append("visit_time", visitedTime);
     }
 
     try {
@@ -133,6 +183,8 @@ export default function VisitorWalkInRegistration() {
           address: "",
           visit_time: "",
           host_name: "",
+          host_id: "",
+          host_role: "",
           building: "building 1",
           floor: "1st floor",
           purpose: "",
@@ -340,14 +392,23 @@ export default function VisitorWalkInRegistration() {
 
                   <div className="mb-3">
                     <label className="form-label fw-bold">Host Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="host_name"
-                      value={formData.host_name}
+                    <select
+                      className="form-select"
+                      id="host_id"
+                      name="host_id"
+                      value={`${formData.host_role || ""}-${formData.host_id || ""}`}
                       onChange={handleChange}
-                      placeholder="Name of the person you are visiting (optional)"
-                    />
+                    >
+                      <option value="">Select a host (optional)</option>
+                      {appUsers.map((user, index) => (
+                        <option
+                          key={`${user.role || "unknown"}-${user.id || index}`}
+                          value={`${user.role}-${user.id}`}
+                        >
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="mb-3">
