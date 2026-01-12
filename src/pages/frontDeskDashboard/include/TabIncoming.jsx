@@ -99,25 +99,23 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
     }
   };
 
-  const formatDateTime = (dateTime) => {
-    if (!dateTime) return 'Not checked in';
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return 'Not checked in';
 
-    // Parse as local time string (Backend now sends formatted local time)
-    // Replace space with T to ensure ISO format
-    let dateStr = dateTime.replace(' ', 'T');
+  const [date, time] = dateTime.split(' ');
+  const [year, month, day] = date.split('-');
 
-    // Create Date object - this will be interpreted as Local Time by default
-    let date = new Date(dateStr);
+  const formattedDate = `${day}/${month}/${year}`;
 
-    // If still invalid, give up and return original string
-    if (isNaN(date.getTime())) return dateTime;
+  const dateObj = new Date(`1970-01-01T${time}`);
+  const formattedTime = dateObj.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
 
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
+  return `${formattedDate} ${formattedTime}`;
+};
 
   return (
     <div>
@@ -170,16 +168,7 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
                       </div>
                       <div className="col-6">
                         <small className="text-muted d-block">Duration</small>
-                        <strong>
-                          {visit.check_in
-                            ? (() => {
-                              const diff = new Date() - new Date(visit.check_in);
-                              const hours = Math.floor(diff / (1000 * 60 * 60));
-                              const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                              return `${hours}h ${minutes}m`;
-                            })()
-                            : "N/A"}
-                        </strong>
+                       <strong>{visit.current_duration}</strong>
                       </div>
                     </div>
 
