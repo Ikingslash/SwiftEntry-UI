@@ -221,502 +221,509 @@ export default function NewGuestIndividual() {
         let time = "";
 
         if (visit?.check_in) {
-        });
-      } catch (e) {
-        console.error("Error parsing visit time for badge:", e);
-        const visitTimeParts = visit.check_in.split(" ");
-        date = visitTimeParts[0] || "";
-        time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
-      }
-    }
+          try {
+            const visitDateObj = new Date(visit.check_in);
+            date = formatDateToDDMMYYYY(visit.check_in);
+            time = visitDateObj.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+          } catch (e) {
+            console.error("Error parsing visit time for badge:", e);
+            const visitTimeParts = visit.check_in.split(" ");
+            date = visitTimeParts[0] || "";
+            time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
+          }
+        }
 
         // Format date to DD/MM/YYYY
         const formattedDate = formatDateToDDMMYYYY(date);
 
-    setGuestDetails({
-      name: visitor.name,
-      id: visit.code || "",
-      host: visit.host_name,
-      date: formattedDate,
-      time,
-      purpose: visit.purpose,
-      Contact_info: visitor.contact_number,
-      address: visitor.address,
-    });
+        setGuestDetails({
+          name: visitor.name,
+          id: visit.code || "",
+          host: visit.host_name,
+          date: formattedDate,
+          time,
+          purpose: visit.purpose,
+          Contact_info: visitor.contact_number,
+          address: visitor.address,
+        });
 
-    // Create enhanced QR code value with all visit details
-    if (visit.code) {
-      const enhancedQR = createEnhancedQRValue(
-        visit.code,
-        visitor.name,
-        visit.host_name,
-        formattedDate,
-        visit.purpose
-      );
-      setQrValue(enhancedQR);
-    }
+        // Create enhanced QR code value with all visit details
+        if (visit.code) {
+          const enhancedQR = createEnhancedQRValue(
+            visit.code,
+            visitor.name,
+            visit.host_name,
+            formattedDate,
+            visit.purpose
+          );
+          setQrValue(enhancedQR);
+        }
 
-    setFormData({
-      name: "",
-      contact_number: "",
-      email: "",
-      address: "",
-      visit_time: "",
-      host_name: formData.host_name,
-      host_id: formData.host_id,
-      host_role: formData.host_role,
-      building: "",
-      floor: "",
-      purpose: "",
-      special_requirements: "",
-      emergency_contact: "",
-      details: "",
-    });
-    setSelectedImage(null);
-    toast.success("Group visitor registered!");
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-      setShowVisitCardModal(true);
-    }, 2500);
-  } else {
-    toast.error("Unexpected error occurred");
-}
+        setFormData({
+          name: "",
+          contact_number: "",
+          email: "",
+          address: "",
+          visit_time: "",
+          host_name: formData.host_name,
+          host_id: formData.host_id,
+          host_role: formData.host_role,
+          building: "",
+          floor: "",
+          purpose: "",
+          special_requirements: "",
+          emergency_contact: "",
+          details: "",
+        });
+        setSelectedImage(null);
+        toast.success("Group visitor registered!");
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setShowVisitCardModal(true);
+        }, 2500);
+      } else {
+        toast.error("Unexpected error occurred");
+      }
     } catch (error) {
-  showValidationErrors(error);
-} finally {
-  setLoading(false);
-}
+      showValidationErrors(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
-const handlePrint = () => {
-  // Get the HTML content of the visit card
-  const element = printRef.current;
+  const handlePrint = () => {
+    // Get the HTML content of the visit card
+    const element = printRef.current;
 
-  // Create a new window to print
-  const printWindow = window.open("", "", "height=600,width=800");
-  printWindow.document.write("<html><head><title>Visitor Badge</title>");
-  // Include Bootstrap CSS for styling in the print window
-  printWindow.document.write(
-    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
-  );
-  printWindow.document.write("</head><body >");
-  printWindow.document.write('<div class="p-5">');
-  printWindow.document.write(element.outerHTML);
-  printWindow.document.write("</div>");
-  printWindow.document.write("</body></html>");
-  printWindow.document.close();
+    // Create a new window to print
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Visitor Badge</title>");
+    // Include Bootstrap CSS for styling in the print window
+    printWindow.document.write(
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+    );
+    printWindow.document.write("</head><body >");
+    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write(element.outerHTML);
+    printWindow.document.write("</div>");
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
 
-  // Wait for the content to load and then print
-  printWindow.onload = function () {
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    // Wait for the content to load and then print
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
   };
-};
 
-const downloadBadgeAsPDF = () => {
-  const element = printRef.current;
-  // Wrapping the call in setTimeout to ensure the HTML is rendered before conversion
-  setTimeout(() => {
-    html2pdf()
-      .set({
-        margin: 0.3,
-        filename: "Visitor_Badge.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-      })
-      .from(element)
-      .save();
-  }, 100);
-};
+  const downloadBadgeAsPDF = () => {
+    const element = printRef.current;
+    // Wrapping the call in setTimeout to ensure the HTML is rendered before conversion
+    setTimeout(() => {
+      html2pdf()
+        .set({
+          margin: 0.3,
+          filename: "Visitor_Badge.pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        })
+        .from(element)
+        .save();
+    }, 100);
+  };
 
-return (
-  <>
-    <div
-      className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-        }`}
-    >
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <div className="row">
-          {/* Left Column */}
-          <div className="col-md-6">
-            <div className="d-flex flex-column gap-3">
-              {/* Guest Information */}
-              <div className=" p-4">
-                <h5 className="fw-bold">Guest Information</h5>
-                <div className="mb-3">
-                  <label className="form-label">Visitors Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter visitor's name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label">Contact Number</label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        placeholder="Enter contact number"
-                        name="contact_number"
-                        value={formData.contact_number}
-                        onChange={handleChange}
-                        required
-                      />
+  return (
+    <>
+      <div
+        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
+          }`}
+      >
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
+          <div className="row">
+            {/* Left Column */}
+            <div className="col-md-6">
+              <div className="d-flex flex-column gap-3">
+                {/* Guest Information */}
+                <div className=" p-4">
+                  <h5 className="fw-bold">Guest Information</h5>
+                  <div className="mb-3">
+                    <label className="form-label">Visitors Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter visitor's name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Contact Number</label>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          placeholder="Enter contact number"
+                          name="contact_number"
+                          value={formData.contact_number}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label">Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          placeholder="Enter email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        placeholder="Enter email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
+                  <div className="mb-3">
+                    <label className="form-label">Address</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Address</label>
+
+                {/* Visit Information */}
+                <div className=" p-4 mb-5">
+                  <h5 className="fw-bold">Visit Information</h5>
+                  <div className="mb-3">
+                    <label className="form-label">Visit Time</label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      name="visit_time"
+                      value={formData.visit_time}
+                      onChange={handleChange}
+                      min={new Date().toISOString().slice(0, 16)}
+                      required
+                    />
+                  </div>
+
+                  {/* Hidden inputs for host data */}
                   <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    required
+                    type="hidden"
+                    name="host_id"
+                    value={formData.host_id}
                   />
+                  <input
+                    type="hidden"
+                    name="host_role"
+                    value={formData.host_role}
+                  />
+
+                  {/* Display only - show the host name to user */}
+                  <div className="mb-3">
+                    <label className="form-label">Host Name</label>
+                    <input
+                      type="text"
+                      className="form-control rounded-pill"
+                      name="host_name"
+                      value={formData.host_name}
+                      readOnly
+                      placeholder="Host will be automatically assigned"
+                    />
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="my-3">
+                        <label className="form-label">Building</label>
+                        <select
+                          className="form-select"
+                          name="building"
+                          value={formData.building}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Building</option>
+                          <option value="building 1">Building 1</option>
+                          <option value="building 2">Building 2</option>
+                          <option value="building 3">Building 3</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="my-3">
+                        <label className="form-label">Floor</label>
+                        <select
+                          className="form-select"
+                          name="floor"
+                          value={formData.floor}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Floor</option>
+                          <option value="1st floor">1st Floor</option>
+                          <option value="2nd floor">2nd Floor</option>
+                          <option value="3rd floor">3rd Floor</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="my-3">
+                    <label className="form-label">Purpose of Visit</label>
+                    <select
+                      className="form-select"
+                      name="purpose"
+                      value={formData.purpose}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Purpose</option>
+                      {visitPurposes.map((purpose, index) => (
+                        <option key={purpose} value={purpose}>
+                          {purpose}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="my-3">
+                    <label className="form-label">Details (Optional)</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="Enter visit details"
+                      name="details"
+                      value={formData.details}
+                      onChange={handleChange}
+                    ></textarea>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Visit Information */}
-              <div className=" p-4 mb-5">
-                <h5 className="fw-bold">Visit Information</h5>
-                <div className="mb-3">
-                  <label className="form-label">Visit Time</label>
-                  <input
-                    type="datetime-local"
-                    className="form-control"
-                    name="visit_time"
-                    value={formData.visit_time}
-                    onChange={handleChange}
-                    min={new Date().toISOString().slice(0, 16)}
-                    required
-                  />
+            {/* Right Column */}
+            <div className="col-md-6">
+              <div className="d-flex flex-column gap-3">
+                {/* Additional Information */}
+                <div className="p-4">
+                  <h5 className="fw-bold">Additional Information</h5>
+
                 </div>
-
-                {/* Hidden inputs for host data */}
-                <input
-                  type="hidden"
-                  name="host_id"
-                  value={formData.host_id}
-                />
-                <input
-                  type="hidden"
-                  name="host_role"
-                  value={formData.host_role}
-                />
-
-                {/* Display only - show the host name to user */}
-                <div className="mb-3">
-                  <label className="form-label">Host Name</label>
-                  <input
-                    type="text"
-                    className="form-control rounded-pill"
-                    name="host_name"
-                    value={formData.host_name}
-                    readOnly
-                    placeholder="Host will be automatically assigned"
-                  />
-                </div>
-
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="my-3">
-                      <label className="form-label">Building</label>
-                      <select
-                        className="form-select"
-                        name="building"
-                        value={formData.building}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Building</option>
-                        <option value="building 1">Building 1</option>
-                        <option value="building 2">Building 2</option>
-                        <option value="building 3">Building 3</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <div className="my-3">
-                      <label className="form-label">Floor</label>
-                      <select
-                        className="form-select"
-                        name="floor"
-                        value={formData.floor}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Floor</option>
-                        <option value="1st floor">1st Floor</option>
-                        <option value="2nd floor">2nd Floor</option>
-                        <option value="3rd floor">3rd Floor</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="my-3">
-                  <label className="form-label">Purpose of Visit</label>
+                <div className="mb-4">
+                  <label className="form-label">Special Requirements</label>
                   <select
                     className="form-select"
-                    name="purpose"
-                    value={formData.purpose}
+                    name="special_requirements"
+                    value={formData.special_requirements}
                     onChange={handleChange}
                   >
-                    <option value="">Select Purpose</option>
-                    {visitPurposes.map((purpose, index) => (
-                      <option key={purpose} value={purpose}>
-                        {purpose}
-                      </option>
-                    ))}
+                    <option> Select special requirements</option>
+                    <option value="parking space">Parking Space</option>
+                    <option value="wheelchair/accessibility">
+                      Wheelchair/Accessibility
+                    </option>
+                    <option value="language interpretation">
+                      Language Interpretation
+                    </option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
-
                 <div className="my-3">
-                  <label className="form-label">Details (Optional)</label>
-                  <textarea
+                  <label className="form-label">Emergency Contact</label>
+                  <input
+                    type="tel"
                     className="form-control"
-                    rows="3"
-                    placeholder="Enter visit details"
-                    name="details"
-                    value={formData.details}
+                    placeholder="Enter emergency contact"
+                    name="emergency_contact"
+                    value={formData.emergency_contact}
                     onChange={handleChange}
-                  ></textarea>
+                  />
                 </div>
               </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary mt-3 w-50 "
+                disabled={loading}
+              >
+                {loading ? "Registering..." : "Register"}
+              </button>
             </div>
           </div>
-
-          {/* Right Column */}
-          <div className="col-md-6">
-            <div className="d-flex flex-column gap-3">
-              {/* Additional Information */}
-              <div className="p-4">
-                <h5 className="fw-bold">Additional Information</h5>
-
-              </div>
-              <div className="mb-4">
-                <label className="form-label">Special Requirements</label>
-                <select
-                  className="form-select"
-                  name="special_requirements"
-                  value={formData.special_requirements}
-                  onChange={handleChange}
-                >
-                  <option> Select special requirements</option>
-                  <option value="parking space">Parking Space</option>
-                  <option value="wheelchair/accessibility">
-                    Wheelchair/Accessibility
-                  </option>
-                  <option value="language interpretation">
-                    Language Interpretation
-                  </option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div className="my-3">
-                <label className="form-label">Emergency Contact</label>
-                <input
-                  type="tel"
-                  className="form-control"
-                  placeholder="Enter emergency contact"
-                  name="emergency_contact"
-                  value={formData.emergency_contact}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary mt-3 w-50 "
-              disabled={loading}
-            >
-              {loading ? "Registering..." : "Register"}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    {/* Success Modal */}
-    <div
-      className={`modal fade ${showSuccessModal ? "show d-block" : ""}`}
-      tabIndex="-1"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-    >
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content bg-success text-white text-center">
-          <div className="modal-body">
-            <h5 className="modal-title">Visitor Registered Successfully!</h5>
-          </div>
-        </div>
+        </form>
       </div>
-    </div>
 
-    {/* Visit Card Modal */}
-    {showVisitCardModal && (
+      {/* Success Modal */}
       <div
-        className="modal fade show d-block"
+        className={`modal fade ${showSuccessModal ? "show d-block" : ""}`}
         tabIndex="-1"
         style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
       >
-        <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
-          <div className="modal-content rounded-4 shadow">
-            <div className="modal-header">
-              <h5 className="modal-title">Share Visit Details</h5>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setShowVisitCardModal(false)}
-              ></button>
-            </div>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content bg-success text-white text-center">
             <div className="modal-body">
-              <div
-                ref={printRef}
-                className="card mx-auto"
-                style={{
-                  maxWidth: "650px",
-                  height: "380px",
-                  border: "2px solid #cfd9e1",
-                  backgroundColor: "#F5FAFE",
-                }}
-              >
-                <div
-                  className="card-header d-flex justify-content-between align-items-center"
-                  style={{ background: "#007bff", color: "white" }}
-                >
-                  <span className="badge bg-light text-dark">
-                    Sydani Group
-                  </span>
-                  <strong className="text-white">VISITORS BADGE</strong>
-                </div>
-                <div className="card-body d-flex mx-4 justify-content-between">
-                  <div className="flex-grow-1 ms-2">
-                    <h5 className="fw-bold my-3">{guestDetails.name}</h5>
-                    <p className="my-2 lead">
-                      ID No: <small className="ms-4">{guestDetails.id}</small>
-                    </p>
-                    <p className="my-2 lead">
-                      Host:{" "}
-                      <small className="ms-4">{guestDetails.host}</small>
-                    </p>
-                    <p className="my-2 lead">
-                      Visit Date:{" "}
-                      <small className="ms-4">
-                        {guestDetails.date} by {guestDetails.time}
-                      </small>
-                    </p>
-                    <p className="my-2 lead">
-                      Purpose:{" "}
-                      <small className="ms-4">{guestDetails.purpose}</small>
-                    </p>
-                    <p className="my-2 lead">
-                      Contact Info:{" "}
-                      <small className="ms-2">
-                        {guestDetails.Contact_info}
-                      </small>
-                    </p>
-                  </div>
-                  <div>
-                    {typeof guestDetails.id === "string" &&
-                      guestDetails.id.length > 0 ? (
-                      <QRCode value={qrValue} size={130} />
-                    ) : (
-                      <div className="text-muted">QR not ready</div>
-                    )}
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <p className="mb-1">
-                    <i className="bi bi-geo-alt"></i> {guestDetails.address}
-                  </p>
-                </div>
+              <h5 className="modal-title">Visitor Registered Successfully!</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Visit Card Modal */}
+      {showVisitCardModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
+            <div className="modal-content rounded-4 shadow">
+              <div className="modal-header">
+                <h5 className="modal-title">Share Visit Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowVisitCardModal(false)}
+                ></button>
               </div>
-              {/* Share Buttons */}
-              <div className="mt-4 text-center">
-                <p className="fw-bold">Share Via</p>
-                <div className="d-flex justify-content-center gap-4">
-                  <a
-                    href={`https://wa.me/?text=Visit%20Details%3A%20${qrValue}`}
-                    target="_blank"
-                    rel="noreferrer"
+              <div className="modal-body">
+                <div
+                  ref={printRef}
+                  className="card mx-auto"
+                  style={{
+                    maxWidth: "650px",
+                    height: "380px",
+                    border: "2px solid #cfd9e1",
+                    backgroundColor: "#F5FAFE",
+                  }}
+                >
+                  <div
+                    className="card-header d-flex justify-content-between align-items-center"
+                    style={{ background: "#007bff", color: "white" }}
                   >
-                    <i className="bi bi-whatsapp fs-3 text-success"></i>
-                  </a>
-                  <a
-                    href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <i className="bi bi-linkedin fs-3 text-primary"></i>
-                  </a>
-                  <a
-                    href="https://twitter.com/intent/tweet?text=Visit%20Confirmation%20Details"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <i className="bi bi-twitter-x fs-3"></i>
-                  </a>
-                  <a
-                    href="https://facebook.com/sharer/sharer.php?u=https://example.com"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <i className="bi bi-facebook fs-3 text-primary"></i>
-                  </a>
-                  <button
-                    className="btn btn-outline-dark"
-                    onClick={handlePrint}
-                  >
-                    🖨️ Print
-                  </button>
-                  <button
-                    className="btn btn-outline-success"
-                    onClick={downloadBadgeAsPDF}
-                  >
-                    📄 Download PDF
-                  </button>
+                    <span className="badge bg-light text-dark">
+                      Sydani Group
+                    </span>
+                    <strong className="text-white">VISITORS BADGE</strong>
+                  </div>
+                  <div className="card-body d-flex mx-4 justify-content-between">
+                    <div className="flex-grow-1 ms-2">
+                      <h5 className="fw-bold my-3">{guestDetails.name}</h5>
+                      <p className="my-2 lead">
+                        ID No: <small className="ms-4">{guestDetails.id}</small>
+                      </p>
+                      <p className="my-2 lead">
+                        Host:{" "}
+                        <small className="ms-4">{guestDetails.host}</small>
+                      </p>
+                      <p className="my-2 lead">
+                        Visit Date:{" "}
+                        <small className="ms-4">
+                          {guestDetails.date} by {guestDetails.time}
+                        </small>
+                      </p>
+                      <p className="my-2 lead">
+                        Purpose:{" "}
+                        <small className="ms-4">{guestDetails.purpose}</small>
+                      </p>
+                      <p className="my-2 lead">
+                        Contact Info:{" "}
+                        <small className="ms-2">
+                          {guestDetails.Contact_info}
+                        </small>
+                      </p>
+                    </div>
+                    <div>
+                      {typeof guestDetails.id === "string" &&
+                        guestDetails.id.length > 0 ? (
+                        <QRCode value={qrValue} size={130} />
+                      ) : (
+                        <div className="text-muted">QR not ready</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="card-footer">
+                    <p className="mb-1">
+                      <i className="bi bi-geo-alt"></i> {guestDetails.address}
+                    </p>
+                  </div>
+                </div>
+                {/* Share Buttons */}
+                <div className="mt-4 text-center">
+                  <p className="fw-bold">Share Via</p>
+                  <div className="d-flex justify-content-center gap-4">
+                    <a
+                      href={`https://wa.me/?text=Visit%20Details%3A%20${qrValue}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-whatsapp fs-3 text-success"></i>
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-linkedin fs-3 text-primary"></i>
+                    </a>
+                    <a
+                      href="https://twitter.com/intent/tweet?text=Visit%20Confirmation%20Details"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-twitter-x fs-3"></i>
+                    </a>
+                    <a
+                      href="https://facebook.com/sharer/sharer.php?u=https://example.com"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="bi bi-facebook fs-3 text-primary"></i>
+                    </a>
+                    <button
+                      className="btn btn-outline-dark"
+                      onClick={handlePrint}
+                    >
+                      🖨️ Print
+                    </button>
+                    <button
+                      className="btn btn-outline-success"
+                      onClick={downloadBadgeAsPDF}
+                    >
+                      📄 Download PDF
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
-    <style>{`
+      <style>{`
         @media print {
           body * { visibility: hidden; }
           #badgeCard, #badgeCard * { visibility: visible; }
           #badgeCard { position: absolute; top: 0; left: 0; width: 100%; }
         }
       `}</style>
-  </>
-);
+    </>
+  );
 }
