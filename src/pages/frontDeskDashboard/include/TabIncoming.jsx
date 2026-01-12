@@ -168,7 +168,8 @@ const formatDateTime = (dateTime) => {
                       </div>
                       <div className="col-6">
                         <small className="text-muted d-block">Duration</small>
-                       <strong>{visit.current_duration}</strong>
+                       <strong>{visit.current_duration.text ?? "Just checked in"}</strong>
+
                       </div>
                     </div>
 
