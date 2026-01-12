@@ -13,7 +13,7 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState(""); // State to store error message
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
@@ -30,7 +30,7 @@ function SignIn() {
     } catch (error) {
       console.error("Error logging in:", error);
       setErrorMessage("Something went wrong. Please try again.");
-       toast.error("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
       navigate("/");
     }
   };
@@ -45,128 +45,128 @@ function SignIn() {
       >
         <div className="row w-100 h-100 d-flex align-items-center justify-content-center g-0">
           {/* Left Section (Video Background) */}
-        <div
-          className="col-lg-5  offset-md-1  d-none d-lg-block position-relative p-0"
-          style={{
-            height: "100vh",
-            overflow: "hidden",
-          }}
-        >
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-100 h-100 object-fit-cover p-4 rounded-5"
-            style={{ objectFit: "cover" }}
-          >
-            <source src="./video3.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
           <div
-            className="position-absolute bottom-0 start-50 translate-middle-x text-white ms-4 p-4 w-100"
+            className="col-lg-5  offset-md-1  d-none d-lg-block position-relative p-0"
             style={{
-              fontSize: "22px",
-              textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5)",
+              height: "100vh",
+              overflow: "hidden",
             }}
           >
-            <div className="d-flex">
-              <img src="./image2.png" width={70} alt="" />
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-100 h-100 object-fit-cover p-4 rounded-5"
+              style={{ objectFit: "cover" }}
+            >
+              <source src="./video3.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div
+              className="position-absolute bottom-0 start-50 translate-middle-x text-white ms-4 p-4 w-100"
+              style={{
+                fontSize: "22px",
+                textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <div className="d-flex">
+                <img src="./image2.png" width={70} alt="" />
+              </div>
+              <p className="fw-bold fs-5 text-shadow">
+                Ready to Manage Guests with Ease? <br /> Lets Get You Started
+              </p>
             </div>
-            <p className="fw-bold fs-5 text-shadow">
-              Ready to Manage Guests with Ease? <br /> Lets Get You Started
-            </p>
           </div>
-        </div>
 
-        {/* Right Section (Sign-In Form) */}
-        <div
-          className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-3"
-          style={{
-            height: "100vh",
-            paddingRight: "80px",
-          }}
-        >
-          <div className="w-100 p-5" style={{ maxWidth: "576px" }}>
-            <div className="d-flex p-3 justify-content-center">
-              <img src="./image.png" width={180} className="py-4" alt="" />
-            </div>
-
-            <h2 className="text-center mb-4 fw-bold">Sign In</h2>
-
-            {errorMessage && (
-              <div className="alert alert-danger text-center">{errorMessage}</div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Enter your company assigned email"
-                  required
-                  style={{ 
-                    color: "rgba(133, 124, 124, 0.5)",
-                    "--placeholder-color": "black"
-                  }}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+          {/* Right Section (Sign-In Form) */}
+          <div
+            className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-3"
+            style={{
+              height: "100vh",
+              paddingRight: "80px",
+            }}
+          >
+            <div className="w-100 p-5" style={{ maxWidth: "576px" }}>
+              <div className="d-flex p-3 justify-content-center">
+                <img src="./image.png" width={180} className="py-4" alt="" />
               </div>
 
-              <div className="mb-3 position-relative">
-                <label className="form-label fw-semibold">Password</label>
-                <input
-                  type={passwordVisible ? "text" : "password"}
-                  className="form-control"
-                  placeholder="Enter password"
-                  required
-                  style={{
-                    "--placeholder-color": "black"
-                  }}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <span
-                  onClick={() => setPasswordVisible(!passwordVisible)}
-                  className="position-absolute top-50 end-0 translate-middle-y m-3"
-                  style={{ cursor: "pointer", color: "#007bff" }}
-                >
-                  {passwordVisible ? "👁️" : "👁️‍🗨️"}
-                </span>
-              </div>
+              <h2 className="text-center mb-4 fw-bold">Sign In</h2>
 
-              <div className="d-flex justify-content-between align-items-center py-4">
-                <div className="form-check">
+              {errorMessage && (
+                <div className="alert alert-danger text-center">{errorMessage}</div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Email</label>
                   <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onChange={() => setRememberMe(!rememberMe)}
+                    type="email"
+                    className="form-control"
+                    placeholder="Enter your company assigned email"
+                    required
+                    style={{
+                      color: "black",
+                      "--placeholder-color": "black"
+                    }}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
-                  <label className="form-check-label" htmlFor="rememberMe">
-                    Remember Me
-                  </label>
                 </div>
-                <Link
-                  to="/forgot-password"
-                  className="text-primary text-decoration-none"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
 
-              <div className="text-center">
-                <button type="submit" className="btn btn-primary w-50 my-3">
-                  Sign In
-                </button>
-              </div>
-            </form>
+                <div className="mb-3 position-relative">
+                  <label className="form-label fw-semibold">Password</label>
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    className="form-control"
+                    placeholder="Enter password"
+                    required
+                    style={{
+                      "--placeholder-color": "black"
+                    }}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <span
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    className="position-absolute top-50 end-0 translate-middle-y m-3"
+                    style={{ cursor: "pointer", color: "#007bff" }}
+                  >
+                    {passwordVisible ? "👁️" : "👁️‍🗨️"}
+                  </span>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center py-4">
+                  <div className="form-check">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={() => setRememberMe(!rememberMe)}
+                    />
+                    <label className="form-check-label" htmlFor="rememberMe">
+                      Remember Me
+                    </label>
+                  </div>
+                  <Link
+                    to="/forgot-password"
+                    className="text-primary text-decoration-none"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
+
+                <div className="text-center">
+                  <button type="submit" className="btn btn-primary w-50 my-3">
+                    Sign In
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </>
   );
