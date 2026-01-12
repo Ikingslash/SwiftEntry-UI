@@ -102,13 +102,13 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
   const formatDateTime = (dateTime) => {
     if (!dateTime) return 'Not checked in';
 
-    // Try parsing as-is first (Browser handles ISO/Local)
-    let date = new Date(dateTime);
+    // Force UTC interpretation for backend timestamps (e.g. "YYYY-MM-DD HH:mm:ss")
+    // If we simply do new Date("string"), browsers often default to Local, which ignores the fact that DB stores UTC.
+    const utcString = (dateTime.includes('Z') || dateTime.includes('+'))
+      ? dateTime
+      : dateTime.replace(' ', 'T') + 'Z';
 
-    // If invalid, try standardizing separators (e.g. SQL space to T)
-    if (isNaN(date.getTime())) {
-      date = new Date(dateTime.replace(' ', 'T'));
-    }
+    const date = new Date(utcString);
 
     // If still invalid, give up and return original string
     if (isNaN(date.getTime())) return dateTime;
