@@ -5,6 +5,22 @@ import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
 import { toast } from "react-toastify";
 
+// Helper function to format date to DD/MM/YYYY
+const formatDateToDDMMYYYY = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return dateString;
+  }
+};
+
 export default function NewGuestIndividual() {
   const [formData, setFormData] = useState({
     name: "",
@@ -196,9 +212,20 @@ export default function NewGuestIndividual() {
         let time = "";
 
         if (visit?.visit_time) {
-          const visitTimeParts = visit.visit_time.split(" ");
-          date = visitTimeParts[0] || "";
-          time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
+          try {
+            const visitDateObj = new Date(visit.visit_time);
+            date = formatDateToDDMMYYYY(visit.visit_time);
+            time = visitDateObj.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+          } catch (e) {
+            console.error("Error parsing visit time for badge:", e);
+            const visitTimeParts = visit.visit_time.split(" ");
+            date = visitTimeParts[0] || "";
+            time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
+          }
         }
 
         setGuestDetails({

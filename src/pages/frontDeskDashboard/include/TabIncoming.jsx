@@ -61,7 +61,7 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
     setLoading(true);
     try {
       const visitorType = filters.group && !filters.individual ? "group" :
-                         filters.individual && !filters.group ? "individual" : "all";
+        filters.individual && !filters.group ? "individual" : "all";
 
       const response = await api.get("/front-desk/guests/visits/incoming", {
         params: {
@@ -101,11 +101,17 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return 'Not checked in';
-    // Append Z if missing to ensure UTC parsing
-    const utcString = dateTime.includes('Z') ? dateTime : dateTime.replace(' ', 'T') + 'Z';
-    const date = new Date(utcString);
 
-    if (isNaN(date.getTime())) return dateTime; // Fallback
+    // Try parsing as-is first (Browser handles ISO/Local)
+    let date = new Date(dateTime);
+
+    // If invalid, try standardizing separators (e.g. SQL space to T)
+    if (isNaN(date.getTime())) {
+      date = new Date(dateTime.replace(' ', 'T'));
+    }
+
+    // If still invalid, give up and return original string
+    if (isNaN(date.getTime())) return dateTime;
 
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
       hour: '2-digit',
@@ -168,11 +174,11 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
                         <strong>
                           {visit.check_in
                             ? (() => {
-                                const diff = new Date() - new Date(visit.check_in);
-                                const hours = Math.floor(diff / (1000 * 60 * 60));
-                                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                                return `${hours}h ${minutes}m`;
-                              })()
+                              const diff = new Date() - new Date(visit.check_in);
+                              const hours = Math.floor(diff / (1000 * 60 * 60));
+                              const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                              return `${hours}h ${minutes}m`;
+                            })()
                             : "N/A"}
                         </strong>
                       </div>
@@ -200,11 +206,11 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
                       Currently visiting for{" "}
                       {visit.check_in
                         ? (() => {
-                            const diff = new Date() - new Date(visit.check_in);
-                            const hours = Math.floor(diff / (1000 * 60 * 60));
-                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                            return `${hours}h ${minutes}m`;
-                          })()
+                          const diff = new Date() - new Date(visit.check_in);
+                          const hours = Math.floor(diff / (1000 * 60 * 60));
+                          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                          return `${hours}h ${minutes}m`;
+                        })()
                         : "a while"}
                     </small>
                   </div>

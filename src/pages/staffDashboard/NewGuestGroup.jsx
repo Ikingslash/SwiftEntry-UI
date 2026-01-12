@@ -220,9 +220,20 @@ function NewGuestGroup() {
         let time = "";
 
         if (visit?.visit_time) {
-          const visitTimeParts = visit.visit_time.split(" ");
-          date = visitTimeParts[0] || "";
-          time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
+          try {
+            const visitDateObj = new Date(visit.visit_time);
+            date = formatDateToDDMMYYYY(visit.visit_time);
+            time = visitDateObj.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+          } catch (e) {
+            console.error("Error parsing visit time for badge:", e);
+            const visitTimeParts = visit.visit_time.split(" ");
+            date = visitTimeParts[0] || "";
+            time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
+          }
         }
 
         // Format date to DD/MM/YYYY

@@ -60,7 +60,7 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
     setLoading(true);
     try {
       const visitorType = filters.group && !filters.individual ? "group" :
-                         filters.individual && !filters.group ? "individual" : "all";
+        filters.individual && !filters.group ? "individual" : "all";
 
       const response = await api.get("/front-desk/guests/visits/outgoing", {
         params: {
@@ -179,7 +179,7 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
                       <small className="text-muted">
                         <i className="bi bi-calendar me-1"></i>
                         Visit date:{" "}
-                        {new Date(visit.visit_date).toLocaleDateString()}
+                        {new Date(visit.visit_date || visit.check_in).toLocaleDateString()}
                       </small>
                       <small className="text-muted">
                         <i className="bi bi-person-check me-1"></i>
