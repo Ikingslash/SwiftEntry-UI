@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import UserAvatar from "../components/UserAvatar";
 
 function SecurityFrontDeskDashboard() {
   const { user, token } = useAuth();
@@ -307,14 +308,13 @@ function SecurityFrontDeskDashboard() {
                     className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
                   >
                     <div className="card mt-3 p-2 shadow-sm rounded-3">
-                      <img
-                        src={visitorImage(guest.visitor_photo)}
-                        alt="Guest"
-                        style={{
-                          width: "100%",
-                          height: 120,
-                          objectFit: "cover",
-                        }}
+                      <UserAvatar
+                        image={guest.visitor_photo}
+                        firstName={guest.visitor_name || "Unknown"}
+                        size={120}
+                        borderRadius="10px"
+                        className="w-100"
+                        style={{ height: 120, objectFit: "cover" }}
                       />
                       <p
                         className="mt-2 mb-1 fw-bold"
@@ -324,11 +324,10 @@ function SecurityFrontDeskDashboard() {
                       </p>
                       <small className="text-muted">
                         <span
-                          className={`ms-2 ${
-                            guest.status === "online"
-                              ? "text-success me-3"
-                              : "text-danger me-3"
-                          }`}
+                          className={`ms-2 ${guest.status === "online"
+                            ? "text-success me-3"
+                            : "text-danger me-3"
+                            }`}
                         >
                           ●
                         </span>
@@ -357,13 +356,11 @@ function SecurityFrontDeskDashboard() {
               latestUpdates.map((u, idx) => (
                 <div key={u.id ?? idx} className="col-12">
                   <div className="card p-3 shadow-sm d-flex flex-row align-items-center mb-3">
-                    <img
-                      src={visitorImage(u.photo)}
-                      alt="Logo"
+                    <UserAvatar
+                      image={u.photo}
+                      firstName={u.name || "Visitor"}
+                      size={40}
                       className="me-3"
-                      width="40"
-                      height="40"
-                      style={{ objectFit: "cover" }}
                     />
                     <div>
                       <p className="mb-1 text-dark">{u.name}</p>

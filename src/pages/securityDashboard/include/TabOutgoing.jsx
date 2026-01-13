@@ -1,3 +1,5 @@
+import UserAvatar from "../../../components/UserAvatar";
+
 function TabOutgoing() {
   return (
     <div>
@@ -6,12 +8,11 @@ function TabOutgoing() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -99,12 +100,11 @@ function TabOutgoing() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -197,12 +197,11 @@ function TabOutgoing() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -293,12 +292,11 @@ function TabOutgoing() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -418,12 +416,11 @@ function TabOutgoing() {
             <div className="modal-body">
               <div className="row g-3 container px-5">
                 <div className="col-12">
-                  <img
-                    src="./images/user.png"
-                    alt="User"
+                  <UserAvatar
+                    image="./images/user.png"
+                    firstName="Femi Biodun"
+                    size={80}
                     className="rounded-circle mb-3"
-                    width="80"
-                    height="80"
                   />
                 </div>
                 <div className="col-md-6">

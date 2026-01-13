@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import UserAvatar from "../../../../components/UserAvatar";
 import api from "../../../../context/api"; // Assuming your Axios instance
 import { format, parseISO } from 'date-fns';
 
@@ -280,13 +281,11 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
                 <form onSubmit={handleEditSubmit}>
                   <div className="row g-3 container">
                     <div className="col-12 text-center">
-                      <img
-                        src={selectedVisit.visitor_photo || "../images/user.png"}
-                        alt="User"
-                        className="rounded-circle mb-3"
-                        width="80"
-                        height="80"
-                        style={{objectFit: 'cover'}}
+                      <UserAvatar
+                        image={selectedVisit.visitor_photo}
+                        firstName={selectedVisit.visitor_name || "Visitor"}
+                        size={80}
+                        className="mb-3"
                       />
                     </div>
                     <div className="col-md-6">

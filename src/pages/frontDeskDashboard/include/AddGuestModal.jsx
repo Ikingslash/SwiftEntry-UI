@@ -1,5 +1,6 @@
 import React from "react";
 import { User, Mail, Phone, Home } from "lucide-react";
+import UserAvatar from "../../../../components/UserAvatar";
 
 export default function AddGuestModal({
   show,
@@ -79,15 +80,11 @@ export default function AddGuestModal({
                     }}
                   >
                     {selectedImage ? (
-                      <img
-                        src={selectedImage}
-                        alt="Uploaded"
+                      <UserAvatar
+                        image={selectedImage}
+                        firstName={name || "New Visitor"}
+                        size={100}
                         className="rounded-circle"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
                       />
                     ) : (
                       <i

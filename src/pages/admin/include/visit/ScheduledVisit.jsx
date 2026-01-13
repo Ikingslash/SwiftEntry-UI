@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import UserAvatar from "../../../../components/UserAvatar";
 import api from "../../../../context/api"; // Assuming your Axios instance
 import { format, parseISO } from 'date-fns'; // For date formatting and parsing
 
@@ -348,30 +349,30 @@ function ScheduledVisit({ refreshKey, triggerRefresh }) {
                               </button>
                             </li>
                             {visit.status === 'scheduled_visit' || visit.status === 'pre_registered_visit' || visit.status === 'Walk_In' ? (
-                                <>
-                                    <li>
-                                        <button className="dropdown-item" onClick={() => handleCheckIn(visit.id)}>
-                                            Check In
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button className="dropdown-item" onClick={() => handleCancelVisit(visit.id)}>
-                                            Cancel Visit
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button className="dropdown-item" onClick={() => handleMarkMissed(visit.id)}>
-                                            Mark as Missed
-                                        </button>
-                                    </li>
-                                </>
+                              <>
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleCheckIn(visit.id)}>
+                                    Check In
+                                  </button>
+                                </li>
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleCancelVisit(visit.id)}>
+                                    Cancel Visit
+                                  </button>
+                                </li>
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleMarkMissed(visit.id)}>
+                                    Mark as Missed
+                                  </button>
+                                </li>
+                              </>
                             ) : null}
                             {visit.status === 'completed_visit' && visit.check_in && !visit.check_out ? (
-                                <li>
-                                    <button className="dropdown-item" onClick={() => handleCheckOut(visit.id)}>
-                                        Check Out
-                                    </button>
-                                </li>
+                              <li>
+                                <button className="dropdown-item" onClick={() => handleCheckOut(visit.id)}>
+                                  Check Out
+                                </button>
+                              </li>
                             ) : null}
                             <li>
                               <button className="dropdown-item" onClick={() => handleInviteAgain(visit.id)}>
@@ -454,13 +455,11 @@ function ScheduledVisit({ refreshKey, triggerRefresh }) {
                 <form onSubmit={handleEditSubmit}>
                   <div className="row g-3 container">
                     <div className="col-12 text-center">
-                      <img
-                        src={selectedVisit.visitor_photo || "../images/user.png"}
-                        alt="User"
-                        className="rounded-circle mb-3"
-                        width="80"
-                        height="80"
-                        style={{objectFit: 'cover'}}
+                      <UserAvatar
+                        image={selectedVisit.visitor_photo}
+                        firstName={selectedVisit.visitor_name || "Visitor"}
+                        size={80}
+                        className="mb-3"
                       />
                     </div>
                     <div className="col-md-6">
@@ -722,13 +721,11 @@ function ScheduledVisit({ refreshKey, triggerRefresh }) {
                     <div className="">
                       <h6 className="fw-bold mb-3">Original Visitor Details</h6>
                       <div className="text-center">
-                        <img
-                          src={selectedImage || "../images/user.png"}
-                          alt="Visitor"
-                          className="rounded-circle mb-3"
-                          width="80"
-                          height="80"
-                          style={{objectFit: 'cover'}}
+                        <UserAvatar
+                          image={selectedImage}
+                          firstName={selectedVisitor.name || "Visitor"}
+                          size={80}
+                          className="mb-3"
                         />
                       </div>
                       <p><strong>Name:</strong> {selectedVisitor.name}</p>

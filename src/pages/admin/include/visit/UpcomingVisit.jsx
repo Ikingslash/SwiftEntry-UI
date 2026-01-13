@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import UserAvatar from "../../../../components/UserAvatar";
 import api from "../../../../context/api"; // Assuming your Axios instance
 import { format, parseISO } from 'date-fns';
 
@@ -45,7 +46,7 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
       console.error("Error fetching upcoming visits:", err.response?.data || err.message);
       setError("Failed to load upcoming visits. Please try again.");
       setVisits({});
-      setPagination({}); 
+      setPagination({});
     } finally {
       setLoading(false);
     }
@@ -247,19 +248,19 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
                               </button>
                             </li>
                             <li>
-                                <button className="dropdown-item" onClick={() => handleCheckIn(visit.id)}>
-                                    Check In
-                                </button>
+                              <button className="dropdown-item" onClick={() => handleCheckIn(visit.id)}>
+                                Check In
+                              </button>
                             </li>
                             <li>
-                                <button className="dropdown-item" onClick={() => handleCancelVisit(visit.id)}>
-                                    Cancel Visit
-                                </button>
+                              <button className="dropdown-item" onClick={() => handleCancelVisit(visit.id)}>
+                                Cancel Visit
+                              </button>
                             </li>
                             <li>
-                                <button className="dropdown-item" onClick={() => handleMarkMissed(visit.id)}>
-                                    Mark as Missed
-                                </button>
+                              <button className="dropdown-item" onClick={() => handleMarkMissed(visit.id)}>
+                                Mark as Missed
+                              </button>
                             </li>
                             <li>
                               <button className="dropdown-item" onClick={() => handleDeleteVisit(visit.id)}>
@@ -277,26 +278,26 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
           </tbody>
         </table>
       </div>
-             {/* Pagination Controls */}
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <button
-                className="btn btn-primary"
-                onClick={handlePrevious}
-                disabled={pagination.current_page === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {pagination.current_page} of {pagination.last_page}
-              </span>
-              <button
-                className="btn btn-primary"
-                onClick={handleNext}
-                disabled={pagination.current_page === pagination.last_page}
-              >
-                Next
-              </button>
-            </div>
+      {/* Pagination Controls */}
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <button
+          className="btn btn-primary"
+          onClick={handlePrevious}
+          disabled={pagination.current_page === 1}
+        >
+          Previous
+        </button>
+        <span>
+          Page {pagination.current_page} of {pagination.last_page}
+        </span>
+        <button
+          className="btn btn-primary"
+          onClick={handleNext}
+          disabled={pagination.current_page === pagination.last_page}
+        >
+          Next
+        </button>
+      </div>
 
       {/* Edit Visit Modal (Same as ScheduledVisit's for consistency) */}
       {showEditModal && selectedVisit && (
@@ -334,13 +335,11 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
                 <form onSubmit={handleEditSubmit}>
                   <div className="row g-3 container">
                     <div className="col-12 text-center">
-                      <img
-                        src={selectedVisit.visitor_photo || "../images/user.png"}
-                        alt="User"
-                        className="rounded-circle mb-3"
-                        width="80"
-                        height="80"
-                        style={{objectFit: 'cover'}}
+                      <UserAvatar
+                        image={selectedVisit.visitor_photo}
+                        firstName={selectedVisit.visitor_name || "Visitor"}
+                        size={80}
+                        className="mb-3"
                       />
                     </div>
                     <div className="col-md-6">

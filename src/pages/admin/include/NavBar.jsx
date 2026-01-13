@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useNotifications } from "../../../context/NotificationContext";
+import UserAvatar from "../../../components/UserAvatar";
 
 function Navbar() {
   const location = useLocation();
@@ -59,11 +60,10 @@ function Navbar() {
           <ul className="navbar-nav text-center fs-6">
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/admin-dashboard"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/admin-dashboard"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/admin-dashboard"
               >
                 Dashboard
@@ -71,11 +71,10 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/admin-dashboard/visitors"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/admin-dashboard/visitors"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/admin-dashboard/visitors"
               >
                 Visitors
@@ -85,16 +84,15 @@ function Navbar() {
             {/* Staff Management Dropdown */}
             <li className="nav-item dropdown">
               <a
-                className={`nav-link dropdown-toggle px-3 ${
-                  [
-                    "/admin-dashboard/staffs",
-                    "/admin-dashboard/frontdesk",
-                    "/admin-dashboard/security",
-                    "/admin-dashboard/self-service",
-                  ].includes(location.pathname)
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link dropdown-toggle px-3 ${[
+                  "/admin-dashboard/staffs",
+                  "/admin-dashboard/frontdesk",
+                  "/admin-dashboard/security",
+                  "/admin-dashboard/self-service",
+                ].includes(location.pathname)
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 href="#"
                 id="staffDropdown"
                 role="button"
@@ -106,11 +104,10 @@ function Navbar() {
               <ul className="dropdown-menu">
                 <li>
                   <NavLink
-                    className={`dropdown-item ${
-                      location.pathname === "/admin-dashboard/staffs"
-                        ? "fw-bold text-light"
-                        : ""
-                    }`}
+                    className={`dropdown-item ${location.pathname === "/admin-dashboard/staffs"
+                      ? "fw-bold text-light"
+                      : ""
+                      }`}
                     to="/admin-dashboard/staffs"
                   >
                     Staff
@@ -118,11 +115,10 @@ function Navbar() {
                 </li>
                 <li>
                   <NavLink
-                    className={`dropdown-item ${
-                      location.pathname === "/admin-dashboard/frontdesk"
-                        ? "fw-bold text-light "
-                        : ""
-                    }`}
+                    className={`dropdown-item ${location.pathname === "/admin-dashboard/frontdesk"
+                      ? "fw-bold text-light "
+                      : ""
+                      }`}
                     to="/admin-dashboard/frontdesk"
                   >
                     Frontdesk
@@ -130,11 +126,10 @@ function Navbar() {
                 </li>
                 <li>
                   <NavLink
-                    className={`dropdown-item ${
-                      location.pathname === "/admin-dashboard/security"
-                        ? "fw-bold text-light"
-                        : ""
-                    }`}
+                    className={`dropdown-item ${location.pathname === "/admin-dashboard/security"
+                      ? "fw-bold text-light"
+                      : ""
+                      }`}
                     to="/admin-dashboard/security"
                   >
                     Security
@@ -145,11 +140,10 @@ function Navbar() {
                 </li>
                 <li>
                   <NavLink
-                    className={`dropdown-item ${
-                      location.pathname === "/admin-dashboard/self-service"
-                        ? "fw-bold text-light"
-                        : ""
-                    }`}
+                    className={`dropdown-item ${location.pathname === "/admin-dashboard/self-service"
+                      ? "fw-bold text-light"
+                      : ""
+                      }`}
                     to="/admin-dashboard/self-service"
                   >
                     Self-Service Users
@@ -161,11 +155,10 @@ function Navbar() {
 
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/admin-dashboard/analytical-report"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/admin-dashboard/analytical-report"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/admin-dashboard/analytical-report"
               >
                 Reports & Analytics
@@ -173,11 +166,10 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/admin-dashboard/settings"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/admin-dashboard/settings"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/admin-dashboard/settings"
               >
                 Settings
@@ -186,11 +178,10 @@ function Navbar() {
 
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/admin-dashboard/new-guest"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/admin-dashboard/new-guest"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/admin-dashboard/new-guest"
               >
                 Register Guest
@@ -246,16 +237,16 @@ function Navbar() {
                       to="/admin-dashboard/notifications"
                       onClick={() => handleDropdownNotificationClick(notification.id)}
                       style={{
-                          // Highlight the item visually distinct (Point 4)
-                          backgroundColor: notification.is_read ? 'transparent' : '#f8f9fa',
+                        // Highlight the item visually distinct (Point 4)
+                        backgroundColor: notification.is_read ? 'transparent' : '#f8f9fa',
                       }}
                     >
                       <div>
-                          <small className="fw-bold text-dark">{notification.title}</small>
-                          <p className="mb-0 text-muted text-wrap" style={{ fontSize: "0.85em" }}>
-                            {notification.message}
-                          </p>
-                          <span className="badge bg-light text-muted fw-normal">{notification.created_at}</span>
+                        <small className="fw-bold text-dark">{notification.title}</small>
+                        <p className="mb-0 text-muted text-wrap" style={{ fontSize: "0.85em" }}>
+                          {notification.message}
+                        </p>
+                        <span className="badge bg-light text-muted fw-normal">{notification.created_at}</span>
                       </div>
                     </NavLink>
                   </li>
@@ -283,35 +274,34 @@ function Navbar() {
 
           {/* User Profile Dropdown */}
           <div className="dropdown">
-              {loading ? (
-                <span className="text-white">Loading...</span>
-              ) : user ? (
-                <button
-                  className="btn text-white d-flex align-items-center dropdown-toggle"
-                  type="button"
-                  id="profileDropdown"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                  style={{
-                    gap: "0.5rem",
-                    background: "transparent",
-                    border: "none",
-                  }}
-                >
-                  <span className="fw-semibold">{user.name}</span>
-                  <img
-                    src={user?.profile_picture ? user.profile_picture : "../images/user.png"}
-                    alt="Profile"
-                    className="rounded-circle border"
-                    width="40"
-                    height="40"
-                  />
-                </button>
-              ) : (
-                <NavLink to="/login" className="btn btn-light">
-                  Login
-                </NavLink>
-              )}
+            {loading ? (
+              <span className="text-white">Loading...</span>
+            ) : user ? (
+              <button
+                className="btn text-white d-flex align-items-center dropdown-toggle"
+                type="button"
+                id="profileDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                style={{
+                  gap: "0.5rem",
+                  background: "transparent",
+                  border: "none",
+                }}
+              >
+                <span className="fw-semibold">{user.name}</span>
+                <UserAvatar
+                  image={user?.profile_picture}
+                  firstName={user.name}
+                  className="border"
+                  size={40}
+                />
+              </button>
+            ) : (
+              <NavLink to="/login" className="btn btn-light">
+                Login
+              </NavLink>
+            )}
 
             {/* Remove the default arrow using inline style or override */}
             <style>
@@ -327,11 +317,10 @@ function Navbar() {
             >
               <li>
                 <NavLink
-                  className={`dropdown-item py-2 ${
-                    location.pathname === "/admin-dashboard/profile"
-                      ? "text-primary bg-white fw-bold"
-                      : "text-dark bg-white"
-                  }`}
+                  className={`dropdown-item py-2 ${location.pathname === "/admin-dashboard/profile"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                    }`}
                   to="/admin-dashboard/profile"
                 >
                   Profile
@@ -339,11 +328,10 @@ function Navbar() {
               </li>
               <li>
                 <NavLink
-                  className={`dropdown-item py-2 ${
-                    location.pathname === "/admin-dashboard/settings"
-                      ? "text-primary bg-white fw-bold"
-                      : "text-dark bg-white"
-                  }`}
+                  className={`dropdown-item py-2 ${location.pathname === "/admin-dashboard/settings"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                    }`}
                   to="/admin-dashboard/settings"
                 >
                   Settings

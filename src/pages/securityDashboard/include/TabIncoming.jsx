@@ -1,3 +1,5 @@
+import UserAvatar from "../../../components/UserAvatar";
+
 function TabIncoming() {
   return (
     <div>
@@ -6,12 +8,11 @@ function TabIncoming() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -78,11 +79,11 @@ function TabIncoming() {
                   <p className="mb-0">
                     <small>08123345678 </small>
 
-                    
-                      <a href="#" className="text-primary ms-4"><small>
-                        See more {" "}→ </small>
-                      </a>
-                    
+
+                    <a href="#" className="text-primary ms-4"><small>
+                      See more {" "}→ </small>
+                    </a>
+
                   </p>
                 </div>
                 <button
@@ -101,12 +102,11 @@ function TabIncoming() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -194,18 +194,17 @@ function TabIncoming() {
         </div>
 
       </div>
-      
+
       <div className="row mb-5">
         {/*  Cards */}
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -296,12 +295,11 @@ function TabIncoming() {
         <div className="col-12 col-md-6 ">
           <div className="card shadow p-3 rounded-4">
             <div className="d-flex align-items-center mb-3">
-              <img
-                src="./images/user.png"
-                alt="User"
+              <UserAvatar
+                image="./images/user.png"
+                firstName="Femi Biodun"
+                size={40}
                 className="rounded-circle me-3"
-                width="40"
-                height="40"
               />
               <div>
                 <p className="mb-0">Femi Biodun</p>
@@ -390,7 +388,7 @@ function TabIncoming() {
 
       </div>
 
-{/* Modal */}
+      {/* Modal */}
       <div
         className="modal fade"
         id="printTagModal"
@@ -421,12 +419,11 @@ function TabIncoming() {
             <div className="modal-body">
               <div className="row g-3 container px-5">
                 <div className="col-12">
-                  <img
-                    src="./images/user.png"
-                    alt="User"
+                  <UserAvatar
+                    image="./images/user.png"
+                    firstName="Femi Biodun"
+                    size={80}
                     className="rounded-circle mb-3"
-                    width="80"
-                    height="80"
                   />
                 </div>
                 <div className="col-md-6">
@@ -499,7 +496,7 @@ function TabIncoming() {
           </div>
         </div>
       </div>
-    
+
     </div>
   );
 }

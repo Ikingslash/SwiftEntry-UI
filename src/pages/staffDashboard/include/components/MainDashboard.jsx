@@ -8,6 +8,7 @@ import {
   User,
   Clock,
 } from "lucide-react";
+import UserAvatar from "../../../../components/UserAvatar";
 
 export default function MainDashboard({
   user,
@@ -166,31 +167,21 @@ export default function MainDashboard({
                   >
                     <div className="card p-2 m-2 shadow-sm rounded-3 text-center">
                       {/* Conditional rendering for the guest image. */}
-                      {guest.visitor?.photo ? (
-                        <img
-                          src={`${guest.visitor.photo}`}
-                          alt="Guest"
-                          className="img-fluid rounded-circle"
-                        />
-                      ) : (
-                        // Default user icon if no image URL is provided.
-                        <div
-                          className="p-2 mx-auto rounded-circle bg-light d-flex align-items-center justify-content-center"
-                          style={{ width: "60px", height: "60px" }}
-                        >
-                          <User size={36} color="#0d6efd" />
-                        </div>
-                      )}
+                      <UserAvatar
+                        image={guest.visitor?.photo}
+                        firstName={guest.visitor?.name || "Visitor"}
+                        size={60}
+                        className="mx-auto"
+                      />
                       <p className="mt-2 mb-1 fw-bold">
                         {guest.visitor?.name || "Unknown Visitor"}
                       </p>
                       <small className="text-muted">
                         <span
-                          className={`ms-2 ${
-                            index % 2 === 0
-                              ? "text-success me-3"
-                              : "text-danger me-3"
-                          }`}
+                          className={`ms-2 ${index % 2 === 0
+                            ? "text-success me-3"
+                            : "text-danger me-3"
+                            }`}
                         >
                           ●
                         </span>
@@ -211,21 +202,12 @@ export default function MainDashboard({
                   <div key={guest.id} className="col-12">
                     <div className="card p-3 shadow-sm d-flex flex-row align-items-center rounded-3">
                       {/* Conditional rendering for the guest image in the list view. */}
-                      {guest.visitor?.image_url ? (
-                        <img
-                          src={guest.visitor.photo}
-                          alt="Guest"
-                          className="rounded-circle me-3"
-                          style={{ width: "40px", height: "40px" }}
-                        />
-                      ) : (
-                        <div
-                          className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center"
-                          style={{ backgroundColor: "#e9f5ff" }}
-                        >
-                          <User size={24} color="#0d6efd" />
-                        </div>
-                      )}
+                      <UserAvatar
+                        image={guest.visitor?.photo || guest.visitor?.image_url}
+                        firstName={guest.visitor?.name || "Visitor"}
+                        size={40}
+                        className="me-3"
+                      />
                       <div>
                         <p className="mb-1 fw-bold">
                           {guest.visitor?.name || "Unknown Visitor"}

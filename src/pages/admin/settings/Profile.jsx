@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Fragment } from "react";
 import { toast } from 'react-toastify';
 import api from '../../../context/api';
+import UserAvatar from '../../../components/UserAvatar';
 
 function Profile() {
     // State for the Admin Profile
@@ -91,7 +92,7 @@ function Profile() {
 
         try {
             await api.post('/admin/settings/profile', formData, {
-                 headers: {
+                headers: {
                     'Content-Type': 'multipart/form-data',
                     'X-HTTP-Method-Override': 'PUT'
                 }
@@ -133,7 +134,7 @@ function Profile() {
 
         try {
             await api.post('/admin/settings/company', formData, {
-                 headers: {
+                headers: {
                     'Content-Type': 'multipart/form-data',
                     'X-HTTP-Method-Override': 'PUT'
                 }
@@ -178,7 +179,7 @@ function Profile() {
 
         try {
             await api.post('/admin/settings/admins', formData, {
-                 headers: {
+                headers: {
                     'Content-Type': 'multipart/form-data',
                 }
             });
@@ -231,12 +232,11 @@ function Profile() {
                         <form onSubmit={handleUpdateAdminProfile}>
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <div className="d-flex align-items-center">
-                                    <img
-                                        src={previewAdminPhoto || (adminProfile.photo ? `/storage/${adminProfile.photo}` : "https://placehold.co/80x80/E0E7FF/000000?text=Admin")}
-                                        alt="Admin"
-                                        className="rounded-circle me-3"
-                                        width="80"
-                                        height="80"
+                                    <UserAvatar
+                                        image={previewAdminPhoto || (adminProfile.photo ? `/storage/${adminProfile.photo}` : null)}
+                                        firstName={adminProfile.fullName || "Admin"}
+                                        className="me-3"
+                                        size={80}
                                     />
                                     <div>
                                         <p className="fw-bold mb-0">Profile Picture</p>
@@ -360,12 +360,11 @@ function Profile() {
                                 </div>
                                 <div className="modal-body">
                                     <div className="text-center mb-3">
-                                        <img
-                                            src={previewNewAdminPhoto || "https://placehold.co/80x80/E0E7FF/000000?text=Admin"}
-                                            alt="Admin Photo"
-                                            className="rounded-circle mb-3"
-                                            width="80"
-                                            height="80"
+                                        <UserAvatar
+                                            image={previewNewAdminPhoto}
+                                            firstName={newAdmin.fullName || "Admin"}
+                                            className="mb-3"
+                                            size={80}
                                         />
                                         <p className="small text-secondary">Add Photo</p>
                                         <input type="file" onChange={handleNewAdminPhotoChange} className="form-control-file" />

@@ -5,6 +5,7 @@ import api from "../../context/api";
 import NavBar from "./include/NavBar";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import UserAvatar from "../../components/UserAvatar";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -78,22 +79,11 @@ export default function Profile() {
 
                 {/* Profile Picture and Staff Badge */}
                 <div className="text-center mt-4">
-                  <img
-                    src={
-                      profileData?.profile_picture && profileData.profile_picture.trim() !== ""
-                        ? profileData.profile_picture
-                        : defaultProfilePicture
-                    }
-                    alt="Profile"
-                    className="rounded-circle mb-3"
-                    style={{
-                      width: "120px",
-                      height: "120px",
-                      objectFit: "cover",
-                    }}
-                    onError={(e) => {
-                      e.target.src = defaultProfilePicture;
-                    }}
+                  <UserAvatar
+                    image={profileData?.profile_picture}
+                    firstName={profileData?.name || "User"}
+                    size={120}
+                    className="rounded-circle mb-3 mx-auto"
                   />
                   <div
                     className="d-inline-block px-3 py-1 rounded-pill bg-light text-primary fw-bold"

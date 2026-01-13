@@ -4,6 +4,7 @@ import api from "../../context/api";
 import { NavLink } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import UserAvatar from "../../components/UserAvatar";
 
 function GenerateByUniqueCode() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -198,15 +199,11 @@ function GenerateByUniqueCode() {
             {userProfile && (
               <div className="modal-body px-4">
                 <div className="text-center mb-4">
-                  <img
-                    src={userProfile.photo || "../images/user.png"}
-                    alt="User"
-                    className="rounded-circle shadow"
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      objectFit: "cover",
-                    }}
+                  <UserAvatar
+                    image={userProfile.photo}
+                    firstName={userProfile.name || "Guest"}
+                    size={80}
+                    className="rounded-circle shadow mb-3 mx-auto"
                   />
                 </div>
 
@@ -245,9 +242,8 @@ function GenerateByUniqueCode() {
                 <div className="d-flex justify-content-between border-bottom py-4 small">
                   <span className="text-muted">Visit Status</span>
                   <span
-                    className={`badge bg-${
-                      userProfile.status === "confirmed" ? "success" : "warning"
-                    }`}
+                    className={`badge bg-${userProfile.status === "confirmed" ? "success" : "warning"
+                      }`}
                   >
                     {userProfile.status}
                   </span>

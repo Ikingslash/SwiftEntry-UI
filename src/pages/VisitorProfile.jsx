@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import VisitorLayout from "../layout/VisitorLayout";
+import UserAvatar from "../components/UserAvatar";
 import api from "../context/api";
 import { toast } from "react-toastify";
 
@@ -48,21 +49,12 @@ function VisitorProfile() {
             <div className="card shadow-sm border-0">
               <div className="card-body p-4">
                 <div className="text-center mb-4">
-                  {profile.profile_picture ? (
-                    <img
-                      src={profile.profile_picture}
-                      alt="Profile"
-                      className="rounded-circle"
-                      style={{ width: "100px", height: "100px" }}
-                    />
-                  ) : (
-                    <div
-                      className="rounded-circle bg-light d-inline-flex align-items-center justify-content-center"
-                      style={{ width: "100px", height: "100px" }}
-                    >
-                      <i className="bi bi-person fs-1 text-muted"></i>
-                    </div>
-                  )}
+                  <UserAvatar
+                    image={profile.profile_picture}
+                    firstName={profile.name || "Visitor"}
+                    size={100}
+                    className="mx-auto"
+                  />
                 </div>
 
                 <div className="mb-3">

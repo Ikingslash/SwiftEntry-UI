@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import React, { useState, useEffect } from "react";
 import NavBar from "../include/NavBar";
+import UserAvatar from "../../../components/UserAvatar";
 import api from "../../../context/api";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -86,101 +87,101 @@ function AnalyticalAndReport() {
     }
   };
 
-const handleExport = async () => {
-  setIsExporting(true);
-  try {
-    const queryParams = new URLSearchParams();
-    queryParams.append("format", exportFormat);
-    queryParams.append("filter", activeFilters.timePeriod || "daily");
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("format", exportFormat);
+      queryParams.append("filter", activeFilters.timePeriod || "daily");
 
-    if (activeFilters.vip) queryParams.append("vip", "true");
-    if (activeFilters.blacklist) queryParams.append("blacklist", "true");
-    if (activeFilters.walkins) queryParams.append("walkins", "true");
-    if (activeFilters.preregistered) queryParams.append("preregistered", "true");
+      if (activeFilters.vip) queryParams.append("vip", "true");
+      if (activeFilters.blacklist) queryParams.append("blacklist", "true");
+      if (activeFilters.walkins) queryParams.append("walkins", "true");
+      if (activeFilters.preregistered) queryParams.append("preregistered", "true");
 
-    // Get the token from localStorage
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Please login again.");
+      // Get the token from localStorage
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login again.");
+        setIsExporting(false);
+        return;
+      }
+
+      // Use the API instance to make the request
+      const response = await api.get(`/admin/analytics/export?${queryParams.toString()}`, {
+        responseType: 'blob', // This is CRITICAL for file downloads
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf, text/csv'
+        }
+      });
+
+      // Get the filename from the response headers or generate one
+      let filename = 'analytics_report';
+      const contentDisposition = response.headers['content-disposition'];
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        } else {
+          // Fallback based on format
+          const extension = exportFormat === 'csv' ? 'csv' :
+            exportFormat === 'pdf' ? 'pdf' : 'xlsx';
+          filename = `analytics_report_${new Date().toISOString().slice(0, 10)}.${extension}`;
+        }
+      }
+
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data], {
+        type: response.headers['content-type'] ||
+          (exportFormat === 'pdf' ? 'application/pdf' :
+            exportFormat === 'csv' ? 'text/csv' :
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+
+      toast.success(`Report exported successfully as ${exportFormat.toUpperCase()}!`);
+
+    } catch (err) {
+      console.error("Error exporting report:", err);
+
+      // Try to parse error response if available
+      if (err.response && err.response.data) {
+        // If it's a JSON error (like from backend)
+        if (err.response.headers['content-type']?.includes('application/json')) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result);
+              toast.error(errorData.error || "Export failed");
+            } catch {
+              toast.error("Export failed: Invalid response");
+            }
+          };
+          reader.readAsText(err.response.data);
+        } else {
+          // If it's a different type of error
+          toast.error("Export failed. Please try again.");
+        }
+      } else {
+        toast.error(err.message || "Failed to export report. Please try again.");
+      }
+    } finally {
       setIsExporting(false);
-      return;
+      setShowExportModal(false);
     }
-
-    // Use the API instance to make the request
-    const response = await api.get(`/admin/analytics/export?${queryParams.toString()}`, {
-      responseType: 'blob', // This is CRITICAL for file downloads
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf, text/csv'
-      }
-    });
-
-    // Get the filename from the response headers or generate one
-    let filename = 'analytics_report';
-    const contentDisposition = response.headers['content-disposition'];
-
-    if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-      if (filenameMatch && filenameMatch[1]) {
-        filename = filenameMatch[1];
-      } else {
-        // Fallback based on format
-        const extension = exportFormat === 'csv' ? 'csv' :
-                         exportFormat === 'pdf' ? 'pdf' : 'xlsx';
-        filename = `analytics_report_${new Date().toISOString().slice(0, 10)}.${extension}`;
-      }
-    }
-
-    // Create a blob URL and trigger download
-    const blob = new Blob([response.data], {
-      type: response.headers['content-type'] ||
-            (exportFormat === 'pdf' ? 'application/pdf' :
-             exportFormat === 'csv' ? 'text/csv' :
-             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    });
-
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-
-    // Cleanup
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(link);
-
-    toast.success(`Report exported successfully as ${exportFormat.toUpperCase()}!`);
-
-  } catch (err) {
-    console.error("Error exporting report:", err);
-
-    // Try to parse error response if available
-    if (err.response && err.response.data) {
-      // If it's a JSON error (like from backend)
-      if (err.response.headers['content-type']?.includes('application/json')) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const errorData = JSON.parse(reader.result);
-            toast.error(errorData.error || "Export failed");
-          } catch {
-            toast.error("Export failed: Invalid response");
-          }
-        };
-        reader.readAsText(err.response.data);
-      } else {
-        // If it's a different type of error
-        toast.error("Export failed. Please try again.");
-      }
-    } else {
-      toast.error(err.message || "Failed to export report. Please try again.");
-    }
-  } finally {
-    setIsExporting(false);
-    setShowExportModal(false);
-  }
-};
+  };
   const handleFilterChange = (filterType, value) => {
     // This function updates the activeFilters state.
     // The useEffect hook, which depends on activeFilters, will then trigger fetchAnalyticsData.
@@ -501,33 +502,12 @@ const handleExport = async () => {
                       <div className="card bg-light text-center p-3 rounded-3 border">
                         {/* Profile Image */}
                         <div className="d-flex justify-content-center">
-                          <div
-                            className="rounded-circle border border-success d-flex justify-content-center align-items-center"
-                            style={{
-                              width: "100px",
-                              height: "100px",
-                              backgroundColor: "#f8f9fa",
-                            }}
-                          >
-                            <img
-                              src={
-                                visitor.visitor_photo ||
-                                "https://placehold.co/90x90/e0e0e0/000000?text=User"
-                              } // Use actual photo or placeholder
-                              className="rounded-circle"
-                              style={{
-                                width: "90%",
-                                height: "90%",
-                                objectFit: "cover",
-                              }}
-                              alt={visitor.visitor_name}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src =
-                                  "https://placehold.co/90x90/e0e0e0/000000?text=User";
-                              }}
-                            />
-                          </div>
+                          <UserAvatar
+                            image={visitor.visitor_photo}
+                            firstName={visitor.visitor_name || "Visitor"}
+                            size={90}
+                            className="rounded-circle"
+                          />
                         </div>
 
                         {/* Name */}
@@ -691,33 +671,30 @@ const handleExport = async () => {
                 <div className="d-flex gap-2 mb-4">
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.timePeriod === "daily"
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.timePeriod === "daily"
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("timePeriod", "daily")}
                   >
                     Daily
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.timePeriod === "weekly"
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.timePeriod === "weekly"
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("timePeriod", "weekly")}
                   >
                     Weekly
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.timePeriod === "monthly"
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.timePeriod === "monthly"
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("timePeriod", "monthly")}
                   >
                     Monthly
@@ -728,42 +705,38 @@ const handleExport = async () => {
                 <div className="d-flex flex-wrap gap-2">
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.vip ? "btn-primary" : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.vip ? "btn-primary" : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("vip")}
                   >
                     VIP
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.blacklist
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.blacklist
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("blacklist")}
                   >
                     Blacklist
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.walkins
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.walkins
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("walkins")}
                   >
                     Walk-ins
                   </button>
                   <button
                     type="button" // Explicitly set type to button
-                    className={`btn btn-sm ${
-                      activeFilters.preregistered
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
+                    className={`btn btn-sm ${activeFilters.preregistered
+                      ? "btn-primary"
+                      : "btn-outline-primary"
+                      }`}
                     onClick={() => handleFilterChange("preregistered")}
                   >
                     Pre-Registered

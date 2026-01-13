@@ -1,4 +1,5 @@
 import { useState } from "react";
+import UserAvatar from "../../../components/UserAvatar";
 import NavBar from "../include/NavBar";
 import ManageStaffTable from "./ManageStaffTable";
 import BulkUploadModal from "../include/BulkUploadModal";
@@ -284,15 +285,11 @@ function AdminStaff() {
                           }}
                         >
                           {selectedImage ? (
-                            <img
-                              src={selectedImage}
-                              alt="Uploaded"
+                            <UserAvatar
+                              image={selectedImage}
+                              firstName={newStaffFormData.name || "New Staff"}
+                              size={100}
                               className="rounded-circle"
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
                             />
                           ) : (
                             <i

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useNotifications } from "../../../context/NotificationContext";
+import UserAvatar from "../../../components/UserAvatar";
 
 function Navbar() {
   const location = useLocation();
@@ -62,11 +63,10 @@ function Navbar() {
           <ul className="navbar-nav text-center fs-6">
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/front-desk-dashboard"
-                    ? "text-white fw-bold "
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/front-desk-dashboard"
+                  ? "text-white fw-bold "
+                  : "text-white-50"
+                  }`}
                 to="/front-desk-dashboard"
               >
                 Guest Confirmation
@@ -74,11 +74,10 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/front-desk-dashboard/register-guest"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/front-desk-dashboard/register-guest"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/front-desk-dashboard/register-guest"
               >
                 Register Guest
@@ -86,11 +85,10 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/front-desk-dashboard/history"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                className={`nav-link px-3 ${location.pathname === "/front-desk-dashboard/history"
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/front-desk-dashboard/history"
               >
                 History
@@ -98,12 +96,11 @@ function Navbar() {
             </li>
             <li className="nav-item">
               <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname ===
+                className={`nav-link px-3 ${location.pathname ===
                   "/front-desk-dashboard/manage-frontdesk-guests"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
+                  ? "text-white fw-bold"
+                  : "text-white-50"
+                  }`}
                 to="/front-desk-dashboard/manage-frontdesk-guests"
               >
                 Manage Guests
@@ -237,16 +234,11 @@ function Navbar() {
                 }}
               >
                 <span className="fw-semibold">{user.name}</span>
-                <img
-                  src={
-                    user?.profile_picture
-                      ? user.profile_picture
-                      : "../images/user.png"
-                  }
-                  alt="Profile"
+                <UserAvatar
+                  image={user?.profile_picture}
+                  firstName={user.name || "User"}
+                  size={40}
                   className="rounded-circle border"
-                  width="40"
-                  height="40"
                 />
               </button>
             ) : (
@@ -269,11 +261,10 @@ function Navbar() {
             >
               <li>
                 <NavLink
-                  className={`dropdown-item py-2 ${
-                    location.pathname === "/front-desk-dashboard/profile"
-                      ? "text-primary bg-white fw-bold"
-                      : "text-dark bg-white"
-                  }`}
+                  className={`dropdown-item py-2 ${location.pathname === "/front-desk-dashboard/profile"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                    }`}
                   to="/front-desk-dashboard/profile"
                 >
                   Profile
@@ -281,11 +272,10 @@ function Navbar() {
               </li>
               <li>
                 <NavLink
-                  className={`dropdown-item py-2 ${
-                    location.pathname === "/front-desk-dashboard/front-desk-settings"
-                      ? "text-primary bg-white fw-bold"
-                      : "text-dark bg-white"
-                  }`}
+                  className={`dropdown-item py-2 ${location.pathname === "/front-desk-dashboard/front-desk-settings"
+                    ? "text-primary bg-white fw-bold"
+                    : "text-dark bg-white"
+                    }`}
                   to="/front-desk-dashboard/front-desk-settings"
                 >
                   Settings

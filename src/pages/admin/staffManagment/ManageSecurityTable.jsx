@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../../context/api";
+import UserAvatar from "../../../components/UserAvatar";
 import { toast } from "react-toastify";
 
 function ManageSecurityTable({ refreshKey, triggerRefresh, onSelectionChange }) {
@@ -433,18 +434,11 @@ function ManageSecurityTable({ refreshKey, triggerRefresh, onSelectionChange }) 
                               }}
                             >
                               {selectedStaff.photo ? (
-                                <img
-                                  src={
-                                    `${selectedStaff.profile_picture}` ||
-                                    "../images/user.png"
-                                  }
-                                  alt="Staff"
+                                <UserAvatar
+                                  image={selectedStaff.photo}
+                                  firstName={selectedStaff.name || "Staff"}
+                                  size={100}
                                   className="rounded-circle"
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                  }}
                                 />
                               ) : (
                                 <i
@@ -577,16 +571,11 @@ function ManageSecurityTable({ refreshKey, triggerRefresh, onSelectionChange }) 
               <div className="modal-body">
                 <div className="row g-3 container">
                   <div className="col-12 text-center mb-3">
-                    <img
-                      src={
-                        `${selectedStaff.profile_picture}` ||
-                        "../images/user.png"
-                      }
-                      alt="Staff"
-                      className="rounded-circle"
-                      width="100"
-                      height="100"
-                      style={{ objectFit: "cover" }}
+                    <UserAvatar
+                      image={selectedStaff.profile_picture}
+                      firstName={selectedStaff.name || "Staff"}
+                      size={100}
+                      className="rounded-circle mx-auto"
                     />
                   </div>
                   <div className="col-md-6">

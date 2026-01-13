@@ -5,6 +5,7 @@ import api from "../context/api";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { NavLink } from "react-router-dom";
+import UserAvatar from "../components/UserAvatar";
 
 function SecurityDashboard() {
   const [scanResult, setScanResult] = useState(null);
@@ -195,15 +196,11 @@ function SecurityDashboard() {
             {userProfile && (
               <div className="modal-body px-4" ref={printRef}>
                 <div className="text-center mb-4">
-                  <img
-                    src={`${userProfile.photo}`}
-                    alt="User"
-                    className="rounded-circle shadow"
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      objectFit: "cover",
-                    }}
+                  <UserAvatar
+                    image={userProfile.photo}
+                    firstName={userProfile.name || "Visitor"}
+                    size={80}
+                    className="mx-auto shadow rounded-circle"
                   />
                 </div>
 
