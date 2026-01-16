@@ -280,7 +280,7 @@ export default function NewGuestIndividual() {
           details: "",
         });
         setSelectedImage(null);
-        toast.success("Group visitor registered!");
+        toast.success("Individual visitor registered!");
         setShowSuccessModal(true);
         setTimeout(() => {
           setShowSuccessModal(false);
