@@ -69,8 +69,7 @@ function CompletedVisitTable({ visitType }) {
                   <th>Check-Out Time</th>
                   <th>Duration</th>
                   <th>Contact</th>
-                  <th>Created At</th>
-                  <th>Updated At</th>
+
                   <th>Special Requirement</th>
                 </tr>
               </thead>
@@ -93,8 +92,7 @@ function CompletedVisitTable({ visitType }) {
                       <td>{visit.check_out ? new Date(visit.check_out).toLocaleString() : 'N/A'}</td>
                       <td>{calculateDuration(visit.check_in, visit.check_out)}</td>
                       <td>{visit.visitor?.contact_number || "N/A"}</td>
-                      <td>{visit.created_at}</td>
-                      <td>{visit.updated_at}</td>
+
                       <td>{visit.visitor?.special_requirements || "None"}</td>
                     </tr>
                   );

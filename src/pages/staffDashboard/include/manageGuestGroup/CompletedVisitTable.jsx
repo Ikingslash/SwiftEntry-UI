@@ -16,7 +16,7 @@ function CompletedVisitTable({ visitType }) {
   const fetchVisits = async () => {
     setLoading(true);
     try {
-        // FIX: Dynamic endpoint for completed visits
+      // FIX: Dynamic endpoint for completed visits
       const endpoint = `/staff/guests/${visitType}/completed-visits`;
       const response = await api.get(
         endpoint,
@@ -66,8 +66,7 @@ function CompletedVisitTable({ visitType }) {
                   <th>Host Name</th>
                   <th>Check-In Time</th>
                   <th>Contact</th>
-                  <th>Created At</th>
-                  <th>Updated At</th>
+
                   <th>Special Requirement</th>
                 </tr>
               </thead>
@@ -79,8 +78,7 @@ function CompletedVisitTable({ visitType }) {
                     <td>{visit.host_name}</td>
                     <td>{new Date(visit.check_in).toLocaleString()}</td>
                     <td>{visit.visitor?.contact_number || "N/A"}</td>
-                    <td>{visit.created_at}</td>
-                    <td>{visit.updated_at}</td>
+
                     <td>{visit.visitor?.special_requirements || "None"}</td>
                   </tr>
                 ))}
