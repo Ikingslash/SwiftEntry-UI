@@ -110,7 +110,7 @@ function FrontDeskDashboard() {
                 onClick={() => setActiveTab("pending")}
                 style={getTabStyle("pending")}
               >
-                Regiter
+                Registered
               </button>
             </li>
             <li className="nav-item">
@@ -128,7 +128,7 @@ function FrontDeskDashboard() {
                 onClick={() => setActiveTab("incoming")}
                 style={getTabStyle("incoming")}
               >
-                Check In
+                Checked In
               </button>
             </li>
             <li className="nav-item">
@@ -137,7 +137,7 @@ function FrontDeskDashboard() {
                 onClick={() => setActiveTab("outgoing")}
                 style={getTabStyle("outgoing")}
               >
-                Check Out
+                Checked Out
               </button>
             </li>
           </div>
