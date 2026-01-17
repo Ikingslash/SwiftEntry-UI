@@ -240,7 +240,17 @@ export default function NewGuestIndividual() {
         });
 
         if (visit.code) {
-          setQrValue(visit.code);
+          const qrData = JSON.stringify({
+            code: visit.code,
+            id: visit.code, // Fallback for some scanners
+            visit_id: visit.id,
+            name: visitor.name,
+            host: visit.host_name,
+            date: date,
+            time: time,
+            purpose: visit.purpose
+          });
+          setQrValue(qrData);
         }
 
         setFormData({
@@ -614,9 +624,8 @@ export default function NewGuestIndividual() {
                       </p>
                     </div>
                     <div>
-                      {typeof guestDetails.id === "string" &&
-                        guestDetails.id.length > 0 ? (
-                        <QRCode value={guestDetails.id} size={130} />
+                      {typeof qrValue === "string" && qrValue.length > 0 ? (
+                        <QRCode value={qrValue} size={130} />
                       ) : (
                         <div className="text-muted">QR not ready</div>
                       )}

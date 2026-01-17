@@ -233,7 +233,19 @@ function NewGuestGroup() {
         });
 
         if (visit.code) {
-          setQrValue(visit.code);
+          const qrData = JSON.stringify({
+            code: visit.code,
+            id: visit.code, // Fallback
+            visit_id: visit.id,
+            name: visitor.name,
+            host: visit.host_name,
+            date: date,
+            time: time,
+            purpose: visit.purpose,
+            type: 'group',
+            group_size: visit.group_size
+          });
+          setQrValue(qrData);
         }
 
         setFormData({

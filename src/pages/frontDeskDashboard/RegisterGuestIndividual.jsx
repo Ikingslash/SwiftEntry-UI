@@ -25,7 +25,8 @@ const formatDateToDDMMYYYY = (dateString) => {
 const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
   try {
     const qrData = {
-      visit_code: visitCode,
+      code: visitCode, // Standardized key
+      visit_code: visitCode, // Keep for backward compat if needed, but 'code' is primary
       name: visitorName,
       host: hostName,
       date: visitDate,

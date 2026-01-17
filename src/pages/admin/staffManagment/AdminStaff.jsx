@@ -100,7 +100,7 @@ function AdminStaff() {
 
     // Don't send password field
     Object.entries(newStaffFormData).forEach(([key, value]) => {
-      if (key !== 'password') { // Remove password from form data
+      if (key !== 'password' && value !== null) { // Remove password and null values
         formData.append(key, value);
       }
     });

@@ -21,8 +21,26 @@ function SecurityDashboard() {
     scanner.render(
       async (decodedText) => {
         scanner.clear();
-        setScanResult(decodedText);
-        await fetchUserProfile(decodedText);
+        let code = decodedText;
+
+        try {
+          // Attempt to parse if it's JSON
+          const data = JSON.parse(decodedText);
+          if (data && (data.id || data.visit_id || data.code)) {
+            code = data.code || data.id || data.visit_id; // Prioritize fields
+          }
+        } catch (e) {
+          // Not JSON, might be a URL or raw string.
+          // Check if it's a URL and extract last segment if needed, 
+          // but for now assume raw code if not JSON.
+          if (decodedText.startsWith("http")) {
+            const urlParts = decodedText.split('/');
+            code = urlParts[urlParts.length - 1];
+          }
+        }
+
+        setScanResult(code);
+        await fetchUserProfile(code);
       },
       (error) => {
         console.warn(error);

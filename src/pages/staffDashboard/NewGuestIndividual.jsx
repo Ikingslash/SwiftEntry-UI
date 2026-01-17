@@ -253,14 +253,17 @@ export default function NewGuestIndividual() {
 
         // Create enhanced QR code value with all visit details
         if (visit.code) {
-          const enhancedQR = createEnhancedQRValue(
-            visit.code,
-            visitor.name,
-            visit.host_name,
-            formattedDate,
-            visit.purpose
-          );
-          setQrValue(enhancedQR);
+          const qrData = JSON.stringify({
+            code: visit.code,
+            id: visit.code, // Fallback
+            visit_id: visit.id,
+            name: visitor.name,
+            host: visit.host_name,
+            date: date,
+            time: time,
+            purpose: visit.purpose
+          });
+          setQrValue(qrData);
         }
 
         setFormData({
