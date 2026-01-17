@@ -173,6 +173,7 @@ function AllVisitors({ refreshKey }) {
                           <ul className="dropdown-menu bg-light rounded-4" style={{ fontSize: "13px", width: "250px" }} >
                             <li>
                               <button
+                                type="button"
                                 className="dropdown-item"
                                 onClick={() => handleEdit(visitor)}
                               >
@@ -181,6 +182,7 @@ function AllVisitors({ refreshKey }) {
                             </li>
                             <li>
                               <button
+                                type="button"
                                 className="dropdown-item"
                                 onClick={() => handleMarkVip(visitor.id)}
                               >
@@ -189,6 +191,7 @@ function AllVisitors({ refreshKey }) {
                             </li>
                             <li>
                               <button
+                                type="button"
                                 className={`dropdown-item ${visitor.is_blacklisted ? "text-success" : "text-danger"}`}
                                 onClick={() => handleBlacklist(visitor.id)}
                               >
@@ -196,7 +199,7 @@ function AllVisitors({ refreshKey }) {
                               </button>
                             </li>
                             <li>
-                              <button className="dropdown-item">
+                              <button type="button" className="dropdown-item">
                                 View Detail {/* Placeholder, implement if needed */}
                               </button>
                             </li>
@@ -205,6 +208,7 @@ function AllVisitors({ refreshKey }) {
                             </li>
                             <li>
                               <button
+                                type="button"
                                 className="dropdown-item text-danger"
                                 onClick={() => handleDelete(visitor.id)}
                               >

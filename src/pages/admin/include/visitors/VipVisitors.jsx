@@ -173,6 +173,7 @@ function VipVisitors({ refreshKey }) {
                           <ul className="dropdown-menu bg-light rounded-4" style={{ fontSize: "13px", width: "250px" }} >
                             <li>
                               <button
+                                type="button"
                                 className="dropdown-item"
                                 onClick={() => handleEdit(visitor)}
                               >
@@ -181,6 +182,7 @@ function VipVisitors({ refreshKey }) {
                             </li>
                             <li>
                               <button
+                                type="button"
                                 className="dropdown-item"
                                 onClick={() => handleMarkVip(visitor.id)}
                               >
@@ -189,6 +191,7 @@ function VipVisitors({ refreshKey }) {
                             </li>
                             <li>
                               <button
+                                type="button"
                                 className={`dropdown-item ${visitor.is_blacklisted ? "text-success" : "text-danger"}`}
                                 onClick={() => handleBlacklist(visitor.id)}
                               >
@@ -196,7 +199,7 @@ function VipVisitors({ refreshKey }) {
                               </button>
                             </li>
                             <li>
-                              <button className="dropdown-item">
+                              <button type="button" className="dropdown-item">
                                 View Detail
                               </button>
                             </li>
@@ -205,6 +208,7 @@ function VipVisitors({ refreshKey }) {
                             </li>
                             <li>
                               <button
+                                type="button"
                                 className="dropdown-item text-danger"
                                 onClick={() => handleDelete(visitor.id)}
                               >
@@ -232,9 +236,9 @@ function VipVisitors({ refreshKey }) {
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
           <div className="modal-dialog modal-dialog-centered" role="document">
-            <div className="modal-content p-3"   style={{
-                      backgroundColor: "#F5FAFE",
-                    }}>
+            <div className="modal-content p-3" style={{
+              backgroundColor: "#F5FAFE",
+            }}>
               <div className="modal-header" >
                 <h5 className="modal-title">Edit Visitor Information</h5>
                 <button
@@ -290,9 +294,9 @@ function VipVisitors({ refreshKey }) {
                     />
                   </div>
                   <div className="mt-5 text-center">
-                   <button type="submit" className="btn btn-primary w-50">
-                    Save Changes
-                  </button>
+                    <button type="submit" className="btn btn-primary w-50">
+                      Save Changes
+                    </button>
                   </div>
                 </form>
               </div>
