@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main
+      - browncon
 
 jobs:
   deploy:
@@ -23,7 +23,7 @@ jobs:
         run: ssh-keyscan -H 85.9.202.212 >> ~/.ssh/known_hosts
 
       - name: Create deployment directory on server
-        run: ssh -o StrictHostKeyChecking=no root@85.9.202.212 'mkdir -p /var/www/vms-frontend'
+        run: ssh -o StrictHostKeyChecking=no root@85.9.202.212 'mkdir -p /var/www/browncon/frontend'
 
       - name: Change to correct working directory
         run: cd $GITHUB_WORKSPACE
@@ -37,8 +37,8 @@ jobs:
             --exclude 'Dockerfile' \
             --exclude '.github/' \
             --exclude 'node_modules/' \
-            ./ root@85.9.202.212:/var/www/vms-frontend
+            ./ root@85.9.202.212:/var/www/browncon/frontend
 
       - name: Build and deploy on server
         run: |
-          ssh -o StrictHostKeyChecking=no root@85.9.202.212 'cd /var/www/vms-frontend && bash ./deploy.sh'
+          ssh -o StrictHostKeyChecking=no root@85.9.202.212 'cd /var/www/browncon/frontend && bash ./deploy.sh'
