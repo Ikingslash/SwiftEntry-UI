@@ -27,18 +27,12 @@ function SignIn() {
     setIsSubmitting(true);
 
     try {
-      // Execute reCAPTCHA with action 'login'
-      const recaptchaToken = await executeRecaptcha('login');
-
-      if (!recaptchaToken) {
-        toast.error("reCAPTCHA verification failed. Please try again.");
-        setIsSubmitting(false);
-        return;
-      }
-
       navigate("/loading");
 
-      const success = await login(email, password, recaptchaToken);
+      // Pass the executeRecaptcha function to login
+      // This allows login to get fresh tokens for each role attempt
+      // reCAPTCHA v3 tokens can only be used once
+      const success = await login(email, password, executeRecaptcha);
       if (!success) {
         setErrorMessage("Invalid email or password");
         toast.error("Invalid email or password");

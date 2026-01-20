@@ -264,7 +264,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
-  const login = async (email, password, recaptchaToken) => {
+  const login = async (email, password, getRecaptchaToken) => {
     const roles = ["admin", "staff", "security", "front_desk", "self_service"];
     let dashboard = "/";
 
@@ -272,6 +272,16 @@ export const AuthProvider = ({ children }) => {
       for (const role of roles) {
         const path = AUTH_PATHS[role].login;
         try {
+          // Get a fresh reCAPTCHA token for each attempt
+          // reCAPTCHA v3 tokens can only be used once
+          let recaptchaToken;
+          if (typeof getRecaptchaToken === 'function') {
+            recaptchaToken = await getRecaptchaToken('login');
+          } else {
+            // Backward compatibility: if a string token is passed directly
+            recaptchaToken = getRecaptchaToken;
+          }
+
           const response = await api.post(path, {
             email,
             password,
@@ -373,7 +383,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // NEW FUNCTIONS FOR PASSWORD RESET FLOW
-  const forgotPassword = async (email, recaptchaToken) => {
+  const forgotPassword = async (email, getRecaptchaToken) => {
     setResetFlowData({ email: null, resetToken: null, userRole: null });
 
     const roles = ["admin", "staff", "security", "front_desk"];
@@ -384,6 +394,16 @@ export const AuthProvider = ({ children }) => {
       for (const role of roles) {
         const path = AUTH_PATHS[role].forgot;
         try {
+          // Get a fresh reCAPTCHA token for each attempt
+          // reCAPTCHA v3 tokens can only be used once
+          let recaptchaToken;
+          if (typeof getRecaptchaToken === 'function') {
+            recaptchaToken = await getRecaptchaToken('forgot_password');
+          } else {
+            // Backward compatibility: if a string token is passed directly
+            recaptchaToken = getRecaptchaToken;
+          }
+
           const response = await api.post(path, {
             email,
             recaptcha_token: recaptchaToken

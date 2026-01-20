@@ -23,16 +23,9 @@ function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      // Execute reCAPTCHA with action 'forgot_password'
-      const recaptchaToken = await executeRecaptcha('forgot_password');
-
-      if (!recaptchaToken) {
-        toast.error("reCAPTCHA verification failed. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-
-      const success = await forgotPassword(email, recaptchaToken);
+      // Pass executeRecaptcha function to forgotPassword
+      // This allows it to get fresh tokens for each role attempt
+      const success = await forgotPassword(email, executeRecaptcha);
       console.log("Forgot password success:", success);
       if (success) {
         toast.success("Verification code sent. Please check your email.");
