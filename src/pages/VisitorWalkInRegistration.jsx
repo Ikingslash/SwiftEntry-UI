@@ -1,9 +1,10 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import api from "../context/api";
 import { toast } from "react-toastify";
 import VisitorLayout from "../layout/VisitorLayout";
 import "react-toastify/dist/ReactToastify.css";
 import { requestForToken, onMessageListener } from "../context/firebase";
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 // Helper function to format date to DD/MM/YYYY
 const formatDateToDDMMYYYY = (dateString) => {
@@ -53,6 +54,7 @@ export default function VisitorWalkInRegistration() {
   const [visitCode, setVisitCode] = useState("");
   const [visitPurposes, setVisitPurposes] = useState([]);
   const [appUsers, setAppUsers] = useState([]);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   useEffect(() => {
     // Request permission and get the FCM token
@@ -138,31 +140,49 @@ export default function VisitorWalkInRegistration() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setLoading(true);
 
-    const formDataToSend = new FormData();
-
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
-        formDataToSend.append(key, value);
-      }
-    });
-
-    // Append host_id and host_role explicitly
-    if (formData.host_id) formDataToSend.append("host_id", formData.host_id);
-    if (formData.host_role) formDataToSend.append("host_role", formData.host_role);
-
-    // Format visit_time - datetime-local already provides local time
-    if (formData.visit_time) {
-      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
-      // Just replace T with space and add seconds for the API format
-      const visitedTime = formData.visit_time.replace("T", " ") + ":00";
-      formDataToSend.append("visit_time", visitedTime);
+    if (!executeRecaptcha) {
+      toast.error("reCAPTCHA not ready. Please try again.");
+      return;
     }
 
+    setLoading(true);
+
     try {
+      // Execute reCAPTCHA with action 'walk_in_register'
+      const recaptchaToken = await executeRecaptcha('walk_in_register');
+
+      if (!recaptchaToken) {
+        toast.error("reCAPTCHA verification failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const formDataToSend = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
+          formDataToSend.append(key, value);
+        }
+      });
+
+      // Append host_id and host_role explicitly
+      if (formData.host_id) formDataToSend.append("host_id", formData.host_id);
+      if (formData.host_role) formDataToSend.append("host_role", formData.host_role);
+
+      // Append reCAPTCHA token
+      formDataToSend.append("recaptcha_token", recaptchaToken);
+
+      // Format visit_time - datetime-local already provides local time
+      if (formData.visit_time) {
+        // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+        // Just replace T with space and add seconds for the API format
+        const visitedTime = formData.visit_time.replace("T", " ") + ":00";
+        formDataToSend.append("visit_time", visitedTime);
+      }
+
       const response = await api.post(
         "/self-service/visits/walk-in-register",
         formDataToSend,
@@ -199,7 +219,7 @@ export default function VisitorWalkInRegistration() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [executeRecaptcha, formData]);
 
   return (
     <VisitorLayout>

@@ -264,7 +264,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
-  const login = async (email, password) => {
+  const login = async (email, password, recaptchaToken) => {
     const roles = ["admin", "staff", "security", "front_desk", "self_service"];
     let dashboard = "/";
 
@@ -272,7 +272,11 @@ export const AuthProvider = ({ children }) => {
       for (const role of roles) {
         const path = AUTH_PATHS[role].login;
         try {
-          const response = await api.post(path, { email, password });
+          const response = await api.post(path, {
+            email,
+            password,
+            recaptcha_token: recaptchaToken
+          });
 
           if (response.data.token) {
             const rawUser = response.data.user || response.data;
@@ -369,7 +373,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // NEW FUNCTIONS FOR PASSWORD RESET FLOW
-  const forgotPassword = async (email) => {
+  const forgotPassword = async (email, recaptchaToken) => {
     setResetFlowData({ email: null, resetToken: null, userRole: null });
 
     const roles = ["admin", "staff", "security", "front_desk"];
@@ -380,7 +384,10 @@ export const AuthProvider = ({ children }) => {
       for (const role of roles) {
         const path = AUTH_PATHS[role].forgot;
         try {
-          const response = await api.post(path, { email });
+          const response = await api.post(path, {
+            email,
+            recaptcha_token: recaptchaToken
+          });
 
           if (response.status >= 200 && response.status < 300) {
             userRole = role;

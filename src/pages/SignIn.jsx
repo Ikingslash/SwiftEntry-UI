@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 function SignIn() {
   const navigate = useNavigate();
@@ -11,29 +12,49 @@ function SignIn() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // State to store error message
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
-    try {
-      navigate("/loading"); // show loading page (optional)
+    if (!executeRecaptcha) {
+      toast.error("reCAPTCHA not ready. Please try again.");
+      return;
+    }
 
-      const success = await login(email, password);
+    setIsSubmitting(true);
+
+    try {
+      // Execute reCAPTCHA with action 'login'
+      const recaptchaToken = await executeRecaptcha('login');
+
+      if (!recaptchaToken) {
+        toast.error("reCAPTCHA verification failed. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      navigate("/loading");
+
+      const success = await login(email, password, recaptchaToken);
       if (!success) {
         setErrorMessage("Invalid email or password");
         toast.error("Invalid email or password");
-        navigate("/"); // go back to login
+        navigate("/");
       } else {
-        setErrorMessage(""); // clear previous error
+        setErrorMessage("");
       }
     } catch (error) {
       console.error("Error logging in:", error);
       setErrorMessage("Something went wrong. Please try again.");
       toast.error("Something went wrong. Please try again.");
       navigate("/");
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [executeRecaptcha, email, password, login, navigate]);
 
 
   return (
@@ -159,8 +180,12 @@ function SignIn() {
                 </div>
 
                 <div className="text-center">
-                  <button type="submit" className="btn btn-primary w-50 my-3">
-                    Sign In
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-50 my-3"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Signing In..." : "Sign In"}
                   </button>
                 </div>
               </form>
