@@ -264,7 +264,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
-  const login = async (email, password) => {
+  const login = async (email, password, getRecaptchaToken) => {
     const roles = ["admin", "staff", "security", "front_desk", "self_service"];
     let dashboard = "/";
 
@@ -272,7 +272,21 @@ export const AuthProvider = ({ children }) => {
       for (const role of roles) {
         const path = AUTH_PATHS[role].login;
         try {
-          const response = await api.post(path, { email, password });
+          // Get a fresh reCAPTCHA token for each attempt
+          // reCAPTCHA v3 tokens can only be used once
+          let recaptchaToken;
+          if (typeof getRecaptchaToken === 'function') {
+            recaptchaToken = await getRecaptchaToken('login');
+          } else {
+            // Backward compatibility: if a string token is passed directly
+            recaptchaToken = getRecaptchaToken;
+          }
+
+          const response = await api.post(path, {
+            email,
+            password,
+            recaptcha_token: recaptchaToken
+          });
 
           if (response.data.token) {
             const rawUser = response.data.user || response.data;
@@ -369,7 +383,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // NEW FUNCTIONS FOR PASSWORD RESET FLOW
-  const forgotPassword = async (email) => {
+  const forgotPassword = async (email, getRecaptchaToken) => {
     setResetFlowData({ email: null, resetToken: null, userRole: null });
 
     const roles = ["admin", "staff", "security", "front_desk"];
@@ -380,7 +394,20 @@ export const AuthProvider = ({ children }) => {
       for (const role of roles) {
         const path = AUTH_PATHS[role].forgot;
         try {
-          const response = await api.post(path, { email });
+          // Get a fresh reCAPTCHA token for each attempt
+          // reCAPTCHA v3 tokens can only be used once
+          let recaptchaToken;
+          if (typeof getRecaptchaToken === 'function') {
+            recaptchaToken = await getRecaptchaToken('forgot_password');
+          } else {
+            // Backward compatibility: if a string token is passed directly
+            recaptchaToken = getRecaptchaToken;
+          }
+
+          const response = await api.post(path, {
+            email,
+            recaptcha_token: recaptchaToken
+          });
 
           if (response.status >= 200 && response.status < 300) {
             userRole = role;

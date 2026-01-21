@@ -236,14 +236,11 @@ function NewGuestGroup() {
           }
         }
 
-        // Format date to DD/MM/YYYY
-        const formattedDate = formatDateToDDMMYYYY(date);
-
         setGuestDetails({
           name: visitor.name,
           id: visit.code || "",
           host: visit.host_name,
-          date: formattedDate,
+          date,
           time,
           purpose: visit.purpose,
           Contact_info: visitor.contact_number,

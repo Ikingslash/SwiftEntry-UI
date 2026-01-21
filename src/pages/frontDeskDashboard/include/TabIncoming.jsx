@@ -99,23 +99,38 @@ function TabIncoming({ filters, searchQuery, refreshKey, onVisitAction }) {
     }
   };
 
-const formatDateTime = (dateTime) => {
-  if (!dateTime) return 'Not checked in';
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return 'Not checked in';
 
-  const [date, time] = dateTime.split(' ');
-  const [year, month, day] = date.split('-');
+    try {
+      // Parse the date - works with both ISO 8601 (2026-01-20T14:07:42+01:00) 
+      // and space-separated format (2026-01-20 14:07:42)
+      const dateObj = new Date(dateTime);
 
-  const formattedDate = `${day}/${month}/${year}`;
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid date:', dateTime);
+        return 'Invalid Date';
+      }
 
-  const dateObj = new Date(`1970-01-01T${time}`);
-  const formattedTime = dateObj.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+      // Format date as DD/MM/YYYY
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const year = dateObj.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
 
-  return `${formattedDate} ${formattedTime}`;
-};
+      // Format time
+      const formattedTime = dateObj.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      return `${formattedDate} ${formattedTime}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  };
 
   return (
     <div>
@@ -168,7 +183,7 @@ const formatDateTime = (dateTime) => {
                       </div>
                       <div className="col-6">
                         <small className="text-muted d-block">Duration</small>
-                       <strong>{visit.current_duration?.text ?? "Just checked in"}</strong>
+                        <strong>{visit.current_duration?.text ?? "Just checked in"}</strong>
 
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 
 import SignIn from "./pages/SignIn";
@@ -67,144 +68,153 @@ import VisitorProfile from "./pages/VisitorProfile";
 
 
 function App() {
- return (
-   <div className="App">
-     <AuthProvider>
-       <NotificationProvider>
-         <Routes>
-           {/* Public Routes */}
-           <Route path="/" element={<SignIn />} />
-           <Route path="/loading" element={<Loading />} />
-           <Route path="/password-success" element={<PasswordSuccessAlert />} />
-           <Route path="/forgot-password" element={<ForgotPassword />} />
-           <Route path="/verify-account" element={<VerifyAccount />} />
-           <Route path="/set-new-password" element={<SetNewPassword />} />
-           <Route path="/setup-password" element={<SetupPassword />} />
-           <Route path="/frontdesk-setup-password" element={<FrontdeskSetupPassword />} />
-           <Route path="/security-setup-password" element={<SecuritySetupPassword />} />
+  return (
+    <GoogleReCaptchaProvider
+      reCaptchaKey="6LfIP1AsAAAAAL06_8oGFfAquyg879TXvZ7fYhb7"
+      scriptProps={{
+        async: true,
+        defer: true,
+        appendTo: 'head',
+      }}
+    >
+      <div className="App">
+        <AuthProvider>
+          <NotificationProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<SignIn />} />
+              <Route path="/loading" element={<Loading />} />
+              <Route path="/password-success" element={<PasswordSuccessAlert />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-account" element={<VerifyAccount />} />
+              <Route path="/set-new-password" element={<SetNewPassword />} />
+              <Route path="/setup-password" element={<SetupPassword />} />
+              <Route path="/frontdesk-setup-password" element={<FrontdeskSetupPassword />} />
+              <Route path="/security-setup-password" element={<SecuritySetupPassword />} />
 
-           {/* Protected Routes */}
-           <Route
-             path="/staff-dashboard/*"
-             element={
-               <PrivateRoute requiredRole="staff">
-                 <StaffLayout />
-               </PrivateRoute>
-             }
-           >
-             <Route index element={<Dashboard />} />
-             <Route path="new-guest" element={<NewGuest />} />
-             <Route path="manage-guest" element={<ManageGuestsIndividual />} />
-             <Route path="notifications" element={<Notifications />} />
-             <Route path="profile" element={<Profile />} />
-             <Route path="staff-settings" element={<StaffSettings />} />
-           </Route>
+              {/* Protected Routes */}
+              <Route
+                path="/staff-dashboard/*"
+                element={
+                  <PrivateRoute requiredRole="staff">
+                    <StaffLayout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="new-guest" element={<NewGuest />} />
+                <Route path="manage-guest" element={<ManageGuestsIndividual />} />
+                <Route path="notifications" element={<Notifications />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="staff-settings" element={<StaffSettings />} />
+              </Route>
 
-           <Route
-             path="/front-desk-dashboard/*"
-             element={
-               <PrivateRoute requiredRole="front_desk">
-                 <FrontDeskLayout />
-               </PrivateRoute>
-             }
-           >
-             <Route index element={<FrontDeskDashboard />} />
-             <Route path="register-guest" element={<RegisterGuest />} />
-             <Route path="history" element={<VisitHistory />} />
-             <Route path="notifications" element={<FrontDeskNotifications />} />
-             <Route
-               path="manage-frontdesk-guests"
-               element={<ManageFrontdeskGuestsIndividual />}
-             />
-             <Route path="profile" element={<FrontDeskProfile />} />
-             <Route
-               path="front-desk-settings"
-               element={<FrontDeskSettings />}
-             />
-           </Route>
+              <Route
+                path="/front-desk-dashboard/*"
+                element={
+                  <PrivateRoute requiredRole="front_desk">
+                    <FrontDeskLayout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<FrontDeskDashboard />} />
+                <Route path="register-guest" element={<RegisterGuest />} />
+                <Route path="history" element={<VisitHistory />} />
+                <Route path="notifications" element={<FrontDeskNotifications />} />
+                <Route
+                  path="manage-frontdesk-guests"
+                  element={<ManageFrontdeskGuestsIndividual />}
+                />
+                <Route path="profile" element={<FrontDeskProfile />} />
+                <Route
+                  path="front-desk-settings"
+                  element={<FrontDeskSettings />}
+                />
+              </Route>
 
-           <Route
-             path="/admin-dashboard/*"
-             element={
-               <PrivateRoute requiredRole="admin">
-                 <AdminLayout />
-               </PrivateRoute>
-             }
-           >
-             <Route index element={<AdminDashboard />} />
-             <Route path="visitors" element={<AdminVisitors />} />
-             <Route path="staffs" element={<AdminStaff />} />
-             <Route path="frontdesk" element={<AdminFrontdesk />} />
-             <Route path="security" element={<AdminSecurity />} />
-             <Route path="self-service" element={<AdminSelfService />} />
-             <Route
-               path="analytical-report"
-               element={<AnalyticalAndReport />}
-             />
-             <Route path="settings" element={<AdminSettings />} />
-             <Route path="new-guest" element={<AdminNewGuest />} />
-             <Route path="profile" element={<AdminProfile />} />
-             <Route path="notifications" element={<AdminNotifications />} />
-             <Route path="alerts" element={<AdminPriorityAlerts />} />
-             <Route path="updates" element={<AdminLatestUpdates />} />
-           </Route>
+              <Route
+                path="/admin-dashboard/*"
+                element={
+                  <PrivateRoute requiredRole="admin">
+                    <AdminLayout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<AdminDashboard />} />
+                <Route path="visitors" element={<AdminVisitors />} />
+                <Route path="staffs" element={<AdminStaff />} />
+                <Route path="frontdesk" element={<AdminFrontdesk />} />
+                <Route path="security" element={<AdminSecurity />} />
+                <Route path="self-service" element={<AdminSelfService />} />
+                <Route
+                  path="analytical-report"
+                  element={<AnalyticalAndReport />}
+                />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="new-guest" element={<AdminNewGuest />} />
+                <Route path="profile" element={<AdminProfile />} />
+                <Route path="notifications" element={<AdminNotifications />} />
+                <Route path="alerts" element={<AdminPriorityAlerts />} />
+                <Route path="updates" element={<AdminLatestUpdates />} />
+              </Route>
 
-           <Route
-             path="/security-dashboard/*"
-             element={
-               <PrivateRoute requiredRole="security">
-                 <SecurityLayout />
-               </PrivateRoute>
-             }
-           >
-             <Route index element={<SecurityDashboard />} />
-             <Route path="generate-qr-code" element={<GenerateQRCode />} />
-             <Route
-               path="generate-by-unique-code"
-               element={<GenerateByUniqueCode />}
-             />
-             <Route path="register-new-guest" element={<RegisterNewGuest />} />
-             <Route path="history" element={<VisitSecurityHistory />} />
-             <Route path="notifications" element={<SecurityNotifications />} />
-             <Route
-               path="manage-security-guests"
-               element={<ManageSecurityGuestsIndividual />}
-             />
-             <Route path="profile" element={<SecurityProfile />} />
-             <Route path="security-settings" element={<SecuritySettings />} />
-           </Route>
+              <Route
+                path="/security-dashboard/*"
+                element={
+                  <PrivateRoute requiredRole="security">
+                    <SecurityLayout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<SecurityDashboard />} />
+                <Route path="generate-qr-code" element={<GenerateQRCode />} />
+                <Route
+                  path="generate-by-unique-code"
+                  element={<GenerateByUniqueCode />}
+                />
+                <Route path="register-new-guest" element={<RegisterNewGuest />} />
+                <Route path="history" element={<VisitSecurityHistory />} />
+                <Route path="notifications" element={<SecurityNotifications />} />
+                <Route
+                  path="manage-security-guests"
+                  element={<ManageSecurityGuestsIndividual />}
+                />
+                <Route path="profile" element={<SecurityProfile />} />
+                <Route path="security-settings" element={<SecuritySettings />} />
+              </Route>
 
-           {/* Visitor Self-Service Routes */}
-           <Route
-             path="/visitor-dashboard/*"
-             element={
-               <PrivateRoute requiredRole="self_service">
-                 <VisitorSelfServiceDashboard />
-               </PrivateRoute>
-             }
-           />
-           <Route
-             path="/visitor-dashboard/register-visit"
-             element={
-               <PrivateRoute requiredRole="self_service">
-                 <VisitorWalkInRegistration />
-               </PrivateRoute>
-             }
-           />
-           <Route
-             path="/visitor-dashboard/profile"
-             element={
-               <PrivateRoute requiredRole="self_service">
-                 <VisitorProfile />
-               </PrivateRoute>
-             }
-           />
-         </Routes>
-       </NotificationProvider>
-     </AuthProvider>
-     <ToastContainer position="top-right" autoClose={5000} />
-   </div>
- );
+              {/* Visitor Self-Service Routes */}
+              <Route
+                path="/visitor-dashboard/*"
+                element={
+                  <PrivateRoute requiredRole="self_service">
+                    <VisitorSelfServiceDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/visitor-dashboard/register-visit"
+                element={
+                  <PrivateRoute requiredRole="self_service">
+                    <VisitorWalkInRegistration />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/visitor-dashboard/profile"
+                element={
+                  <PrivateRoute requiredRole="self_service">
+                    <VisitorProfile />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </NotificationProvider>
+        </AuthProvider>
+        <ToastContainer position="top-right" autoClose={5000} />
+      </div>
+    </GoogleReCaptchaProvider>
+  );
 }
 
 export default App;

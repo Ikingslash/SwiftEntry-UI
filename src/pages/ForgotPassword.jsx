@@ -1,21 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { forgotPassword } = useAuth();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+
+    if (!executeRecaptcha) {
+      toast.error("reCAPTCHA not ready. Please try again.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const success = await forgotPassword(email);
+      // Pass executeRecaptcha function to forgotPassword
+      // This allows it to get fresh tokens for each role attempt
+      const success = await forgotPassword(email, executeRecaptcha);
       console.log("Forgot password success:", success);
       if (success) {
         toast.success("Verification code sent. Please check your email.");
@@ -29,7 +39,7 @@ function ForgotPassword() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [executeRecaptcha, email, forgotPassword, navigate]);
 
   return (
     <div
