@@ -220,10 +220,11 @@ export default function NewGuestIndividual() {
         let date = "";
         let time = "";
 
-        if (visit?.check_in) {
+        // Use visit_time for scheduled visits (not check_in, which is only set after actual check-in)
+        if (visit?.visit_time) {
           try {
-            const visitDateObj = new Date(visit.check_in);
-            date = formatDateToDDMMYYYY(visit.check_in);
+            const visitDateObj = new Date(visit.visit_time);
+            date = formatDateToDDMMYYYY(visit.visit_time);
             time = visitDateObj.toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
@@ -231,20 +232,17 @@ export default function NewGuestIndividual() {
             });
           } catch (e) {
             console.error("Error parsing visit time for badge:", e);
-            const visitTimeParts = visit.check_in.split(" ");
-            date = visitTimeParts[0] || "";
+            const visitTimeParts = visit.visit_time.split(" ");
+            date = formatDateToDDMMYYYY(visitTimeParts[0] || "");
             time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
           }
         }
-
-        // Format date to DD/MM/YYYY
-        const formattedDate = formatDateToDDMMYYYY(date);
 
         setGuestDetails({
           name: visitor.name,
           id: visit.code || "",
           host: visit.host_name,
-          date: formattedDate,
+          date,
           time,
           purpose: visit.purpose,
           Contact_info: visitor.contact_number,
