@@ -5,6 +5,7 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 
 import SignIn from "./pages/SignIn";
+import AdminRegister from "./pages/AdminRegister";
 import Loading from "./pages/Loading";
 import PasswordSuccessAlert from "./pages/PasswordSuccessAlert";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -64,6 +65,7 @@ import VisitorSelfServiceDashboard from "./pages/VisitorSelfServiceDashboard";
 import VisitorWalkInRegistration from "./pages/VisitorWalkInRegistration";
 import VisitorProfile from "./pages/VisitorProfile";
 
+
 <Route path="/admin/new-guest" element={<AdminNewGuest />} />
 
 
@@ -83,6 +85,7 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<SignIn />} />
+              <Route path="/admin-register" element={<AdminRegister />} />
               <Route path="/loading" element={<Loading />} />
               <Route path="/password-success" element={<PasswordSuccessAlert />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
