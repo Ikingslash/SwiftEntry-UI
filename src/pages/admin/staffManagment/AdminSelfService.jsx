@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "../include/NavBar";
 import api from "../../../context/api";
 import { ToastContainer, toast } from 'react-toastify';
@@ -16,11 +16,13 @@ function AdminSelfService() {
     password: "",
     position: "",
     company_name: "",
-    employee_id: "",
     department: "",
-    fcm_token: "",
-    status: "1",
   });
+
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchSelfServiceUsers();
+  }, []);
   const [formErrors, setFormErrors] = useState({});
 
   const triggerRefresh = () => {
@@ -48,10 +50,7 @@ function AdminSelfService() {
       password: "",
       position: "",
       company_name: "",
-      employee_id: "",
       department: "",
-      fcm_token: "",
-      status: "1",
     });
     setFormErrors({});
   };
@@ -87,8 +86,8 @@ function AdminSelfService() {
     } else {
       toast.error(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
     }
   };
@@ -216,9 +215,8 @@ function AdminSelfService() {
                           <td>{user.department || "N/A"}</td>
                           <td>
                             <span
-                              className={`badge ${
-                                user.status ? "bg-success" : "bg-danger"
-                              }`}
+                              className={`badge ${user.status ? "bg-success" : "bg-danger"
+                                }`}
                             >
                               {user.status ? "Active" : "Inactive"}
                             </span>
@@ -322,18 +320,6 @@ function AdminSelfService() {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label fw-bold">Employee ID</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="employee_id"
-                      value={newUserFormData.employee_id}
-                      onChange={handleFormChange}
-                      placeholder="Enter employee ID"
-                    />
-                  </div>
-
-                  <div className="mb-3">
                     <label className="form-label fw-bold">Department</label>
                     <input
                       type="text"
@@ -343,31 +329,6 @@ function AdminSelfService() {
                       onChange={handleFormChange}
                       placeholder="Enter department"
                     />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">FCM Token</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="fcm_token"
-                      value={newUserFormData.fcm_token}
-                      onChange={handleFormChange}
-                      placeholder="Firebase Cloud Messaging token (optional)"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Status</label>
-                    <select
-                      className="form-select"
-                      name="status"
-                      value={newUserFormData.status}
-                      onChange={handleFormChange}
-                    >
-                      <option value="1">Active</option>
-                      <option value="0">Inactive</option>
-                    </select>
                   </div>
 
                   <div className="d-grid gap-2 mt-4">
