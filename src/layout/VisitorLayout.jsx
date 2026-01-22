@@ -6,11 +6,23 @@ function VisitorLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/sign-in");
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.user-dropdown-container')) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   return (
     <div>
@@ -49,11 +61,10 @@ function VisitorLayout({ children }) {
             <ul className="navbar-nav text-center fs-6">
               <li className="nav-item">
                 <NavLink
-                  className={`nav-link px-3 ${
-                    location.pathname === "/visitor-dashboard"
+                  className={`nav-link px-3 ${location.pathname === "/visitor-dashboard"
                       ? "text-white fw-bold"
                       : "text-white-50"
-                  }`}
+                    }`}
                   to="/visitor-dashboard"
                 >
                   Search Visit
@@ -61,42 +72,61 @@ function VisitorLayout({ children }) {
               </li>
               <li className="nav-item">
                 <NavLink
-                  className={`nav-link px-3 ${
-                    location.pathname === "/visitor-dashboard/register-visit"
+                  className={`nav-link px-3 ${location.pathname === "/visitor-dashboard/register-visit"
                       ? "text-white fw-bold"
                       : "text-white-50"
-                  }`}
+                    }`}
                   to="/visitor-dashboard/register-visit"
                 >
                   Register Visit
                 </NavLink>
               </li>
-              <li className="nav-item">
-                <NavLink
-                  className={`nav-link px-3 ${
-                    location.pathname === "/visitor-dashboard/profile"
-                      ? "text-white fw-bold"
-                      : "text-white-50"
-                  }`}
-                  to="/visitor-dashboard/profile"
-                >
-                  Profile
-                </NavLink>
-              </li>
             </ul>
           </div>
 
-          {/* Right Side - User & Logout */}
-          <div className="d-flex align-items-center gap-3">
-            <div className="text-white">
-              <small>Welcome, {user?.name}</small>
-            </div>
+          {/* Right Side - User Dropdown */}
+          <div className="d-flex align-items-center user-dropdown-container position-relative">
             <button
-              className="btn btn-sm btn-outline-light"
-              onClick={handleLogout}
+              className="btn btn-link text-white text-decoration-none d-flex align-items-center gap-2 p-0"
+              onClick={() => setShowDropdown(!showDropdown)}
+              style={{ border: "none", background: "transparent" }}
             >
-              Logout
+              <span>Welcome, {user?.name}</span>
+              <i className={`bi bi-chevron-${showDropdown ? 'up' : 'down'}`}></i>
             </button>
+
+            {/* Dropdown Menu */}
+            {showDropdown && (
+              <div
+                className="position-absolute bg-white rounded shadow-lg py-2"
+                style={{
+                  top: "100%",
+                  right: 0,
+                  minWidth: "150px",
+                  marginTop: "8px",
+                  zIndex: 1000,
+                }}
+              >
+                <NavLink
+                  to="/visitor-dashboard/profile"
+                  className="dropdown-item d-flex align-items-center gap-2 px-3 py-2 text-dark text-decoration-none"
+                  onClick={() => setShowDropdown(false)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <i className="bi bi-person"></i>
+                  Profile
+                </NavLink>
+                <hr className="my-1" />
+                <button
+                  className="dropdown-item d-flex align-items-center gap-2 px-3 py-2 text-danger w-100 border-0 bg-transparent"
+                  onClick={handleLogout}
+                  style={{ cursor: "pointer" }}
+                >
+                  <i className="bi bi-box-arrow-right"></i>
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>

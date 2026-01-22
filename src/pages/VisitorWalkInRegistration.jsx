@@ -31,22 +31,29 @@ const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purp
   });
 };
 
+// Helper function to get current datetime in the format needed for the backend
+const getCurrentDateTime = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 export default function VisitorWalkInRegistration() {
   const [formData, setFormData] = useState({
+    visitor_type: "individual",
     name: "",
     contact_number: "",
     email: "",
     address: "",
-    visit_time: "",
-    host_name: "",
     host_id: "",
     host_role: "",
-    building: "building 1",
-    floor: "1st floor",
+    host_name: "",
     purpose: "",
-    special_requirements: "",
-    emergency_contact: "",
-    details: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -162,26 +169,32 @@ export default function VisitorWalkInRegistration() {
 
       const formDataToSend = new FormData();
 
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "visit_time" && key !== "host_id" && key !== "host_role") {
-          formDataToSend.append(key, value);
-        }
-      });
+      // Required fields from form
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("contact_number", formData.contact_number);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("purpose", formData.purpose);
+      formDataToSend.append("visitor_type", formData.visitor_type);
 
-      // Append host_id and host_role explicitly
-      if (formData.host_id) formDataToSend.append("host_id", formData.host_id);
-      if (formData.host_role) formDataToSend.append("host_role", formData.host_role);
+      // Optional email - if not provided, backend will generate
+      if (formData.email) {
+        formDataToSend.append("email", formData.email);
+      }
+
+      // Host info (optional)
+      if (formData.host_id) {
+        formDataToSend.append("host_id", formData.host_id);
+        formDataToSend.append("host_role", formData.host_role);
+        formDataToSend.append("host_name", formData.host_name);
+      }
+
+      // Set defaults for fields not shown in form but required by backend
+      formDataToSend.append("building", "building 1");
+      formDataToSend.append("floor", "1st floor");
+      formDataToSend.append("visit_time", getCurrentDateTime());
 
       // Append reCAPTCHA token
       formDataToSend.append("recaptcha_token", recaptchaToken);
-
-      // Format visit_time - datetime-local already provides local time
-      if (formData.visit_time) {
-        // datetime-local gives us "YYYY-MM-DDTHH:MM" format
-        // Just replace T with space and add seconds for the API format
-        const visitedTime = formData.visit_time.replace("T", " ") + ":00";
-        formDataToSend.append("visit_time", visitedTime);
-      }
 
       const response = await api.post(
         "/self-service/visits/walk-in-register",
@@ -197,20 +210,15 @@ export default function VisitorWalkInRegistration() {
         setVisitCode(response.data.visit_code);
         setShowSuccessModal(true);
         setFormData({
+          visitor_type: "individual",
           name: "",
           contact_number: "",
           email: "",
           address: "",
-          visit_time: "",
-          host_name: "",
           host_id: "",
           host_role: "",
-          building: "building 1",
-          floor: "1st floor",
+          host_name: "",
           purpose: "",
-          special_requirements: "",
-          emergency_contact: "",
-          details: "",
         });
         toast.success("Visit registered successfully!");
       }
@@ -226,200 +234,119 @@ export default function VisitorWalkInRegistration() {
       <div className="container-fluid">
         <div className="row mb-4">
           <div className="col-md-12">
-            <h2 className="fw-bold" style={{ color: "#053561" }}>
+            <h2 className="fw-bold text-center" style={{ color: "#053561" }}>
               Register Your Visit
             </h2>
-            <p className="text-muted">
-              Fill in your details to register your visit as a walk-in visitor
-            </p>
           </div>
         </div>
 
         <div className="row">
-          <div className="col-md-8 mx-auto">
+          <div className="col-md-6 mx-auto">
             <div className="card shadow-sm border-0">
               <div className="card-body p-4">
                 <form onSubmit={handleSubmit}>
-                  {/* Personal Information */}
-                  <h5 className="fw-bold mb-3" style={{ color: "#053561" }}>
-                    Personal Information
-                  </h5>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Full Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter your full name"
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Email *</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Enter your email"
-                        required
-                      />
-                    </div>
+                  {/* Individual or Group */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Individual or Group</label>
+                    <select
+                      className="form-select form-select-lg"
+                      name="visitor_type"
+                      value={formData.visitor_type}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="individual">Individual</option>
+                      <option value="group">Group</option>
+                    </select>
                   </div>
 
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Contact Number *</label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        name="contact_number"
-                        value={formData.contact_number}
-                        onChange={handleChange}
-                        placeholder="Enter your contact number"
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">
-                        Emergency Contact
-                      </label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        name="emergency_contact"
-                        value={formData.emergency_contact}
-                        onChange={handleChange}
-                        placeholder="Emergency contact number"
-                      />
-                    </div>
+                  {/* Full Name */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Full Name</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter your full name"
+                      required
+                    />
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Address *</label>
-                    <textarea
-                      className="form-control"
+                  {/* Phone No. */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Phone No.</label>
+                    <input
+                      type="tel"
+                      className="form-control form-control-lg"
+                      name="contact_number"
+                      value={formData.contact_number}
+                      onChange={handleChange}
+                      placeholder="Enter your phone number"
+                      required
+                    />
+                  </div>
+
+                  {/* Email (Optional) */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">
+                      Email <span className="text-muted fw-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control form-control-lg"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email address"
+                    />
+                  </div>
+
+                  {/* Address */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Address</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg"
                       name="address"
                       value={formData.address}
                       onChange={handleChange}
                       placeholder="Enter your address"
-                      rows="2"
                       required
-                    ></textarea>
+                    />
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">
-                      Special Requirements
-                    </label>
+                  {/* Purpose of Visit */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Purpose of Visit</label>
                     <select
-                      className="form-select"
-                      name="special_requirements"
-                      value={formData.special_requirements}
+                      className="form-select form-select-lg"
+                      name="purpose"
+                      value={formData.purpose}
                       onChange={handleChange}
+                      required
                     >
-                      <option value="">Select special requirements</option>
-                      <option value="wheelchair/accessibility">
-                        Wheelchair/Accessibility
-                      </option>
-                      <option value="sign_language_interpreter">
-                        Sign Language Interpreter
-                      </option>
-                      <option value="language interpretation">
-                        Language Interpretation
-                      </option>
-                      <option value="parking space">Parking Space</option>
-                      <option value="catering needs">Catering Needs</option>
-                      <option value="meeting room">Meeting Room</option>
-                      <option value="other">Other</option>
+                      <option value="">Select purpose</option>
+                      {visitPurposes.map((purpose, index) => (
+                        <option key={index} value={purpose}>
+                          {purpose}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
-                  {/* Visit Information */}
-                  <hr className="my-4" />
-                  <h5 className="fw-bold mb-3" style={{ color: "#053561" }}>
-                    Visit Information
-                  </h5>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Visit Time *</label>
-                      <input
-                        type="datetime-local"
-                        className="form-control"
-                        name="visit_time"
-                        value={formData.visit_time}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Purpose *</label>
-                      <select
-                        className="form-select"
-                        name="purpose"
-                        value={formData.purpose}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">Select purpose</option>
-                        {visitPurposes.map((purpose, index) => (
-                          <option key={index} value={purpose}>
-                            {purpose}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Building *</label>
-                      <select
-                        className="form-select"
-                        name="building"
-                        value={formData.building}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="building 1">Building 1</option>
-                        <option value="building 2">Building 2</option>
-                        <option value="building 3">Building 3</option>
-                        <option value="building 4">Building 4</option>
-                      </select>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Floor *</label>
-                      <select
-                        className="form-select"
-                        name="floor"
-                        value={formData.floor}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="1st floor">1st Floor</option>
-                        <option value="2nd floor">2nd Floor</option>
-                        <option value="3rd floor">3rd Floor</option>
-                        <option value="4th floor">4th Floor</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Host Name</label>
+                  {/* Who Are You Meeting With? */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold">Who Are You Meeting With?</label>
                     <select
-                      className="form-select"
+                      className="form-select form-select-lg"
                       id="host_id"
                       name="host_id"
                       value={`${formData.host_role || ""}-${formData.host_id || ""}`}
                       onChange={handleChange}
                     >
-                      <option value="">Select a host (optional)</option>
+                      <option value="">Select a host</option>
                       {appUsers.map((user, index) => (
                         <option
                           key={`${user.role || "unknown"}-${user.id || index}`}
@@ -429,18 +356,6 @@ export default function VisitorWalkInRegistration() {
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Additional Details</label>
-                    <textarea
-                      className="form-control"
-                      name="details"
-                      value={formData.details}
-                      onChange={handleChange}
-                      placeholder="Any additional details about your visit"
-                      rows="3"
-                    ></textarea>
                   </div>
 
                   {/* Submit Button */}
