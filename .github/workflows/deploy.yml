@@ -3,6 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
+      - main
       - browncon
 
 jobs:
@@ -22,23 +23,41 @@ jobs:
       - name: Add VPS to known hosts
         run: ssh-keyscan -H 85.9.202.212 >> ~/.ssh/known_hosts
 
-      - name: Create deployment directory on server
-        run: ssh -o StrictHostKeyChecking=no root@85.9.202.212 'mkdir -p /var/www/browncon/frontend'
+      - name: Set deployment path
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/browncon" ]; then
+            echo "DEPLOY_PATH=/var/www/browncon/frontend" >> $GITHUB_ENV
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "DEPLOY_PATH=/var/www/vms-frontend" >> $GITHUB_ENV
+         
 
-      - name: Change to correct working directory
-        run: cd $GITHUB_WORKSPACE
+      - name: Debug deployment path
+        run: |
+          echo "Deploying to: $DEPLOY_PATH"
+
+      - name: Create deployment directory on server
+        run: ssh -o StrictHostKeyChecking=no root@85.9.202.212 "mkdir -p $DEPLOY_PATH"
 
       - name: Copy source code to server
         run: |
           rsync -avz --delete \
             --exclude '.git/' \
-            --exclude '.env' \
-            --exclude 'deploy.sh' \
-            --exclude 'Dockerfile' \
             --exclude '.github/' \
             --exclude 'node_modules/' \
-            ./ root@85.9.202.212:/var/www/browncon/frontend
+            --exclude '.next/' \
+            --exclude 'static/' \
+            --exclude 'media/' \
+            --exclude 'storage/' \
+            --exclude 'public/' \
+            --exclude '.dockerignore' \
+            --exclude 'docker-compose.yml' \
+            --exclude 'Dockerfile' \
+            --exclude 'deploy.sh' \
+            --exclude 'docker-entrypoint.sh' \
+            --exclude 'entrypoint.sh' \
+            --exclude '.env' \
+            ./ root@85.9.202.212:$DEPLOY_PATH/
 
       - name: Build and deploy on server
         run: |
-          ssh -o StrictHostKeyChecking=no root@85.9.202.212 'cd /var/www/browncon/frontend && bash ./deploy.sh'
+          ssh -o StrictHostKeyChecking=no root@85.9.202.212 "cd $DEPLOY_PATH && bash ./deploy.sh"
