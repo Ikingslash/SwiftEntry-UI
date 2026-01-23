@@ -29,7 +29,7 @@ jobs:
             echo "DEPLOY_PATH=/var/www/browncon/frontend" >> $GITHUB_ENV
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "DEPLOY_PATH=/var/www/vms-frontend" >> $GITHUB_ENV
-         
+          fi
 
       - name: Debug deployment path
         run: |
