@@ -48,6 +48,7 @@ import AdminLayout from "./layout/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminVisitors from "./pages/admin/visitorsManagment/AdminVisitors";
 import AdminStaff from "./pages/admin/staffManagment/AdminStaff";
+import AdminManagement from "./pages/admin/adminManagement/AdminManagement";
 import AdminFrontdesk from "./pages/admin/staffManagment/AdminFrontdesk";
 import AdminSecurity from "./pages/admin/staffManagment/AdminSecurity";
 import AdminSelfService from "./pages/admin/staffManagment/AdminSelfService";
@@ -146,6 +147,7 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="visitors" element={<AdminVisitors />} />
                 <Route path="staffs" element={<AdminStaff />} />
+                <Route path="admins" element={<AdminManagement />} />
                 <Route path="frontdesk" element={<AdminFrontdesk />} />
                 <Route path="security" element={<AdminSecurity />} />
                 <Route path="self-service" element={<AdminSelfService />} />

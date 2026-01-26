@@ -86,6 +86,7 @@ function Navbar() {
               <a
                 className={`nav-link dropdown-toggle px-3 ${[
                   "/admin-dashboard/staffs",
+                  "/admin-dashboard/admins",
                   "/admin-dashboard/frontdesk",
                   "/admin-dashboard/security",
                   "/admin-dashboard/self-service",
@@ -111,6 +112,17 @@ function Navbar() {
                     to="/admin-dashboard/staffs"
                   >
                     Staff
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    className={`dropdown-item ${location.pathname === "/admin-dashboard/admins"
+                      ? "fw-bold text-light"
+                      : ""
+                      }`}
+                    to="/admin-dashboard/admins"
+                  >
+                    Admin
                   </NavLink>
                 </li>
                 <li>

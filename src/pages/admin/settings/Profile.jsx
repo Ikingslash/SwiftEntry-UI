@@ -178,12 +178,12 @@ function Profile() {
         }
 
         try {
-            await api.post('/admin/settings/admins', formData, {
+            await api.post('/admin/admins', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
             });
-            toast.success('New admin added successfully!');
+            toast.success('New admin added successfully! An invitation email has been sent.');
             setShowAddAdminModal(false);
             setNewAdmin({ fullName: '', email: '', jobRole: '', department: '', roleAssignment: '' });
             setNewAdminPhotoFile(null);
@@ -193,7 +193,7 @@ function Profile() {
             setAdmins(adminsResponse.data.admins);
         } catch (error) {
             console.error('Error adding new admin:', error);
-            // toast.error('Failed to add new admin.');
+            toast.error(error.response?.data?.message || 'Failed to add new admin.');
         }
     };
 
