@@ -241,7 +241,7 @@ export default function VisitorWalkInRegistration() {
         </div>
 
         <div className="row">
-          <div className="col-md-6 mx-auto">
+          <div className="col-md-8 mx-auto">
             <div className="card shadow-sm border-0">
               <div className="card-body p-4">
                 <form onSubmit={handleSubmit}>
@@ -373,12 +373,12 @@ export default function VisitorWalkInRegistration() {
                             role="status"
                             aria-hidden="true"
                           ></span>
-                          Registering...
+                          Loading...
                         </>
                       ) : (
                         <>
                           <i className="bi bi-check-circle me-2"></i>
-                          Register Visit
+                          Check In
                         </>
                       )}
                     </button>

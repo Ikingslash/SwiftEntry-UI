@@ -88,9 +88,10 @@ function VisitorVisitCard({ visit, onRefresh }) {
     }
   };
 
-  const canCheckIn =
-    visit.visit_status === "confirmed" || visit.visit_status === "checked_out";
-  const canCheckOut = visit.visit_status === "confirmed" || visit.visit_status === "checked_in";
+  // Show Check In button only if not yet checked in
+  const canCheckIn = visit.visit_status === "confirmed" || visit.visit_status === "pending";
+  // Show Check Out button only if already checked in
+  const canCheckOut = visit.visit_status === "checked_in";
   const isCheckedOut = visit.visit_status === "checked_out";
 
   return (
@@ -228,53 +229,11 @@ function VisitorVisitCard({ visit, onRefresh }) {
                 )}
               </>
             )}
-
-            <button
-              className="btn btn-outline-primary btn-sm"
-              onClick={() => setShowQRModal(true)}
-            >
-              <i className="bi bi-qr-code me-2"></i>
-              Show QR Code
-            </button>
           </div>
         </div>
       </div>
 
-      {/* QR Code Modal */}
-      {showQRModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Visit QR Code</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowQRModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body text-center">
-                <p className="mb-3">
-                  <strong>{visit.visitor?.name}</strong>
-                </p>
-                <QRCode 
-                  value={createEnhancedQRValue(
-                    visit.code,
-                    visit.visitor?.name || "Unknown",
-                    visit.host_name || "N/A",
-                    formatDateToDDMMYYYY(visit.visit_time || visit.check_in),
-                    visit.purpose || "N/A"
-                  )} 
-                  size={256} 
-                />
-                <p className="mt-3 text-muted small">
-                  Code: <strong>{visit.code}</strong>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 }
