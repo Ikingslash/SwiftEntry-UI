@@ -144,13 +144,10 @@ function VisitorVisitCard({ visit, onRefresh }) {
             <label className="small text-muted fw-bold">HOST</label>
             <p className="mb-2">{visit.host_name || "N/A"}</p>
 
-            <label className="small text-muted fw-bold">LOCATION</label>
-            <p className="mb-2">
-              {visit.building} - {visit.floor}
-            </p>
+          
 
             <label className="small text-muted fw-bold">VISIT TIME</label>
-            <p className="mb-2">
+            <p className="mb-3">
               {visit.visit_time
                 ? new Date(visit.visit_time).toLocaleString()
                 : "N/A"}
@@ -159,7 +156,7 @@ function VisitorVisitCard({ visit, onRefresh }) {
             {visit.visit_details && (
               <>
                 <label className="small text-muted fw-bold">DETAILS</label>
-                <p className="mb-2">{visit.visit_details}</p>
+                <p className="mb-3">{visit.visit_details}</p>
               </>
             )}
           </div>
@@ -167,11 +164,11 @@ function VisitorVisitCard({ visit, onRefresh }) {
           {/* Contact Info */}
           <div className="border-top pt-3">
             <label className="small text-muted fw-bold">CONTACT INFORMATION</label>
-            <p className="mb-1">
+            <p className="mb-2">
               <i className="bi bi-telephone me-2"></i>
               {visit.visitor?.contact_number || "N/A"}
             </p>
-            <p className="mb-1">
+            <p className="mb-2">
               <i className="bi bi-envelope me-2"></i>
               {visit.visitor?.email || "N/A"}
             </p>
