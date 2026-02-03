@@ -14,7 +14,7 @@ function VisitorSelfServiceDashboard() {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
-      toast.error("Please enter a name or visit code");
+      toast.error("Please enter your visit code");
       return;
     }
 
@@ -48,7 +48,7 @@ function VisitorSelfServiceDashboard() {
 
   const handleRefresh = () => {
     if (searchQuery.trim()) {
-      handleSearch({ preventDefault: () => {} });
+      handleSearch({ preventDefault: () => { } });
     }
   };
 
@@ -61,7 +61,7 @@ function VisitorSelfServiceDashboard() {
               Search Your Visit
             </h2>
             <p className="text-muted">
-              Search for your visit using your name or visit code
+              Search for your visit using your visit code
             </p>
           </div>
         </div>
@@ -74,7 +74,7 @@ function VisitorSelfServiceDashboard() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Enter your name or visit code..."
+                  placeholder="Enter your visit code..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
@@ -172,7 +172,7 @@ function VisitorSelfServiceDashboard() {
                 Use the search field above to find your visit
               </h5>
               <p className="text-muted">
-                Enter your name or visit code to see your visit details and
+                Enter your visit code to see your visit details and
                 check in/check out
               </p>
             </div>

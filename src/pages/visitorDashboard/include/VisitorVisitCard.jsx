@@ -144,7 +144,7 @@ function VisitorVisitCard({ visit, onRefresh }) {
             <label className="small text-muted fw-bold">HOST</label>
             <p className="mb-2">{visit.host_name || "N/A"}</p>
 
-          
+
 
             <label className="small text-muted fw-bold">VISIT TIME</label>
             <p className="mb-3">
@@ -159,23 +159,6 @@ function VisitorVisitCard({ visit, onRefresh }) {
                 <p className="mb-3">{visit.visit_details}</p>
               </>
             )}
-          </div>
-
-          {/* Contact Info */}
-          <div className="border-top pt-3">
-            <label className="small text-muted fw-bold">CONTACT INFORMATION</label>
-            <p className="mb-2">
-              <i className="bi bi-telephone me-2"></i>
-              {visit.visitor?.contact_number || "N/A"}
-            </p>
-            <p className="mb-2">
-              <i className="bi bi-envelope me-2"></i>
-              {visit.visitor?.email || "N/A"}
-            </p>
-            <p>
-              <i className="bi bi-geo-alt me-2"></i>
-              {visit.visitor?.address || "N/A"}
-            </p>
           </div>
 
           {/* Check-in/Check-out Times */}

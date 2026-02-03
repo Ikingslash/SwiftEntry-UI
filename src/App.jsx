@@ -31,6 +31,7 @@ import FrontDeskNotifications from "./pages/frontDeskDashboard/FrontDeskNotifica
 import FrontDeskProfile from "./pages/frontDeskDashboard/FrontDeskProfile";
 import FrontDeskSettings from "./pages/frontDeskDashboard/FrontDeskSettings";
 import ManageFrontdeskGuestsIndividual from "./pages/frontDeskDashboard/ManageFrontdeskGuestsIndividual";
+import ConfirmVisitor from "./pages/frontDeskDashboard/ConfirmVisitor";
 
 
 import SecurityLayout from "./layout/SecurityLayout";
@@ -134,6 +135,7 @@ function App() {
                   path="front-desk-settings"
                   element={<FrontDeskSettings />}
                 />
+                <Route path="confirm-visitor" element={<ConfirmVisitor />} />
               </Route>
 
               <Route
