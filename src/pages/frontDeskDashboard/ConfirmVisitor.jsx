@@ -83,33 +83,90 @@ function ConfirmVisitor() {
     };
 
     const handlePrintBadge = () => {
-        if (!badgeRef.current) return;
+        if (!badgeRef.current) {
+            toast.error("Badge content not available");
+            return;
+        }
 
-        const printContent = badgeRef.current.innerHTML;
-        const printWindow = window.open('', '_blank');
+        // Clone the badge content to properly serialize it
+        const badgeClone = badgeRef.current.cloneNode(true);
+
+        // Get the QR code SVG and convert to proper string
+        const qrCodeSvg = badgeClone.querySelector('svg');
+        let qrCodeHtml = '';
+        if (qrCodeSvg) {
+            qrCodeHtml = new XMLSerializer().serializeToString(qrCodeSvg);
+        }
+
+        const printContent = `
+            <div class="badge-card">
+                <div class="badge-header">
+                    <h3>VISITOR BADGE</h3>
+                </div>
+                <div class="badge-detail">
+                    <span class="badge-label">Name:</span>
+                    <span class="badge-value">${userProfile?.name || 'N/A'}</span>
+                </div>
+                <div class="badge-detail">
+                    <span class="badge-label">Visit Date:</span>
+                    <span class="badge-value">${userProfile?.visit_date || 'N/A'}</span>
+                </div>
+                <div class="badge-detail">
+                    <span class="badge-label">Host:</span>
+                    <span class="badge-value">${userProfile?.host_name || 'N/A'}</span>
+                </div>
+                <div class="badge-detail">
+                    <span class="badge-label">Purpose:</span>
+                    <span class="badge-value">${userProfile?.purpose || 'N/A'}</span>
+                </div>
+                <div class="badge-detail">
+                    <span class="badge-label">Badge Code:</span>
+                    <span class="badge-value">${userProfile?.ID_No || 'N/A'}</span>
+                </div>
+                <div class="qr-container">
+                    ${qrCodeHtml}
+                </div>
+            </div>
+        `;
+
+        const printWindow = window.open('', '_blank', 'width=400,height=600');
+        if (!printWindow) {
+            toast.error("Please allow popups to print the badge");
+            return;
+        }
+
         printWindow.document.write(`
-      <html>
-        <head>
-          <title>Visitor Badge</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .badge-card { border: 2px solid #053561; border-radius: 10px; padding: 20px; max-width: 350px; margin: 0 auto; }
-            .badge-header { background-color: #053561; color: white; padding: 15px; text-align: center; margin: -20px -20px 20px -20px; border-radius: 8px 8px 0 0; }
-            .badge-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-            .badge-label { color: #666; font-size: 12px; }
-            .badge-value { font-weight: bold; font-size: 14px; }
-            .qr-container { text-align: center; margin-top: 20px; }
-          </style>
-        </head>
-        <body>
-          ${printContent}
-        </body>
-      </html>
-    `);
+            <html>
+                <head>
+                    <title>Visitor Badge</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+                        .badge-card { border: 2px solid #053561; border-radius: 10px; padding: 20px; max-width: 350px; margin: 0 auto; }
+                        .badge-header { background-color: #053561; color: white; padding: 15px; text-align: center; margin: -20px -20px 20px -20px; border-radius: 8px 8px 0 0; }
+                        .badge-header h3 { margin: 0; }
+                        .badge-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                        .badge-label { color: #666; font-size: 12px; }
+                        .badge-value { font-weight: bold; font-size: 14px; }
+                        .qr-container { text-align: center; margin-top: 20px; }
+                        .qr-container svg { max-width: 120px; height: auto; }
+                        @media print {
+                            body { padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${printContent}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 250);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
         printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
     };
 
     const handleKeyDown = (e, index) => {
