@@ -91,10 +91,12 @@ function ConfirmVisitor() {
         // Automatic Check-in Logic
         try {
             if (userProfile && userProfile.visit_id) {
+                console.log("Attempting auto check-in for visit:", userProfile.visit_id);
+
                 // Determine the correct API endpoint based on user role (assuming front-desk here as per file location)
                 // Using the specific endpoint for front-desk check-in
                 await api.post(`/front-desk/guests/visits/${userProfile.visit_id}/check-in`, {
-                    actual_check_in_time: new Date().toISOString(),
+                    actual_check_in_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     notes: "Auto check-in via Print Badge"
                 });
                 toast.success("Visitor automatically checked in!");
@@ -102,15 +104,18 @@ function ConfirmVisitor() {
                 // Update local state to reflect check-in if needed
                 setUserProfile(prev => ({
                     ...prev,
-                    status: 'checked_in',
+                    status: 'Checked In',
                     visit_status: 'checked_in'
                 }));
+            } else {
+                console.warn("Auto check-in skipped: visit_id missing", userProfile);
             }
         } catch (error) {
             console.error("Auto check-in failed:", error);
+            const errorMsg = error.response?.data?.message || error.message || "Unknown error";
             // We choose NOT to return here, allowing print to proceed even if check-in fails, 
             // but we alert the user.
-            toast.warning("Badge printing... (Note: Auto check-in failed)");
+            toast.warning(`Auto check-in failed: ${errorMsg}. Printing badge...`);
         }
 
         // Clone the badge content to properly serialize it
