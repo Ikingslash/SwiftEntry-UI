@@ -28,7 +28,7 @@ const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purp
   });
 };
 
-function VisitorVisitCard({ visit, onRefresh }) {
+function VisitorVisitCard({ visit, onActionComplete }) {
   const [loading, setLoading] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
 
@@ -67,7 +67,10 @@ function VisitorVisitCard({ visit, onRefresh }) {
     try {
       const response = await api.post(`/self-service/visits/${visit.id}/check-in`);
       toast.success("Checked in successfully!");
-      onRefresh();
+      // Wait 2.5 seconds to let user see the success message, then clear the card
+      setTimeout(() => {
+        onActionComplete();
+      }, 2500);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to check in");
     } finally {
@@ -80,7 +83,10 @@ function VisitorVisitCard({ visit, onRefresh }) {
     try {
       const response = await api.post(`/self-service/visits/${visit.id}/check-out`);
       toast.success("Checked out successfully!");
-      onRefresh();
+      // Wait 2.5 seconds to let user see the success message, then clear the card
+      setTimeout(() => {
+        onActionComplete();
+      }, 2500);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to check out");
     } finally {

@@ -150,7 +150,7 @@ function VisitorSelfServiceDashboard() {
                     <div key={visit.id} className="col-md-6 mb-4">
                       <VisitorVisitCard
                         visit={visit}
-                        onRefresh={handleRefresh}
+                        onActionComplete={handleClearSearch}
                       />
                     </div>
                   ))}
