@@ -82,10 +82,35 @@ function ConfirmVisitor() {
         }
     };
 
-    const handlePrintBadge = () => {
+    const handlePrintBadge = async () => {
         if (!badgeRef.current) {
             toast.error("Badge content not available");
             return;
+        }
+
+        // Automatic Check-in Logic
+        try {
+            if (userProfile && userProfile.visit_id) {
+                // Determine the correct API endpoint based on user role (assuming front-desk here as per file location)
+                // Using the specific endpoint for front-desk check-in
+                await api.post(`/front-desk/guests/visits/${userProfile.visit_id}/check-in`, {
+                    actual_check_in_time: new Date().toISOString(),
+                    notes: "Auto check-in via Print Badge"
+                });
+                toast.success("Visitor automatically checked in!");
+
+                // Update local state to reflect check-in if needed
+                setUserProfile(prev => ({
+                    ...prev,
+                    status: 'checked_in',
+                    visit_status: 'checked_in'
+                }));
+            }
+        } catch (error) {
+            console.error("Auto check-in failed:", error);
+            // We choose NOT to return here, allowing print to proceed even if check-in fails, 
+            // but we alert the user.
+            toast.warning("Badge printing... (Note: Auto check-in failed)");
         }
 
         // Clone the badge content to properly serialize it
