@@ -5,6 +5,7 @@ import VisitorLayout from "../layout/VisitorLayout";
 import "react-toastify/dist/ReactToastify.css";
 import { requestForToken, onMessageListener } from "../context/firebase";
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import QRCode from 'react-qr-code';
 
 // Helper function to format date to DD/MM/YYYY
 const formatDateToDDMMYYYY = (dateString) => {
@@ -59,6 +60,7 @@ export default function VisitorWalkInRegistration() {
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [visitCode, setVisitCode] = useState("");
+  const [visitorName, setVisitorName] = useState("");
   const [visitPurposes, setVisitPurposes] = useState([]);
   const [appUsers, setAppUsers] = useState([]);
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -208,6 +210,7 @@ export default function VisitorWalkInRegistration() {
 
       if (response.status === 200 || response.status === 201) {
         setVisitCode(response.data.visit_code);
+        setVisitorName(formData.name); // Save name before clearing form
         setShowSuccessModal(true);
         setFormData({
           visitor_type: "individual",
@@ -395,10 +398,10 @@ export default function VisitorWalkInRegistration() {
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
+              <div className="modal-header" style={{ backgroundColor: "#053561", color: "white" }}>
                 <h5 className="modal-title">Visit Registered Successfully!</h5>
               </div>
-              <div className="modal-body text-center">
+              <div className="modal-body text-center" id="print-visit-slip">
                 <div className="mb-3">
                   <i
                     className="bi bi-check-circle text-success"
@@ -406,11 +409,21 @@ export default function VisitorWalkInRegistration() {
                   ></i>
                 </div>
                 <p>
-                  Your visit has been registered successfully as a confirmed walk-in
-                  visit.
+                  Your visit has been registered successfully.
                 </p>
+
+                {/* Visitor Name */}
+                <p className="mb-2">
+                  <strong>Visitor:</strong> {visitorName}
+                </p>
+
+                {/* QR Code */}
+                <div className="my-4 d-flex justify-content-center">
+                  <QRCode value={visitCode || ""} size={150} />
+                </div>
+
                 <p className="mt-3">
-                  <strong>Your Visit Code:</strong>
+                  <strong>Visit Code:</strong>
                   <br />
                   <span
                     style={{ fontSize: "1.5rem", color: "#053561" }}
@@ -420,11 +433,44 @@ export default function VisitorWalkInRegistration() {
                   </span>
                 </p>
                 <p className="text-muted mt-3 small">
-                  Please save this code. You can use it to search for your visit and
-                  check in/out.
+                  Scan QR code or use visit code to check in/out.
                 </p>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer justify-content-between">
+                <button
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={() => {
+                    const printContent = document.getElementById('print-visit-slip');
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                      <html>
+                        <head>
+                          <title>Visit Slip - ${visitCode}</title>
+                          <style>
+                            body { font-family: Arial, sans-serif; text-align: center; padding: 30px; }
+                            h2 { color: #053561; margin-bottom: 20px; }
+                            .info { margin: 10px 0; font-size: 16px; }
+                            .code { font-size: 24px; font-weight: bold; color: #053561; margin: 20px 0; }
+                            svg { margin: 20px auto; display: block; }
+                            .footer { margin-top: 30px; font-size: 12px; color: #666; }
+                          </style>
+                        </head>
+                        <body>
+                          <h2>VISITOR PASS</h2>
+                          <div class="info"><strong>Name:</strong> ${visitorName}</div>
+                          ${printContent.querySelector('svg') ? printContent.querySelector('svg').outerHTML : ''}
+                          <div class="code">${visitCode}</div>
+                          <div class="footer">Scan QR code or use visit code to check in/out</div>
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.print();
+                  }}
+                >
+                  <i className="bi bi-printer me-2"></i>Print
+                </button>
                 <button
                   type="button"
                   className="btn btn-primary"
