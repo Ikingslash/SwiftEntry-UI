@@ -67,10 +67,12 @@ function VisitorVisitCard({ visit, onActionComplete }) {
     try {
       const response = await api.post(`/self-service/visits/${visit.id}/check-in`);
       toast.success("Checked in successfully!");
-      onActionComplete();
+      // Wait 1.5 seconds so user can see success message before card disappears
+      setTimeout(() => {
+        onActionComplete();
+      }, 1500);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to check in");
-    } finally {
       setLoading(false);
     }
   };
@@ -80,10 +82,12 @@ function VisitorVisitCard({ visit, onActionComplete }) {
     try {
       const response = await api.post(`/self-service/visits/${visit.id}/check-out`);
       toast.success("Checked out successfully!");
-      onActionComplete();
+      // Wait 1.5 seconds so user can see success message before card disappears
+      setTimeout(() => {
+        onActionComplete();
+      }, 1500);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to check out");
-    } finally {
       setLoading(false);
     }
   };
