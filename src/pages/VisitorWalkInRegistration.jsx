@@ -396,84 +396,133 @@ export default function VisitorWalkInRegistration() {
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: "#053561", color: "white" }}>
-                <h5 className="modal-title">Visit Registered Successfully!</h5>
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content" style={{ maxHeight: '90vh' }}>
+              <div className="modal-header py-2" style={{ backgroundColor: "#053561", color: "white" }}>
+                <h5 className="modal-title fs-6">Visit Registered Successfully!</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowSuccessModal(false)}></button>
               </div>
-              <div className="modal-body text-center" id="print-visit-slip">
-                <div className="mb-3">
+              <div className="modal-body text-center py-3" id="print-visit-slip">
+                <div className="mb-2">
                   <i
                     className="bi bi-check-circle text-success"
                     style={{ fontSize: "3rem" }}
                   ></i>
                 </div>
-                <p>
-                  Your visit has been registered successfully.
-                </p>
+                <p className="mb-2">Your visit has been registered.</p>
 
                 {/* Visitor Name */}
-                <p className="mb-2">
+                <p className="mb-2 small">
                   <strong>Visitor:</strong> {visitorName}
                 </p>
 
                 {/* QR Code */}
-                <div className="my-4 d-flex justify-content-center">
-                  <QRCode value={visitCode || ""} size={150} />
+                <div className="my-3 d-flex justify-content-center">
+                  <QRCode value={visitCode || ""} size={120} />
                 </div>
 
-                <p className="mt-3">
+                <p className="mt-2 mb-1">
                   <strong>Visit Code:</strong>
                   <br />
                   <span
-                    style={{ fontSize: "1.5rem", color: "#053561" }}
+                    style={{ fontSize: "1.2rem", color: "#053561" }}
                     className="fw-bold"
                   >
                     {visitCode}
                   </span>
                 </p>
-                <p className="text-muted mt-3 small">
+                <p className="text-muted mt-2 x-small" style={{ fontSize: '0.8rem' }}>
                   Scan QR code or use visit code to check in/out.
                 </p>
               </div>
-              <div className="modal-footer justify-content-between">
+              <div className="modal-footer justify-content-between py-2">
                 <button
                   type="button"
-                  className="btn btn-outline-primary"
+                  className="btn btn-outline-primary btn-sm"
                   onClick={() => {
                     const printContent = document.getElementById('print-visit-slip');
                     const printWindow = window.open('', '_blank');
                     printWindow.document.write(`
                       <html>
                         <head>
-                          <title>Visit Slip - ${visitCode}</title>
+                          <title>Visit Badge - ${visitCode}</title>
                           <style>
-                            body { font-family: Arial, sans-serif; text-align: center; padding: 30px; }
-                            h2 { color: #053561; margin-bottom: 20px; }
-                            .info { margin: 10px 0; font-size: 16px; }
-                            .code { font-size: 24px; font-weight: bold; color: #053561; margin: 20px 0; }
-                            svg { margin: 20px auto; display: block; }
-                            .footer { margin-top: 30px; font-size: 12px; color: #666; }
+                            @page {
+                                size: 80mm 120mm; /* Standard badge size */
+                                margin: 0;
+                            }
+                            body {
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                text-align: center;
+                                padding: 10px;
+                                margin: 0;
+                                width: 80mm;
+                                height: 120mm;
+                                box-sizing: border-box;
+                            }
+                            .badge-container {
+                                border: 1px solid #ddd;
+                                padding: 15px 5px;
+                                height: 100%;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                align-items: center;
+                            }
+                            h2 {
+                                color: #053561;
+                                margin: 0 0 10px 0;
+                                font-size: 18px;
+                                text-transform: uppercase;
+                                border-bottom: 2px solid #053561;
+                                padding-bottom: 5px;
+                                width: 90%;
+                            }
+                            .info { margin: 5px 0; font-size: 14px; }
+                            .code {
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: #053561;
+                                margin: 10px 0;
+                                letter-spacing: 2px;
+                            }
+                            svg {
+                                margin: 10px auto;
+                                display: block;
+                                max-width: 100%;
+                                height: auto;
+                            }
+                            .footer {
+                                margin-top: 15px;
+                                font-size: 10px;
+                                color: #666;
+                            }
                           </style>
                         </head>
                         <body>
-                          <h2>VISITOR PASS</h2>
-                          <div class="info"><strong>Name:</strong> ${visitorName}</div>
-                          ${printContent.querySelector('svg') ? printContent.querySelector('svg').outerHTML : ''}
-                          <div class="code">${visitCode}</div>
-                          <div class="footer">Scan QR code or use visit code to check in/out</div>
+                          <div class="badge-container">
+                            <h2>VISITOR PASS</h2>
+                            <div class="info"><strong>${visitorName}</strong></div>
+                            ${printContent.querySelector('svg') ? printContent.querySelector('svg').outerHTML : ''}
+                            <div class="code">${visitCode}</div>
+                            <div class="footer">Please wear this badge at all times</div>
+                          </div>
                         </body>
                       </html>
                     `);
                     printWindow.document.close();
-                    printWindow.print();
+                    setTimeout(() => {
+                      printWindow.focus();
+                      printWindow.print();
+                      printWindow.close();
+                    }, 250);
                   }}
                 >
-                  <i className="bi bi-printer me-2"></i>Print
+                  <i className="bi bi-printer me-1"></i>Print Badge
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm"
                   onClick={() => setShowSuccessModal(false)}
                 >
                   Close
