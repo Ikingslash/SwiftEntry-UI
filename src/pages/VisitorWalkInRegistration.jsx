@@ -400,7 +400,7 @@ export default function VisitorWalkInRegistration() {
             <div className="modal-content" style={{ maxHeight: '90vh' }}>
               <div className="modal-header py-2" style={{ backgroundColor: "#053561", color: "white" }}>
                 <h5 className="modal-title fs-6">Visit Registered Successfully!</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowSuccessModal(false)}></button>
+                <button type="button" className="btn-close btn-close-white" onClick={() => window.location.href = "https://app.theswiftentry.com/visitor-dashboard"}></button>
               </div>
               <div className="modal-body text-center py-3" id="print-visit-slip">
                 <div className="mb-2">
@@ -523,7 +523,7 @@ export default function VisitorWalkInRegistration() {
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  onClick={() => setShowSuccessModal(false)}
+                  onClick={() => window.location.href = "https://app.theswiftentry.com/visitor-dashboard"}
                 >
                   Close
                 </button>
