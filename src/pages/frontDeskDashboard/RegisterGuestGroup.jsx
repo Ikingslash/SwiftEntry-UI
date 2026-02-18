@@ -64,6 +64,9 @@ function RegisterGuestGroup() {
   const printRef = useRef();
   const [appUsers, setAppUsers] = useState([]);
   const [visitPurposes, setVisitPurposes] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [floors, setFloors] = useState([]);
+  const [specialRequirements, setSpecialRequirements] = useState([]);
 
   // useEffect to handle Firebase messaging and token registration, AND to fetch users.
   useEffect(() => {
@@ -120,6 +123,11 @@ function RegisterGuestGroup() {
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
       });
+
+    // Fetch buildings, floors, special requirements
+    api.get("/front-desk/guests/settings/buildings").then((r) => { if (Array.isArray(r.data)) setBuildings(r.data); }).catch(() => { });
+    api.get("/front-desk/guests/settings/floors").then((r) => { if (Array.isArray(r.data)) setFloors(r.data); }).catch(() => { });
+    api.get("/front-desk/guests/settings/special-requirements").then((r) => { if (Array.isArray(r.data)) setSpecialRequirements(r.data); }).catch(() => { });
 
     // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
@@ -501,11 +509,10 @@ function RegisterGuestGroup() {
                           value={formData.building}
                           onChange={handleChange}
                         >
-                          <option value="">Select Building</option>
-                          <option value="building 1">Building 1</option>
-                          <option value="building 2">Building 2</option>
-                          <option value="building 3">Building 3</option>
-                          <option value="building 4">Building 4</option>
+                          <option value="">None</option>
+                          {buildings.map((b, i) => (
+                            <option key={i} value={b}>{b}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -519,11 +526,10 @@ function RegisterGuestGroup() {
                           value={formData.floor}
                           onChange={handleChange}
                         >
-                          <option value="">Select Floor</option>
-                          <option value="1st floor">1st Floor</option>
-                          <option value="2nd floor">2nd Floor</option>
-                          <option value="3rd floor">3rd Floor</option>
-                          <option value="4th floor">4th Floor</option>
+                          <option value="">None</option>
+                          {floors.map((f, i) => (
+                            <option key={i} value={f}>{f}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -590,13 +596,10 @@ function RegisterGuestGroup() {
                     value={formData.special_requirements}
                     onChange={handleChange}
                   >
-                    <option value="">Select special requirements</option>
-                    <option value="parking arrangements[for multiple vehicles]">
-                      Parking arrangements (for multiple vehicles)
-                    </option>
-                    <option value="meeting room">Meeting Room</option>
-                    <option value="catering needs">Catering Needs</option>
-                    <option value="other">Other</option>
+                    <option value="">None</option>
+                    {specialRequirements.map((r, i) => (
+                      <option key={i} value={r}>{r}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="my-3">

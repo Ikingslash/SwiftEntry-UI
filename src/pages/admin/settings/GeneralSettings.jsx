@@ -6,47 +6,67 @@ import api from "../../../context/api";
 function GeneralSettings() {
   const [settings, setSettings] = useState({
     primary_color: "",
-    timezone: "WAT", // Default value
+    timezone: "WAT",
     visit_purposes: [],
-    date_format: "MM/DD/YYYY", // Default value
-    time_format: "12-hour", // Assuming you'll add this to backend
-    language_preference: "English", // Default value
+    buildings: [],
+    floors: [],
+    special_requirements: [],
+    date_format: "MM/DD/YYYY",
+    time_format: "12-hour",
+    language_preference: "English",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Purpose of Visit modal state
   const [selectedPurpose, setSelectedPurpose] = useState("");
   const [modalType, setModalType] = useState(""); // "add" or "edit"
   const [showModal, setShowModal] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState("blue"); // This is a frontend UI state
+
+  // Buildings modal state
+  const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [buildingModalType, setBuildingModalType] = useState("");
+  const [showBuildingModal, setShowBuildingModal] = useState(false);
+
+  // Floors modal state
+  const [selectedFloor, setSelectedFloor] = useState("");
+  const [floorModalType, setFloorModalType] = useState("");
+  const [showFloorModal, setShowFloorModal] = useState(false);
+
+  // Special Requirements modal state
+  const [selectedRequirement, setSelectedRequirement] = useState("");
+  const [requirementModalType, setRequirementModalType] = useState("");
+  const [showRequirementModal, setShowRequirementModal] = useState(false);
+
+  const [selectedTheme, setSelectedTheme] = useState("blue");
 
   // Fetch settings on component mount
   useEffect(() => {
     fetchSettings();
   }, []);
 
-   useEffect(() => {
-     const applyLanguage = (lang) => {
-       const select = document.querySelector(".goog-te-combo");
-       if (select) {
-         select.value = lang;
-         select.dispatchEvent(new Event("change"));
-         localStorage.setItem("selectedLanguage", lang);
-       }
-     };
+  useEffect(() => {
+    const applyLanguage = (lang) => {
+      const select = document.querySelector(".goog-te-combo");
+      if (select) {
+        select.value = lang;
+        select.dispatchEvent(new Event("change"));
+        localStorage.setItem("selectedLanguage", lang);
+      }
+    };
 
-     const savedLang = localStorage.getItem("selectedLanguage") || "en";
+    const savedLang = localStorage.getItem("selectedLanguage") || "en";
 
-     const interval = setInterval(() => {
-       const select = document.querySelector(".goog-te-combo");
-       if (select) {
-         applyLanguage(savedLang);
-         clearInterval(interval);
-       }
-     }, 1000);
+    const interval = setInterval(() => {
+      const select = document.querySelector(".goog-te-combo");
+      if (select) {
+        applyLanguage(savedLang);
+        clearInterval(interval);
+      }
+    }, 1000);
 
-     return () => clearInterval(interval);
-   }, []);
+    return () => clearInterval(interval);
+  }, []);
 
 
   const fetchSettings = async () => {
@@ -54,13 +74,16 @@ function GeneralSettings() {
     setError(null);
     try {
       const response = await api.get("/admin/settings");
-      const fetchedSettings = response.data.general_settings; // Access the general_settings object
+      const fetchedSettings = response.data.general_settings;
       setSettings({
         primary_color: fetchedSettings.primary_color || "",
         timezone: fetchedSettings.timezone || "WAT",
         visit_purposes: fetchedSettings.visit_purposes || [],
+        buildings: fetchedSettings.buildings || [],
+        floors: fetchedSettings.floors || [],
+        special_requirements: fetchedSettings.special_requirements || [],
         date_format: fetchedSettings.date_format || "MM/DD/YYYY",
-        time_format: fetchedSettings.time_format || "12-hour", // Default if not found
+        time_format: fetchedSettings.time_format || "12-hour",
         language_preference: fetchedSettings.language_preference || "English",
       });
     } catch (err) {
@@ -88,13 +111,13 @@ function GeneralSettings() {
     setSelectedTheme(theme);
     // If themes correspond to primary colors in backend, update that setting
     let colorCode = '';
-    switch(theme) {
+    switch (theme) {
       case 'blue': colorCode = '#007bff'; break; // Example default blue
       case 'orange': colorCode = '#fd7e14'; break; // Example default orange
       case 'purple': colorCode = '#6f42c1'; break; // Example default purple
       default: colorCode = '';
     }
-    setSettings(prev => ({...prev, primary_color: colorCode}));
+    setSettings(prev => ({ ...prev, primary_color: colorCode }));
     handleUpdateSetting('primary_color', colorCode);
   };
 
@@ -142,37 +165,154 @@ function GeneralSettings() {
     }
   };
 
- const changeLanguage = (lang) => {
-   const select = document.querySelector(".goog-te-combo");
-   if (select) {
-     select.value = lang;
-     select.dispatchEvent(new Event("change"));
-     localStorage.setItem("selectedLanguage", lang);
-   } else {
-     // If the widget isn’t ready yet, retry
-     const interval = setInterval(() => {
-       const s = document.querySelector(".goog-te-combo");
-       if (s) {
-         s.value = lang;
-         s.dispatchEvent(new Event("change"));
-         localStorage.setItem("selectedLanguage", lang);
-         clearInterval(interval);
-       }
-     }, 1000);
-   }
- };
+  // ---- Buildings handlers ----
+  const handleAddBuilding = async (newBuilding) => {
+    try {
+      const response = await api.post("/admin/settings/add-building", { building: newBuilding });
+      alert(response.data.message);
+      setShowBuildingModal(false);
+      fetchSettings();
+    } catch (err) {
+      alert("Failed to add building: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleUpdateBuilding = async (updatedBuilding) => {
+    try {
+      const response = await api.post("/admin/settings/update-building", {
+        old_building: selectedBuilding,
+        new_building: updatedBuilding,
+      });
+      alert(response.data.message);
+      setShowBuildingModal(false);
+      fetchSettings();
+    } catch (err) {
+      alert("Failed to update building: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteBuilding = async () => {
+    if (window.confirm(`Are you sure you want to delete "${selectedBuilding}"?`)) {
+      try {
+        const response = await api.post("/admin/settings/delete-building", { building: selectedBuilding });
+        alert(response.data.message);
+        setShowBuildingModal(false);
+        fetchSettings();
+      } catch (err) {
+        alert("Failed to delete building: " + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  // ---- Floors handlers ----
+  const handleAddFloor = async (newFloor) => {
+    try {
+      const response = await api.post("/admin/settings/add-floor", { floor: newFloor });
+      alert(response.data.message);
+      setShowFloorModal(false);
+      fetchSettings();
+    } catch (err) {
+      alert("Failed to add floor: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleUpdateFloor = async (updatedFloor) => {
+    try {
+      const response = await api.post("/admin/settings/update-floor", {
+        old_floor: selectedFloor,
+        new_floor: updatedFloor,
+      });
+      alert(response.data.message);
+      setShowFloorModal(false);
+      fetchSettings();
+    } catch (err) {
+      alert("Failed to update floor: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteFloor = async () => {
+    if (window.confirm(`Are you sure you want to delete "${selectedFloor}"?`)) {
+      try {
+        const response = await api.post("/admin/settings/delete-floor", { floor: selectedFloor });
+        alert(response.data.message);
+        setShowFloorModal(false);
+        fetchSettings();
+      } catch (err) {
+        alert("Failed to delete floor: " + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  // ---- Special Requirements handlers ----
+  const handleAddRequirement = async (newReq) => {
+    try {
+      const response = await api.post("/admin/settings/add-special-requirement", { requirement: newReq });
+      alert(response.data.message);
+      setShowRequirementModal(false);
+      fetchSettings();
+    } catch (err) {
+      alert("Failed to add requirement: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleUpdateRequirement = async (updatedReq) => {
+    try {
+      const response = await api.post("/admin/settings/update-special-requirement", {
+        old_requirement: selectedRequirement,
+        new_requirement: updatedReq,
+      });
+      alert(response.data.message);
+      setShowRequirementModal(false);
+      fetchSettings();
+    } catch (err) {
+      alert("Failed to update requirement: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteRequirement = async () => {
+    if (window.confirm(`Are you sure you want to delete "${selectedRequirement}"?`)) {
+      try {
+        const response = await api.post("/admin/settings/delete-special-requirement", { requirement: selectedRequirement });
+        alert(response.data.message);
+        setShowRequirementModal(false);
+        fetchSettings();
+      } catch (err) {
+        alert("Failed to delete requirement: " + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const changeLanguage = (lang) => {
+    const select = document.querySelector(".goog-te-combo");
+    if (select) {
+      select.value = lang;
+      select.dispatchEvent(new Event("change"));
+      localStorage.setItem("selectedLanguage", lang);
+    } else {
+      // If the widget isn’t ready yet, retry
+      const interval = setInterval(() => {
+        const s = document.querySelector(".goog-te-combo");
+        if (s) {
+          s.value = lang;
+          s.dispatchEvent(new Event("change"));
+          localStorage.setItem("selectedLanguage", lang);
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
+  };
 
 
-    const languages = [
-      { code: "en", name: "English", flag: "🇬🇧" },
-      { code: "ha", name: "Hausa", flag: "🇳🇬" },
-      { code: "yo", name: "Yoruba", flag: "🇳🇬" },
-      { code: "ig", name: "Igbo", flag: "🇳🇬" },
-      { code: "ff", name: "Fulfulde", flag: "🌍" },
-      { code: "es", name: "Spanish", flag: "🇪🇸" },
-      { code: "fr", name: "French", flag: "🇫🇷" },
-      { code: "ar", name: "Arabic", flag: "🇸🇦" },
-    ];
+  const languages = [
+    { code: "en", name: "English", flag: "🇬🇧" },
+    { code: "ha", name: "Hausa", flag: "🇳🇬" },
+    { code: "yo", name: "Yoruba", flag: "🇳🇬" },
+    { code: "ig", name: "Igbo", flag: "🇳🇬" },
+    { code: "ff", name: "Fulfulde", flag: "🌍" },
+    { code: "es", name: "Spanish", flag: "🇪🇸" },
+    { code: "fr", name: "French", flag: "🇫🇷" },
+    { code: "ar", name: "Arabic", flag: "🇸🇦" },
+  ];
 
   if (loading) {
     return <p className="text-center mt-5">Loading settings...</p>;
@@ -352,6 +492,102 @@ function GeneralSettings() {
 
       <hr className="text-secondary" />
 
+      {/* Buildings */}
+      <div className="row my-3">
+        <div className="col-md-4">
+          <div className="p-3">
+            <h5 className="mb-3">Buildings</h5>
+            <p><small>Manage the list of buildings visitors can be directed to.</small></p>
+          </div>
+        </div>
+        <div className="col-md-8">
+          <div className="card shadow-sm rounded-4 border-0">
+            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
+              <strong>Edit Buildings</strong>
+              <button type="button" className="btn btn-primary" onClick={() => { setSelectedBuilding(""); setBuildingModalType("add"); setShowBuildingModal(true); }}>Add New</button>
+            </div>
+            <ul className="list-group list-group-flush">
+              {settings.buildings.length === 0 ? (
+                <li className="list-group-item text-center text-muted py-3">No buildings defined.</li>
+              ) : (
+                settings.buildings.map((b, i) => (
+                  <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
+                    {b}
+                    <button type="button" className="btn btn-link text-primary" onClick={() => { setSelectedBuilding(b); setBuildingModalType("edit"); setShowBuildingModal(true); }}>Edit</button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <hr className="text-secondary" />
+
+      {/* Floors */}
+      <div className="row my-3">
+        <div className="col-md-4">
+          <div className="p-3">
+            <h5 className="mb-3">Floors</h5>
+            <p><small>Manage the list of floors visitors can be directed to.</small></p>
+          </div>
+        </div>
+        <div className="col-md-8">
+          <div className="card shadow-sm rounded-4 border-0">
+            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
+              <strong>Edit Floors</strong>
+              <button type="button" className="btn btn-primary" onClick={() => { setSelectedFloor(""); setFloorModalType("add"); setShowFloorModal(true); }}>Add New</button>
+            </div>
+            <ul className="list-group list-group-flush">
+              {settings.floors.length === 0 ? (
+                <li className="list-group-item text-center text-muted py-3">No floors defined.</li>
+              ) : (
+                settings.floors.map((f, i) => (
+                  <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
+                    {f}
+                    <button type="button" className="btn btn-link text-primary" onClick={() => { setSelectedFloor(f); setFloorModalType("edit"); setShowFloorModal(true); }}>Edit</button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <hr className="text-secondary" />
+
+      {/* Special Requirements */}
+      <div className="row my-3">
+        <div className="col-md-4">
+          <div className="p-3">
+            <h5 className="mb-3">Special Requirements</h5>
+            <p><small>Manage the list of special requirements visitors can select.</small></p>
+          </div>
+        </div>
+        <div className="col-md-8">
+          <div className="card shadow-sm rounded-4 border-0">
+            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
+              <strong>Edit Special Requirements</strong>
+              <button type="button" className="btn btn-primary" onClick={() => { setSelectedRequirement(""); setRequirementModalType("add"); setShowRequirementModal(true); }}>Add New</button>
+            </div>
+            <ul className="list-group list-group-flush">
+              {settings.special_requirements.length === 0 ? (
+                <li className="list-group-item text-center text-muted py-3">No special requirements defined.</li>
+              ) : (
+                settings.special_requirements.map((r, i) => (
+                  <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
+                    {r}
+                    <button type="button" className="btn btn-link text-primary" onClick={() => { setSelectedRequirement(r); setRequirementModalType("edit"); setShowRequirementModal(true); }}>Edit</button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <hr className="text-secondary" />
+
       {/* Date & Time Format */}
       <div className="row my-3">
         <div className="col-md-4">
@@ -505,10 +741,10 @@ function GeneralSettings() {
               </div>
             </div>
           </div>
-</div>
+        </div>
       </div>
 
-      {/* Modal */}
+      {/* Purpose of Visit Modal */}
       <PurposeModal
         type={modalType}
         show={showModal}
@@ -517,6 +753,39 @@ function GeneralSettings() {
         onAdd={handleAddPurpose}
         onUpdate={handleUpdatePurpose}
         onDelete={handleDeletePurpose}
+      />
+
+      {/* Buildings Modal */}
+      <PurposeModal
+        type={buildingModalType}
+        show={showBuildingModal}
+        onHide={() => setShowBuildingModal(false)}
+        selectedPurpose={selectedBuilding}
+        onAdd={handleAddBuilding}
+        onUpdate={handleUpdateBuilding}
+        onDelete={handleDeleteBuilding}
+      />
+
+      {/* Floors Modal */}
+      <PurposeModal
+        type={floorModalType}
+        show={showFloorModal}
+        onHide={() => setShowFloorModal(false)}
+        selectedPurpose={selectedFloor}
+        onAdd={handleAddFloor}
+        onUpdate={handleUpdateFloor}
+        onDelete={handleDeleteFloor}
+      />
+
+      {/* Special Requirements Modal */}
+      <PurposeModal
+        type={requirementModalType}
+        show={showRequirementModal}
+        onHide={() => setShowRequirementModal(false)}
+        selectedPurpose={selectedRequirement}
+        onAdd={handleAddRequirement}
+        onUpdate={handleUpdateRequirement}
+        onDelete={handleDeleteRequirement}
       />
     </div>
   );

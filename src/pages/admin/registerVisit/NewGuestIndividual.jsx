@@ -44,6 +44,9 @@ export default function NewGuestIndividual() {
   const [guestDetails, setGuestDetails] = useState({});
   const [appUsers, setAppUsers] = useState([]);
   const [visitPurposes, setVisitPurposes] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [floors, setFloors] = useState([]);
+  const [specialRequirements, setSpecialRequirements] = useState([]);
   const [qrValue, setQrValue] = useState("");
   const printRef = useRef();
 
@@ -81,6 +84,11 @@ export default function NewGuestIndividual() {
         }
       })
       .catch(() => { });
+
+    // Fetch buildings, floors, special requirements
+    api.get("/admin/settings/buildings").then((r) => { if (Array.isArray(r.data)) setBuildings(r.data); }).catch(() => { });
+    api.get("/admin/settings/floors").then((r) => { if (Array.isArray(r.data)) setFloors(r.data); }).catch(() => { });
+    api.get("/admin/settings/special-requirements").then((r) => { if (Array.isArray(r.data)) setSpecialRequirements(r.data); }).catch(() => { });
 
     // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
@@ -374,7 +382,6 @@ export default function NewGuestIndividual() {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          required
                         />
                       </div>
                     </div>
@@ -434,10 +441,10 @@ export default function NewGuestIndividual() {
                           value={formData.building}
                           onChange={handleChange}
                         >
-                          <option value="">Select Building</option>
-                          <option value="building 1">Building 1</option>
-                          <option value="building 2">Building 2</option>
-                          <option value="building 3">Building 3</option>
+                          <option value="">None</option>
+                          {buildings.map((b, i) => (
+                            <option key={i} value={b}>{b}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -451,10 +458,10 @@ export default function NewGuestIndividual() {
                           value={formData.floor}
                           onChange={handleChange}
                         >
-                          <option value="">Select Floor</option>
-                          <option value="1st floor">1st Floor</option>
-                          <option value="2nd floor">2nd Floor</option>
-                          <option value="3rd floor">3rd Floor</option>
+                          <option value="">None</option>
+                          {floors.map((f, i) => (
+                            <option key={i} value={f}>{f}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -508,15 +515,10 @@ export default function NewGuestIndividual() {
                     value={formData.special_requirements}
                     onChange={handleChange}
                   >
-                    <option> Select special requirements</option>
-                    <option value="parking space">Parking Space</option>
-                    <option value="wheelchair/accessibility">
-                      Wheelchair/Accessibility
-                    </option>
-                    <option value="language interpretation">
-                      Language Interpretation
-                    </option>
-                    <option value="other">Other</option>
+                    <option value="">None</option>
+                    {specialRequirements.map((r, i) => (
+                      <option key={i} value={r}>{r}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="my-3">
