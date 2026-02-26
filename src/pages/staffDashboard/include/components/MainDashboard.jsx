@@ -41,7 +41,7 @@ export default function MainDashboard({
                 className="badge mt-2 text-white"
                 style={{ backgroundColor: "#195894", fontSize: "0.85em" }}
               >
-                Syndani Group
+                Sydani Group
                 <span
                   className="badge text-light ms-2"
                   style={{ backgroundColor: "#0d2e4e" }}
@@ -94,7 +94,7 @@ export default function MainDashboard({
                   <Eye size={28} />
                 </div>
                 <div className="ms-auto text-start">
-                  <h6 className="mb-1">Pending Guests</h6>
+                  <h6 className="mb-1">Pending Visits</h6>
                   <p className="mb-0 fs-4">{summaryData.pending_guests}</p>
                 </div>
               </div>

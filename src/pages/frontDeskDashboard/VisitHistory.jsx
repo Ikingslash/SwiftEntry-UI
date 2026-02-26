@@ -52,47 +52,47 @@ function VisitSecurityHistory() {
         console.error("Failed to fetch visit purposes:", error);
         toast.error(
           "Failed to fetch visit purposes: " +
-            (error.response?.data?.message || "Server error.")
+          (error.response?.data?.message || "Server error.")
         );
       });
   }, [activeFilter, month, purpose, currentPage]);
 
-const fetchHistory = async () => {
-  setLoading(true);
-  try {
-    const monthParam = month
-      ? new Date(`${month} 1, 2025`).getMonth() + 1
-      : null;
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const monthParam = month
+        ? new Date(`${month} 1, 2025`).getMonth() + 1
+        : null;
 
-    const response = await api.get("/front-desk/history/visits", {
-      params: {
-        visitor_type: activeFilter,
-        month: monthParam,
-        purpose: purpose !== "all" ? purpose : null,
-        per_page: perPage,
-        page: currentPage,
-      },
-    });
+      const response = await api.get("/front-desk/history/visits", {
+        params: {
+          visitor_type: activeFilter,
+          month: monthParam,
+          purpose: purpose !== "all" ? purpose : null,
+          per_page: perPage,
+          page: currentPage,
+        },
+      });
 
-    if (!response?.data || !response.data.visits) {
-      throw new Error("Invalid response structure: 'visits' key not found.");
-    }
+      if (!response?.data || !response.data.visits) {
+        throw new Error("Invalid response structure: 'visits' key not found.");
+      }
 
-    const groupedData = groupVisitsByDate(response.data.visits);
-    setGroupedVisits(groupedData);
-    setPagination(response.data.pagination || {});
-    // toast.success("Visit history fetched successfully.");
-  } catch (err) {
+      const groupedData = groupVisitsByDate(response.data.visits);
+      setGroupedVisits(groupedData);
+      setPagination(response.data.pagination || {});
+      // toast.success("Visit history fetched successfully.");
+    } catch (err) {
       console.error("Error fetching history:", err);
       if (err.response && err.response.status === 422) {
-          toast.error("Validation error: " + JSON.stringify(err.response.data));
+        toast.error("Validation error: " + JSON.stringify(err.response.data));
       } else {
-          toast.error("Failed to fetch visit history. Please try again.");
+        toast.error("Failed to fetch visit history. Please try again.");
       }
-  } finally {
-    setLoading(false);
-  }
-};
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -121,7 +121,7 @@ const fetchHistory = async () => {
           >
             <div className="d-flex align-items-center justify-content-between">
               <h3 className="fw-bod mb-0">Visits</h3>
-              
+
             </div>
 
             <div className="d-flex align-items-center mt-2">
@@ -131,7 +131,7 @@ const fetchHistory = async () => {
                   backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
-                Syndani Group{" "}
+                Sydani Group{" "}
                 <span
                   className="badge text-light p-1"
                   style={{
@@ -217,9 +217,8 @@ const fetchHistory = async () => {
               <a
                 key={item.value}
                 onClick={() => setActiveFilter(item.value)}
-                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${
-                  activeFilter === item.value ? "border-primary" : "border"
-                }`}
+                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${activeFilter === item.value ? "border-primary" : "border"
+                  }`}
                 style={{
                   minWidth: item.width,
                   borderRadius: "7px",

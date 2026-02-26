@@ -49,7 +49,7 @@ function VisitHistory() {
                   backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
-                Syndani Group{" "}
+                Sydani Group{" "}
                 <span
                   className="badge text-light p-1"
                   style={{
@@ -168,8 +168,8 @@ function VisitHistory() {
                   {month}
                 </option>
               ))}
-            </select> 
-           
+            </select>
+
             {/* Visitor Type Filter */}
             {[
               { label: "All", value: "all", width: "60px" },
@@ -183,21 +183,20 @@ function VisitHistory() {
               <a
                 key={item.value}
                 onClick={() => setActiveFilter(item.value)}
-                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${
-                  activeFilter === item.value
+                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${activeFilter === item.value
                     ? "border-primary"
-                  : "border"
-                }`}
+                    : "border"
+                  }`}
                 style={{
                   minWidth: item.width,
                   borderRadius: "7px",
-                cursor: "pointer",
-                transition: "all 0.3s ease-in-out",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease-in-out",
                 }}
               >
                 <small>{item.label}</small>
                 {activeFilter === item.value && (
-                 <IoCheckmark className="fs-5 text-primary" />
+                  <IoCheckmark className="fs-5 text-primary" />
                 )}
               </a>
             ))}

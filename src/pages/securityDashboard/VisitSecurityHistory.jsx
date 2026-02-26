@@ -96,7 +96,7 @@ function VisitSecurityHistory() {
               <h3 className="fw-bod mb-0">History</h3>
 
               {/* Plus Icon */}
-          
+
             </div>
 
             {/* Badge & Line Row */}
@@ -108,7 +108,7 @@ function VisitSecurityHistory() {
                   backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
-                Syndani Group{" "}
+                Sydani Group{" "}
                 <span
                   className="badge text-light p-1"
                   style={{
@@ -258,9 +258,8 @@ function VisitSecurityHistory() {
               <a
                 key={item.value}
                 onClick={() => setActiveFilter(item.value)}
-                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${
-                  activeFilter === item.value ? "border-primary" : "border"
-                }`}
+                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${activeFilter === item.value ? "border-primary" : "border"
+                  }`}
                 style={{
                   minWidth: item.width,
                   borderRadius: "7px",

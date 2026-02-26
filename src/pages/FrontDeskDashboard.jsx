@@ -75,7 +75,7 @@ function FrontDeskDashboard() {
                   backgroundColor: "rgba(25, 88, 148, 0.8)",
                 }}
               >
-                Syndani Group{" "}
+                Sydani Group{" "}
                 <span
                   className="badge text-light p-1"
                   style={{

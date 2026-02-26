@@ -65,6 +65,7 @@ function CompletedVisitTable({ visitType }) {
                   <th>Guest Name</th>
                   <th>Host Name</th>
                   <th>Check-In Time</th>
+                  <th>Check-Out Time</th>
                   <th>Contact</th>
 
                   <th>Special Requirement</th>
@@ -77,6 +78,7 @@ function CompletedVisitTable({ visitType }) {
                     <td>{visit.visitor?.name || "N/A"}</td>
                     <td>{visit.host_name}</td>
                     <td>{new Date(visit.check_in).toLocaleString()}</td>
+                    <td>{visit.check_out ? new Date(visit.check_out).toLocaleString() : "N/A"}</td>
                     <td>{visit.visitor?.contact_number || "N/A"}</td>
 
                     <td>{visit.visitor?.special_requirements || "None"}</td>
