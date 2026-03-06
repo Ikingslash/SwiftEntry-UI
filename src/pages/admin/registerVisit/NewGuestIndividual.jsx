@@ -644,7 +644,7 @@ export default function NewGuestIndividual() {
                   <p className="fw-bold">Share Via</p>
                   <div className="d-flex justify-content-center gap-4">
                     <a
-                      href={`https://wa.me/?text=Visit%20Details%3A%20${qrValue}`}
+                      href={`https://wa.me/?text=${encodeURIComponent(`🎫 Visitor Badge – Sydani Group\n\nName: ${guestDetails.name}\nGuest Code: ${guestDetails.id}\nHost: ${guestDetails.host}\nVisit Date: ${guestDetails.date} at ${guestDetails.time}\nPurpose: ${guestDetails.purpose}\nContact: ${guestDetails.Contact_info}`)}`}
                       target="_blank"
                       rel="noreferrer"
                     >

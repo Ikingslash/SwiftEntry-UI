@@ -8,6 +8,7 @@ function VipVisitors({ refreshKey }) {
   const [error, setError] = useState(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
@@ -44,6 +45,11 @@ function VipVisitors({ refreshKey }) {
       address: visitor.address,
     });
     setShowEditModal(true);
+  };
+
+  const handleViewDetails = (visitor) => {
+    setSelectedVisitor(visitor);
+    setShowDetailsModal(true);
   };
 
   const handleEditFormChange = (e) => {
@@ -199,8 +205,8 @@ function VipVisitors({ refreshKey }) {
                               </button>
                             </li>
                             <li>
-                              <button type="button" className="dropdown-item">
-                                View Detail
+                              <button type="button" className="dropdown-item" onClick={() => handleViewDetails(visitor)}>
+                                View Details
                               </button>
                             </li>
                             <li>
@@ -311,6 +317,89 @@ function VipVisitors({ refreshKey }) {
           className="modal-backdrop fade show"
           onClick={() => setShowEditModal(false)}
         ></div>
+      )}
+
+      {/* View Details Modal */}
+      {showDetailsModal && selectedVisitor && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={() => setShowDetailsModal(false)}
+        >
+          <div
+            className="modal-dialog modal-lg py-4"
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              width: "420px",
+              maxWidth: "100%",
+              height: "100vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content h-100" style={{ backgroundColor: "#F5FAFE" }}>
+              <div className="modal-header border-bottom">
+                <h5 className="modal-title fw-bold">Visitor Details</h5>
+                <button type="button" className="btn-close" onClick={() => setShowDetailsModal(false)} />
+              </div>
+              <div className="modal-body p-4">
+                <div className="text-center mb-4">
+                  <div
+                    className="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center text-white fw-bold fs-3"
+                    style={{ width: 80, height: 80 }}
+                  >
+                    {selectedVisitor.name?.charAt(0)?.toUpperCase() || "V"}
+                  </div>
+                  <h5 className="mt-3 mb-0 fw-bold">{selectedVisitor.name}</h5>
+                  <div className="mt-2">
+                    {selectedVisitor.is_vip && <span className="badge bg-warning text-dark me-2">VIP</span>}
+                    {selectedVisitor.is_blacklisted && <span className="badge bg-danger">Blacklisted</span>}
+                    {!selectedVisitor.is_vip && !selectedVisitor.is_blacklisted && <span className="badge bg-success">Regular</span>}
+                  </div>
+                </div>
+                <div className="list-group list-group-flush">
+                  <div className="list-group-item bg-transparent px-0">
+                    <small className="text-muted d-block">Email Address</small>
+                    <span className="fw-semibold">{selectedVisitor.email || "N/A"}</span>
+                  </div>
+                  <div className="list-group-item bg-transparent px-0">
+                    <small className="text-muted d-block">Contact Number</small>
+                    <span className="fw-semibold">{selectedVisitor.contact_number || "N/A"}</span>
+                  </div>
+                  <div className="list-group-item bg-transparent px-0">
+                    <small className="text-muted d-block">Address</small>
+                    <span className="fw-semibold">{selectedVisitor.address || "N/A"}</span>
+                  </div>
+                  {selectedVisitor.emergency_contact && (
+                    <div className="list-group-item bg-transparent px-0">
+                      <small className="text-muted d-block">Emergency Contact</small>
+                      <span className="fw-semibold">{selectedVisitor.emergency_contact}</span>
+                    </div>
+                  )}
+                  {selectedVisitor.special_requirements && (
+                    <div className="list-group-item bg-transparent px-0">
+                      <small className="text-muted d-block">Special Requirements</small>
+                      <span className="fw-semibold">{selectedVisitor.special_requirements}</span>
+                    </div>
+                  )}
+                  <div className="list-group-item bg-transparent px-0">
+                    <small className="text-muted d-block">Registered On</small>
+                    <span className="fw-semibold">
+                      {selectedVisitor.created_at ? new Date(selectedVisitor.created_at).toLocaleString() : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer border-top">
+                <button type="button" className="btn btn-secondary w-100" onClick={() => setShowDetailsModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

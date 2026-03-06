@@ -17,7 +17,7 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
   const fetchVisits = async () => {
     setLoading(true);
     try {
-        // FIX: Dynamic endpoint for cancelled visits
+      // FIX: Dynamic endpoint for cancelled visits
       const endpoint = `/front-desk/guests/${visitType}/cancelled-visits`;
       const response = await api.get(
         endpoint,
@@ -51,24 +51,24 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
 
   const handleRescheduleSubmit = async () => {
     if (!selectedVisit || !newDate || !newTime) {
-        toast.error("Please select a new date and time.");
-        return;
+      toast.error("Please select a new date and time.");
+      return;
     }
 
     const newVisitTime = `${newDate} ${newTime}`;
 
     try {
-        // Assume reschedule uses a generic visit ID endpoint
-        await api.post(`security/guest/visit/${selectedVisit.id}/reschedule`, {
-            visit_time: newVisitTime
-        });
-        toast.success("Visit successfully rescheduled!");
-        setShowModal(false);
-        fetchVisits();
-        if(onVisitUpdate) onVisitUpdate();
+      // Use front-desk specific endpoint
+      await api.post(`/front-desk/guests/visit/${selectedVisit.id}/reschedule`, {
+        visit_time: newVisitTime
+      });
+      toast.success("Visit successfully rescheduled!");
+      setShowModal(false);
+      fetchVisits();
+      if (onVisitUpdate) onVisitUpdate();
     } catch (error) {
-        console.error("Reschedule failed:", error);
-        toast.error("Failed to reschedule visit.");
+      console.error("Reschedule failed:", error);
+      toast.error("Failed to reschedule visit.");
     }
   };
 
@@ -114,13 +114,13 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
                     <td>{visit.visitor?.contact_number}</td>
                     <td>{visit.visitor?.email}</td>
                     <td>{visit.visitor?.special_requirements || "None"}</td>
-                     <td>
-                        <button
-                            className="btn btn-sm btn-info"
-                            onClick={() => openRescheduleModal(visit)}
-                        >
-                            Reschedule
-                        </button>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-info"
+                        onClick={() => openRescheduleModal(visit)}
+                      >
+                        Reschedule
+                      </button>
                     </td>
                   </tr>
                 ))}

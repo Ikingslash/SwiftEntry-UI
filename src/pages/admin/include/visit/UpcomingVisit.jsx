@@ -243,11 +243,6 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
                           </button>
                           <ul className="dropdown-menu bg-light rounded-4" style={{ fontSize: "13px", width: "250px" }}>
                             <li>
-                              <button className="dropdown-item" onClick={() => handleEdit(visit.id)}>
-                                Edit Info
-                              </button>
-                            </li>
-                            <li>
                               <button className="dropdown-item" onClick={() => handleCheckIn(visit.id)}>
                                 Check In
                               </button>
@@ -260,11 +255,6 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
                             <li>
                               <button className="dropdown-item" onClick={() => handleMarkMissed(visit.id)}>
                                 Mark as Missed
-                              </button>
-                            </li>
-                            <li>
-                              <button className="dropdown-item" onClick={() => handleDeleteVisit(visit.id)}>
-                                Delete Visit
                               </button>
                             </li>
                           </ul>

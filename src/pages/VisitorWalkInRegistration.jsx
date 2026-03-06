@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { requestForToken, onMessageListener } from "../context/firebase";
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import QRCode from 'react-qr-code';
+import Select from 'react-select';
 
 // Helper function to format date to DD/MM/YYYY
 const formatDateToDDMMYYYY = (dateString) => {
@@ -123,6 +124,32 @@ export default function VisitorWalkInRegistration() {
       setFormData({ ...formData, [name]: value });
     }
   };
+
+  const handleHostChange = (selectedOption) => {
+    if (selectedOption) {
+      const [role, id] = selectedOption.value.split("-");
+      const backendRole = role.toLowerCase().replace(/\s+/g, '_');
+
+      setFormData({
+        ...formData,
+        host_id: id,
+        host_role: backendRole,
+        host_name: selectedOption.label,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        host_id: "",
+        host_role: "",
+        host_name: "",
+      });
+    }
+  };
+
+  const hostOptions = appUsers.map(user => ({
+    value: `${user.role || "unknown"}-${user.id}`,
+    label: user.name
+  }));
 
   const showValidationErrors = (error) => {
     if (error.response && error.response.status === 422) {
@@ -342,23 +369,24 @@ export default function VisitorWalkInRegistration() {
                   {/* Who Are You Meeting With? */}
                   <div className="mb-4">
                     <label className="form-label fw-bold">Who Are You Meeting With?</label>
-                    <select
-                      className="form-select form-select-lg"
+                    <Select
                       id="host_id"
                       name="host_id"
-                      value={`${formData.host_role || ""}-${formData.host_id || ""}`}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select a host</option>
-                      {appUsers.map((user, index) => (
-                        <option
-                          key={`${user.role || "unknown"}-${user.id || index}`}
-                          value={`${user.role}-${user.id}`}
-                        >
-                          {user.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={hostOptions}
+                      value={hostOptions.find(option => option.value === `${formData.host_role || ""}-${formData.host_id || ""}`) || null}
+                      onChange={handleHostChange}
+                      placeholder="Search and select a host..."
+                      isClearable
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: '48px',
+                          borderRadius: '0.5rem',
+                        })
+                      }}
+                    />
                   </div>
 
                   {/* Submit Button */}

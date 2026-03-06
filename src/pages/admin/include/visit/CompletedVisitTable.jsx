@@ -193,28 +193,7 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
                       <td>{visit.check_in_time_formatted}</td>
                       <td>{visit.check_out_time_formatted}</td>
                       <td className="text-center">
-                        <div className="dropdown">
-                          <button
-                            className="btn btn-white border-primary"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
-                          >
-                            <i className="bi bi-three-dots-vertical"></i>
-                          </button>
-                          <ul className="dropdown-menu bg-light rounded-4" style={{ fontSize: "13px", width: "250px" }}>
-                            <li>
-                              <button className="dropdown-item" onClick={() => handleEdit(visit.id)}>
-                                Edit Info
-                              </button>
-                            </li>
-                            <li>
-                              <button className="dropdown-item" onClick={() => handleDeleteVisit(visit.id)}>
-                                Delete Visit
-                              </button>
-                            </li>
-                          </ul>
-                        </div>
+                        <span className="text-muted" style={{ fontSize: "13px" }}>—</span>
                       </td>
                     </tr>
                   ))}
