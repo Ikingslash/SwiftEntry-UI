@@ -60,7 +60,8 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
     try {
       // Use staff specific endpoint
       await api.put(`/staff/guests/reschedule/${selectedVisit.id}`, {
-        visit_time: newVisitTime
+        new_date: newDate,
+        new_time: newTime
       });
       toast.success("Visit successfully rescheduled!");
       setShowModal(false);
