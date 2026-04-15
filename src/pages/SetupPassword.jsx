@@ -14,79 +14,46 @@ function SetupPassword() {
     token: "",
   });
   const [loading, setLoading] = useState(false);
-  const [validToken, setValidToken] = useState(false);
-  const [checkingToken, setCheckingToken] = useState(true);
+  const [tokenStatus, setTokenStatus] = useState("checking"); // "checking" | "valid" | "invalid" | "expired"
+  const [tokenMessage, setTokenMessage] = useState("");
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const email = decodeURIComponent(searchParams.get('email') || '');
+    const token = searchParams.get("token");
+    const email = decodeURIComponent(searchParams.get("email") || "");
 
-    console.log("Setup Password Page Loaded:", {
-      token,
-      email,
-      allParams: Object.fromEntries(searchParams.entries())
-    });
-
-    if (token && email) { 
-      setFormData(prev => ({
-        ...prev,
-        token,
-        email: email
-      }));
-
-      // Try to validate token
-      validateToken(token, email);
-    } else {
-      setCheckingToken(false);
-      toast.error("Invalid setup link - missing parameters");
+    if (!token || !email) {
+      setTokenStatus("invalid");
+      setTokenMessage("Setup link is missing required parameters.");
+      return;
     }
+
+    setFormData((prev) => ({ ...prev, token, email }));
+    validateToken(token, email);
   }, [searchParams]);
 
   const validateToken = async (token, email) => {
     try {
-      // Try with different API endpoints
-      const endpoints = [
-        "/api/admin/staff/validate-setup-token",
-        "/admin/staff/validate-setup-token",
-        "/admin/staff/validate-setup-token",
-        "/api/admin/staff/validate-setup-token",
-        "/admin/staff/validate-setup-token",
-      ];
-
-      let validResponse = null;
-
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`Trying endpoint: ${endpoint}`);
-          const response = await api.post(endpoint, {
-            token,
-            email
-          });
-
-          if (response.data && response.data.valid !== undefined) {
-            validResponse = response;
-            break;
-          }
-        } catch (err) {
-          console.log(`Endpoint ${endpoint} failed:`, err.message);
-          continue;
-        }
-      }
-
-      if (validResponse && validResponse.data.valid) {
-        setValidToken(true);
-        toast.success("Token validated successfully");
+      const response = await api.post("/admin/staff/validate-setup-token", { token, email });
+      if (response.data?.valid) {
+        setTokenStatus("valid");
       } else {
-        toast.error("Invalid or expired setup link");
-        console.error("Token validation failed:", validResponse?.data);
+        setTokenStatus("invalid");
+        setTokenMessage(response.data?.message || "This setup link is no longer valid.");
       }
     } catch (error) {
-      console.error("Token validation error:", error);
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
 
-      setValidToken(true);
-      toast.warning("Unable to validate token. You can still try to set password.");
-    } finally {
-      setCheckingToken(false);
+      if (status === 400) {
+        setTokenStatus("expired");
+        setTokenMessage(message || "This setup link has expired.");
+      } else if (status === 404) {
+        setTokenStatus("invalid");
+        setTokenMessage(message || "This setup link is invalid or has already been used.");
+      } else {
+        // Network / unknown error – allow user to try anyway
+        setTokenStatus("valid");
+      }
     }
   };
 
@@ -94,110 +61,128 @@ function SetupPassword() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
- const handleSubmit = async (e) => {
-   e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-   // Frontend validation
-   if (formData.password !== formData.password_confirmation) {
-     toast.error("Passwords do not match");
-     return;
-   }
+    if (formData.password !== formData.password_confirmation) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
 
-   if (formData.password.length < 8) {
-     toast.error("Password must be at least 8 characters");
-     return;
-   }
+    setLoading(true);
+    try {
+      const response = await api.post("/admin/staff/setup-password", formData);
+      if (response.data.success) {
+        toast.success("Password set successfully! Redirecting to login…");
+        setTimeout(() => navigate("/"), 2000);
+      }
+    } catch (error) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
 
-   if (!formData.token || !formData.email) {
-     toast.error("Invalid setup link");
-     return;
-   }
+      if (status === 422) {
+        const errors = error.response.data.errors || {};
+        Object.values(errors).forEach((errArray) =>
+          (Array.isArray(errArray) ? errArray : [errArray]).forEach((e) => toast.error(e))
+        );
+      } else if (status === 400 || status === 404) {
+        // Token is invalid / already used / expired
+        setTokenStatus("invalid");
+        setTokenMessage(
+          message ||
+          "This setup link has already been used or is no longer valid. Please ask your administrator to resend a new setup link."
+        );
+        toast.error("Setup link is no longer valid.");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-   setLoading(true);
-
-   // Debug logging
-   console.log("Submitting setup password request:", {
-     email: formData.email,
-     token: formData.token,
-     tokenLength: formData.token.length,
-     passwordLength: formData.password.length,
-     endpoint: "/admin/staff/setup-password",
-   });
-
-   try {
-     // Use the correct endpoint
-     const response = await api.post("/admin/staff/setup-password", formData);
-     console.log("Setup password response:", response.data);
-
-     if (response.data.success) {
-       toast.success("Password set successfully! You can now login.");
-       setTimeout(() => {
-         navigate("/");
-       }, 2000);
-     }
-   } catch (error) {
-     console.error("Setup password error:", {
-       status: error.response?.status,
-       data: error.response?.data,
-       message: error.message,
-       config: error.config,
-     });
-
-     if (error.response?.status === 422) {
-       const errors = error.response.data.errors || {};
-       Object.values(errors).forEach((errArray) => {
-         if (Array.isArray(errArray)) {
-           errArray.forEach((err) => toast.error(err));
-         } else {
-           toast.error(errArray);
-         }
-       });
-     } else if (error.response?.status === 404) {
-       toast.error(
-         "Invalid setup link. The token may be incorrect or expired."
-       );
-     } else if (error.response?.status === 400) {
-       toast.error(error.response.data.message || "Setup link has expired");
-     } else {
-       toast.error("Something went wrong. Please try again.");
-     }
-   } finally {
-     setLoading(false);
-   }
- };
-
-  if (checkingToken) {
+  /* ── Loading state ── */
+  if (tokenStatus === "checking") {
     return (
       <div className="container d-flex justify-content-center align-items-center vh-100">
         <div className="text-center">
           <div className="spinner-border text-primary mb-3" role="status">
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">Loading…</span>
           </div>
-          <p>Validating your setup link...</p>
+          <p>Validating your setup link…</p>
         </div>
       </div>
     );
   }
 
+  /* ── Invalid / expired token state ── */
+  if (tokenStatus === "invalid" || tokenStatus === "expired") {
+    return (
+      <div className="container mt-5">
+        <ToastContainer position="top-right" autoClose={5000} />
+        <div className="row justify-content-center">
+          <div className="col-md-6">
+            <div className="card shadow border-danger">
+              <div className="card-header bg-danger text-white">
+                <h4 className="mb-0">
+                  {tokenStatus === "expired" ? "⏰ Setup Link Expired" : "🔗 Invalid Setup Link"}
+                </h4>
+              </div>
+              <div className="card-body text-center py-4">
+                <div className="mb-3" style={{ fontSize: "3rem" }}>
+                  {tokenStatus === "expired" ? "⏰" : "⚠️"}
+                </div>
+                <h5 className="text-danger mb-3">
+                  {tokenStatus === "expired" ? "Link Has Expired" : "Link Is No Longer Valid"}
+                </h5>
+                <p className="text-muted mb-3">
+                  {tokenMessage ||
+                    "This setup link has already been used or has expired. Each setup link can only be used once."}
+                </p>
+                <div className="alert alert-info text-start">
+                  <strong>What to do next:</strong>
+                  <ol className="mb-0 mt-2">
+                    <li>Contact your administrator</li>
+                    <li>Ask them to resend a new setup link to <strong>{formData.email}</strong></li>
+                    <li>Check your email for a new invitation</li>
+                  </ol>
+                </div>
+              </div>
+              <div className="card-footer text-center">
+                <small className="text-muted">
+                  Already set your password?{" "}
+                  <a href="/" className="text-primary">Go to Login</a>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Valid token – show form ── */
   return (
     <div className="container mt-5">
+      <ToastContainer position="top-right" autoClose={5000} />
       <div className="row justify-content-center">
-         <ToastContainer position="top-right" autoClose={5000} />
         <div className="col-md-6">
           <div className="card shadow">
             <div className="card-header bg-primary text-white">
               <h4 className="mb-0">Set Your Password</h4>
             </div>
             <div className="card-body">
-              <div className="mb-3">
-                <div className="alert alert-info">
-                  <p className="mb-1"><strong>Email:</strong> {formData.email}</p>
-                  <p className="mb-0"><strong>Status:</strong> {validToken ? "✓ Link is valid" : "⚠ Please proceed with caution"}</p>
-                </div>
+              <div className="alert alert-success mb-3">
+                <p className="mb-1"><strong>Email:</strong> {formData.email}</p>
+                <p className="mb-0"><strong>Status:</strong> ✓ Link is valid</p>
               </div>
 
               <p className="text-muted mb-4">
-                Please set your password to activate your account. Your password must be at least 8 characters.
+                Please set a password to activate your account. It must be at least 8 characters.
               </p>
 
               <form onSubmit={handleSubmit}>
@@ -227,32 +212,33 @@ function SetupPassword() {
                     required
                     minLength="8"
                   />
-                  {formData.password && formData.password_confirmation &&
-                   formData.password !== formData.password_confirmation && (
-                    <div className="text-danger small mt-1">Passwords do not match</div>
-                  )}
+                  {formData.password &&
+                    formData.password_confirmation &&
+                    formData.password !== formData.password_confirmation && (
+                      <div className="text-danger small mt-1">Passwords do not match</div>
+                    )}
                 </div>
 
                 <div className="d-grid">
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={loading || (formData.password && formData.password.length < 8)}
+                    disabled={loading || formData.password.length < 8}
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Setting Password...
+                        <span className="spinner-border spinner-border-sm me-2" role="status" />
+                        Setting Password…
                       </>
-                    ) : "Set Password"}
+                    ) : (
+                      "Set Password"
+                    )}
                   </button>
                 </div>
               </form>
             </div>
             <div className="card-footer text-center">
-              <small className="text-muted">
-                Having issues? Contact your administrator.
-              </small>
+              <small className="text-muted">Having issues? Contact your administrator.</small>
             </div>
           </div>
         </div>
