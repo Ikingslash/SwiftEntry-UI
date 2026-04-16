@@ -82,7 +82,7 @@ function Navbar() {
                   }`}
                 to="/staff-dashboard/new-guest"
               >
-                Guest
+                Register Guest
               </NavLink>
             </li>
             <li className="nav-item">
