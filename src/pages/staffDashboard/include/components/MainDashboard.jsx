@@ -50,13 +50,7 @@ export default function MainDashboard({
                 </span>
               </p>
             </div>
-            <button
-              onClick={openAddGuestModal}
-              className="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-circle"
-              style={{ width: "48px", height: "48px" }}
-            >
-              <PlusCircle size={24} className="text-white" />
-            </button>
+
           </div>
         </div>
         <div
