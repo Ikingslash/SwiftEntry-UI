@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../../../context/api";
 import UserAvatar from "../../../components/UserAvatar";
 import { toast } from "react-toastify";
@@ -225,13 +225,16 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
               <th>Department</th>
               <th>Email</th>
               <th>Status</th>
+              <th>Invite Status</th>
+              <th>Password Set Up</th>
+              <th>Last Login</th>
               <th className="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {staff.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center text-muted py-4">
+                <td colSpan="10" className="text-center text-muted py-4">
                   No staff found.
                 </td>
               </tr>
@@ -253,6 +256,34 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
                   <td>{s.department}</td>
                   <td>{s.email}</td>
                   <td>{s.status ? "Active" : "Inactive"}</td>
+                  <td>
+                    <span
+                      className={`badge rounded-pill ${
+                        s.invitation_status === 'sent'
+                          ? 'bg-success'
+                          : s.invitation_status === 'failed'
+                          ? 'bg-danger'
+                          : 'bg-secondary'
+                      }`}
+                      style={{ fontSize: '11px' }}
+                    >
+                      {s.invitation_status || 'pending'}
+                    </span>
+                  </td>
+                  <td>
+                    <small className="text-muted">
+                      {s.password_setup_at
+                        ? new Date(s.password_setup_at).toLocaleDateString()
+                        : <span className="text-warning">Not set</span>}
+                    </small>
+                  </td>
+                  <td>
+                    <small className="text-muted">
+                      {s.last_login
+                        ? new Date(s.last_login).toLocaleDateString()
+                        : <span className="text-danger">Never</span>}
+                    </small>
+                  </td>
                   <td className="text-center">
                     <div className="dropdown">
                       <button
@@ -295,6 +326,22 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
                             }
                           >
                             {s.status ? "Deactivate" : "Activate"}
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            className="dropdown-item text-info"
+                            onClick={async () => {
+                              try {
+                                await api.post(`admin/staff/${s.id}/resend-setup-email`);
+                                toast.success('Setup email resent successfully!');
+                                triggerRefresh();
+                              } catch (err) {
+                                toast.error('Failed to resend setup email.');
+                              }
+                            }}
+                          >
+                            Resend Setup Email
                           </button>
                         </li>
                         <li>

@@ -9,6 +9,8 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [results, setResults] = useState(null);
   const [fileError, setFileError] = useState("");
+  const [onboardingStats, setOnboardingStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files[0];
@@ -82,8 +84,20 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
       if (response.data.success) {
         setResults(response.data);
         toast.success(response.data.message);
+
+        // Fetch live onboarding stats to show actual email delivery status
+        setLoadingStats(true);
+        try {
+          const statsRes = await api.get(`/admin/users/onboarding-stats?user_type=${userType}`);
+          setOnboardingStats(statsRes.data);
+        } catch (statsErr) {
+          console.warn('Could not load onboarding stats:', statsErr.message);
+        } finally {
+          setLoadingStats(false);
+        }
+
         if (onSuccess) {
-          setTimeout(onSuccess, 2000);
+          setTimeout(onSuccess, 4000);
         }
       }
     } catch (error) {
@@ -116,6 +130,7 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
     setResults(null);
     setFileError("");
     setUploadProgress(0);
+    setOnboardingStats(null);
   };
 
   const handleClose = () => {
@@ -285,6 +300,64 @@ function BulkUploadModal({ isOpen, onClose, userType, onSuccess }) {
                     </div>
                   </div>
                 )}
+
+                {/* Onboarding Email Delivery Stats */}
+                {loadingStats && (
+                  <div className="text-center py-3">
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    <small className="text-muted">Fetching email delivery status...</small>
+                  </div>
+                )}
+
+                {onboardingStats && !loadingStats && (() => {
+                  const s = onboardingStats.breakdown?.[userType] || onboardingStats.totals;
+                  return (
+                    <div className="card border-0 bg-light mb-3">
+                      <div className="card-body">
+                        <h6 className="card-title mb-3">
+                          <i className="bi bi-envelope-check me-2 text-primary"></i>
+                          Live Onboarding Status
+                        </h6>
+                        <div className="row g-2 text-center">
+                          <div className="col-4">
+                            <div className="p-2 rounded" style={{ background: '#d1ecf1' }}>
+                              <div className="fw-bold fs-5 text-primary">{s.emails_sent ?? 0}</div>
+                              <small className="text-muted">Emails Sent</small>
+                            </div>
+                          </div>
+                          <div className="col-4">
+                            <div className="p-2 rounded" style={{ background: '#fff3cd' }}>
+                              <div className="fw-bold fs-5 text-warning">{s.emails_pending ?? 0}</div>
+                              <small className="text-muted">Pending</small>
+                            </div>
+                          </div>
+                          <div className="col-4">
+                            <div className="p-2 rounded" style={{ background: '#f8d7da' }}>
+                              <div className="fw-bold fs-5 text-danger">{s.emails_failed ?? 0}</div>
+                              <small className="text-muted">Failed</small>
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="p-2 rounded" style={{ background: '#d4edda' }}>
+                              <div className="fw-bold fs-5 text-success">{s.passwords_setup ?? 0}</div>
+                              <small className="text-muted">Passwords Set Up</small>
+                            </div>
+                          </div>
+                          <div className="col-6">
+                            <div className="p-2 rounded" style={{ background: '#e2e3e5' }}>
+                              <div className="fw-bold fs-5 text-dark">{s.logged_in_users ?? 0}</div>
+                              <small className="text-muted">Logged In</small>
+                            </div>
+                          </div>
+                        </div>
+                        <small className="text-muted d-block mt-2">
+                          <i className="bi bi-info-circle me-1"></i>
+                          Email status updates as the mail queue processes. Refresh to get the latest.
+                        </small>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="d-grid gap-2 mt-4">
                   <button

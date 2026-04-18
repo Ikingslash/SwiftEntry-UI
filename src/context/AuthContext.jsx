@@ -524,20 +524,13 @@ export const AuthProvider = ({ children }) => {
         token_prefix: resetToken.substring(0, 10) + "...",
       });
 
-      // Prepare request data based on role
-      const requestData = userRole === "security"
-        ? {
-          email,
-          reset_token: resetToken,
-          password,
-          password_confirmation: confirmPassword,
-        }
-        : {
-          email,
-          token: resetToken, // Other roles might use 'token' instead of 'reset_token'
-          password,
-          password_confirmation: confirmPassword,
-        };
+      // Prepare request data - all roles use the same field names
+      const requestData = {
+        email,
+        reset_token: resetToken,
+        password,
+        password_confirmation: confirmPassword,
+      };
 
       console.log("Sending request data:", {
         ...requestData,
@@ -545,10 +538,7 @@ export const AuthProvider = ({ children }) => {
         password_confirmation: "***"
       });
 
-      // Use appropriate method based on role
-      const response = userRole === "security"
-        ? await api.put(path, requestData)
-        : await api.post(path, requestData);
+      const response = await api.post(path, requestData);
 
       console.log("Reset password response:", response.data);
 
