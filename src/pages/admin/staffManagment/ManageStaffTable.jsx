@@ -10,6 +10,8 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
   const [pagination, setPagination] = useState({});
   const [page, setPage] = useState(1); // State for current page
   const [selectedUsers, setSelectedUsers] = useState([]); // For bulk delete
+  const [filters, setFilters] = useState({ name: "", department: "", email: "" });
+  const [filterTrigger, setFilterTrigger] = useState(0);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false); // For "View Detail"
@@ -28,14 +30,20 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
 
   useEffect(() => {
     fetchStaff();
-  }, [refreshKey, page]);
+  }, [refreshKey, page, filterTrigger]);
 
   const fetchStaff = async () => {
     setLoading(true);
     setError(null);
     try {
+      const queryParams = new URLSearchParams({
+        page: page,
+        ...(filters.name && { name: filters.name }),
+        ...(filters.department && { department: filters.department }),
+        ...(filters.email && { email: filters.email }),
+      }).toString();
 
-      const response = await api.get(`admin/staff?page=${page}`);
+      const response = await api.get(`admin/staff?${queryParams}`);
 
       setStaff(Array.isArray(response.data.staff) ? response.data.staff : []);
       setPagination(response.data.pagination);
@@ -208,6 +216,55 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
 
   return (
     <div className="container">
+      {/* FrontDesk/Staff Filters */}
+      <div className="row mb-3 mt-4">
+        <div className="col-md-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Filter by Name"
+            value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+          />
+        </div>
+        <div className="col-md-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Filter by Department"
+            value={filters.department}
+            onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+          />
+        </div>
+        <div className="col-md-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Filter by Email"
+            value={filters.email}
+            onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+          />
+        </div>
+        <div className="col-md-3 d-flex gap-2">
+          <button
+            className="btn btn-primary"
+            onClick={() => { setPage(1); setFilterTrigger(prev => prev + 1); }}
+          >
+            Apply
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setFilters({ name: "", department: "", email: "" });
+              setPage(1);
+              setFilterTrigger(prev => prev + 1);
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
       <div className="table-responsive my-5">
         <table className="table table-bordered table-hover">
           <thead className="bg-white">
@@ -258,13 +315,12 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
                   <td>{s.status ? "Active" : "Inactive"}</td>
                   <td>
                     <span
-                      className={`badge rounded-pill ${
-                        s.invitation_status === 'sent'
+                      className={`badge rounded-pill ${s.invitation_status === 'sent'
                           ? 'bg-success'
                           : s.invitation_status === 'failed'
-                          ? 'bg-danger'
-                          : 'bg-secondary'
-                      }`}
+                            ? 'bg-danger'
+                            : 'bg-secondary'
+                        }`}
                       style={{ fontSize: '11px' }}
                     >
                       {s.invitation_status || 'pending'}
