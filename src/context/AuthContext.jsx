@@ -240,7 +240,13 @@ export const AuthProvider = ({ children }) => {
         } catch (profileError) {
           console.error("Profile fetch failed:", profileError);
 
-          // If profile fetch fails, use stored user data
+          if (profileError.response && profileError.response.status === 401) {
+            console.warn("Token expired or invalid. Logging out.");
+            logout();
+            return;
+          }
+
+          // If profile fetch fails for other reasons (e.g., network offline), use stored user data
           const normalized = normalizeUser(storedUser);
           if (normalized?.id) {
             setUser(normalized);
@@ -269,6 +275,16 @@ export const AuthProvider = ({ children }) => {
     let dashboard = "/";
 
     try {
+      // Get CSRF cookie before making login attempts
+      try {
+        await api.get("/sanctum/csrf-cookie", {
+          // baseURL: "http://127.0.0.1:8000",
+          baseURL: "https://api.theswiftentry.com",
+        });
+      } catch (csrfError) {
+        console.warn("Could not fetch CSRF cookie:", csrfError);
+      }
+
       for (const role of roles) {
         const path = AUTH_PATHS[role].login;
         try {
@@ -391,6 +407,16 @@ export const AuthProvider = ({ children }) => {
     let mailFailed = false;
 
     try {
+      // Get CSRF cookie before making forgot password attempts
+      try {
+        await api.get("/sanctum/csrf-cookie", {
+          // baseURL: "http://127.0.0.1:8000",
+          baseURL: "https://api.theswiftentry.com",
+        });
+      } catch (csrfError) {
+        console.warn("Could not fetch CSRF cookie:", csrfError);
+      }
+
       for (const role of roles) {
         const path = AUTH_PATHS[role].forgot;
         try {

@@ -6,7 +6,6 @@ export default function AddGuestModal({
   name,
   selectedImage,
   handleImageChange,
-  photo,
   visitorType,
   email,
   address,

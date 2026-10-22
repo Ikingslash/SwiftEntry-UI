@@ -1,36 +1,9 @@
 import { useState } from "react";
 import api from "../../../context/api";
 import { toast } from "react-toastify";
-import QRCode from "react-qr-code";
-
-// Helper function to format date to DD/MM/YYYY
-const formatDateToDDMMYYYY = (dateString) => {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch (error) {
-    return dateString;
-  }
-};
-
-// Helper function to create enhanced QR code value with visit details
-const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
-  return JSON.stringify({
-    visit_code: visitCode,
-    name: visitorName,
-    host: hostName,
-    date: visitDate,
-    purpose: purpose,
-  });
-};
 
 function VisitorVisitCard({ visit, onActionComplete }) {
   const [loading, setLoading] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
@@ -65,9 +38,8 @@ function VisitorVisitCard({ visit, onActionComplete }) {
   const handleCheckIn = async () => {
     setLoading(true);
     try {
-      const response = await api.post(`/self-service/visits/${visit.id}/check-in`);
+      await api.post(`/self-service/visits/${visit.id}/check-in`);
       toast.success("Checked in successfully!");
-      // Wait 1.5 seconds so user can see success message before card disappears
       setTimeout(() => {
         onActionComplete();
       }, 1500);
@@ -80,9 +52,8 @@ function VisitorVisitCard({ visit, onActionComplete }) {
   const handleCheckOut = async () => {
     setLoading(true);
     try {
-      const response = await api.post(`/self-service/visits/${visit.id}/check-out`);
+      await api.post(`/self-service/visits/${visit.id}/check-out`);
       toast.success("Checked out successfully!");
-      // Wait 1.5 seconds so user can see success message before card disappears
       setTimeout(() => {
         onActionComplete();
       }, 1500);

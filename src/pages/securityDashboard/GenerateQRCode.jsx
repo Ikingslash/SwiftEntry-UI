@@ -6,12 +6,9 @@ function GenerateQRCode() {
   const [email, setEmail] = useState("");
   const [qrValue, setQrValue] = useState("");
 
-  // Simulate getting user email on page load
+  // Start with empty state instead of dummy data
   useEffect(() => {
-    // Example: get from localStorage (or simulate)
-    const dummyEmail = "john@example.com"; // Replace with localStorage.getItem("email") if available
-    setEmail(dummyEmail);
-    setQrValue(`dummy-user-id-${dummyEmail}`);
+    // Optionally fetch specific guest data if passed via state or props
   }, []);
 
   return (
@@ -51,6 +48,19 @@ function GenerateQRCode() {
 
       <section className="container p-5 text-center">
         <h2 className="text-2xl font-bold mb-4">QR Code for Guest</h2>
+        
+        <div className="mb-4">
+            <input 
+              type="email" 
+              className="form-control w-50 mx-auto" 
+              placeholder="Enter Guest Email to Generate QR"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setQrValue(e.target.value ? `guest-${e.target.value}` : '');
+              }}
+            />
+        </div>
 
         {qrValue ? (
           <div className="mt-6">
@@ -59,7 +69,7 @@ function GenerateQRCode() {
             <p className="text-muted mt-3">Email: {email}</p>
           </div>
         ) : (
-          <p>Generating QR code...</p>
+          <p>Please enter an email to generate the QR code...</p>
         )}
       </section>
     </div>

@@ -9,7 +9,7 @@ import UserAvatar from "../../components/UserAvatar";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { logout, updateUser } = useAuth(); // Assume AuthContext provides 'user' and 'logout'
+  const { logout } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,8 +48,6 @@ export default function Profile() {
 
 
 
-  // Placeholder image for when a profile picture isn't available
-  const defaultProfilePicture = "https://placehold.co/120x120/E0E7FF/6B7280?text=No+Image";
 
   if (loading) {
     return (

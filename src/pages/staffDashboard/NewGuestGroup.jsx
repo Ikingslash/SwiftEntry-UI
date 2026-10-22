@@ -24,11 +24,9 @@ function NewGuestGroup() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
-  const [appUsers, setAppUsers] = useState([]);
   const [visitPurposes, setVisitPurposes] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
@@ -50,16 +48,7 @@ function NewGuestGroup() {
     }
   };
 
-  // Helper function to create enhanced QR code value with visit details
-  const createEnhancedQRValue = (visitCode, visitorName, hostName, visitDate, purpose) => {
-    return JSON.stringify({
-      visit_code: visitCode,
-      name: visitorName,
-      host: hostName,
-      date: visitDate,
-      purpose: purpose,
-    });
-  };
+
 
   // Get current logged-in user from localStorage or API
   const getCurrentUser = () => {
@@ -291,7 +280,6 @@ function NewGuestGroup() {
           previsit_instruction: "",
           details: "",
         });
-        setSelectedImage(null);
 
         toast.success("Group visitor registered!");
         setShowSuccessModal(true);
@@ -514,7 +502,7 @@ function NewGuestGroup() {
                       onChange={handleChange}
                     >
                       <option value="">Select Purpose</option>
-                      {visitPurposes.map((purpose, index) => (
+                      {visitPurposes.map((purpose) => (
                         <option key={purpose} value={purpose}>
                           {purpose}
                         </option>

@@ -1,22 +1,17 @@
 
 import { useEffect, useState } from "react";
 import { IoPencil } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import api from "../../context/api";
-import { useAuth } from "../../context/AuthContext";
 import NavBar from "./include/NavBar";
 
 function StaffSettings() {
   const [settings, setSettings] = useState({
-    email: "", // Changed to 'email' for consistency with backend
+    email: "",
     password: "",
-    password_confirmation: "", // Added password confirmation field
+    password_confirmation: "",
   });
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     async function fetchSettings() {

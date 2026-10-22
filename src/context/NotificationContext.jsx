@@ -38,26 +38,34 @@ export const NotificationProvider = ({ children }) => {
     setUnreadCount(0);
   };
 
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
+
   const fetchNotificationCount = useCallback(async () => {
-    if (!user || !rolePrefix) return;
+    if (!user || !rolePrefix || isUnauthorized) return;
     try {
       const response = await api.get(`/${rolePrefix}/notifications/unread-count`);
       setUnreadCount(response.data.unread_count ?? response.data.count ?? 0);
     } catch (error) {
       console.error("Error fetching notification count:", error);
+      if (error.response && error.response.status === 401) {
+        setIsUnauthorized(true);
+      }
     }
-  }, [user, rolePrefix]);
+  }, [user, rolePrefix, isUnauthorized]);
 
   // 👈 NEW FUNCTION: Fetch the top 3 unread notifications for the dropdown
   const fetchLatestUnread = useCallback(async () => {
-    if (!user || !rolePrefix) return;
+    if (!user || !rolePrefix || isUnauthorized) return;
     try {
       const response = await api.get(`/${rolePrefix}/notifications/latest-unread`);
       setLatestUnread(response.data.latest_unread_notifications || []);
     } catch (error) {
       console.error("Error fetching latest unread notifications:", error);
+      if (error.response && error.response.status === 401) {
+        setIsUnauthorized(true);
+      }
     }
-  }, [user, rolePrefix]);
+  }, [user, rolePrefix, isUnauthorized]);
 
 
   const markNotificationsAsRead = useCallback(async () => {

@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
-function PendingVisitsTable({ visitType, onVisitUpdate }) {
+function PendingVisitsTable({ onVisitUpdate }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [pendingCount, setPendingCount] = useState(0);
   const perPage = 10;
 
   const fetchVisits = useCallback(async () => {
@@ -20,13 +19,11 @@ function PendingVisitsTable({ visitType, onVisitUpdate }) {
 
       setVisits(response.data.visits || []);
       setPagination(response.data.pagination || {});
-      setPendingCount(response.data.pagination?.total || 0);
     } catch (error) {
       console.error("Error fetching pending visits:", error);
       const errorMessage = error.response?.data?.error || "Failed to load pending visits.";
       toast.error(errorMessage);
       setVisits([]);
-      setPendingCount(0);
     } finally {
       setLoading(false);
     }

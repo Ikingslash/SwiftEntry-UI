@@ -1,8 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import { useEffect, useRef } from "react";
-import api from "../../../context/api";
-import echo from "../../../context/echo";
+import { useEffect } from "react";
 import { useNotifications } from "../../../context/NotificationContext";
 import UserAvatar from "../../../components/UserAvatar";
 

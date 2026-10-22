@@ -5,7 +5,7 @@ import CompletedVisitTable from "./manageGuestGroup/CompletedVisitTable";
 import CancelledVisitTable from "./manageGuestGroup/CancelledVisitTable";
 import MissedVisitTbale from "./manageGuestGroup/MissedVisitTbale";
 import PendingVisitsTable from "./PendingVisitsTable";
-import {toast, ToastContainer } from 'react-toastify';
+import {ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function TabGroup() {
