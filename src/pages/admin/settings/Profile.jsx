@@ -1,10 +1,9 @@
-import React, { useState, useEffect, Fragment } from "react";
+import { useState, useEffect } from "react";
 import { toast } from 'react-toastify';
 import api from '../../../context/api';
 import UserAvatar from '../../../components/UserAvatar';
 
 function Profile() {
-    // State for the Admin Profile
     const [activeAdminTab, setActiveAdminTab] = useState('super-admin');
     const [adminProfile, setAdminProfile] = useState({
         photo: '',
@@ -16,7 +15,6 @@ function Profile() {
     const [adminPhotoFile, setAdminPhotoFile] = useState(null);
     const [previewAdminPhoto, setPreviewAdminPhoto] = useState(null);
 
-    // State for the Company Profile
     const [companyProfile, setCompanyProfile] = useState({
         logo: '',
         companyName: '',
@@ -25,7 +23,6 @@ function Profile() {
     const [companyLogoFile, setCompanyLogoFile] = useState(null);
     const [previewCompanyLogo, setPreviewCompanyLogo] = useState(null);
 
-    // State for the "Add New Admin" modal
     const [showAddAdminModal, setShowAddAdminModal] = useState(false);
     const [newAdmin, setNewAdmin] = useState({
         fullName: '',
@@ -37,34 +34,25 @@ function Profile() {
     const [newAdminPhotoFile, setNewAdminPhotoFile] = useState(null);
     const [previewNewAdminPhoto, setPreviewNewAdminPhoto] = useState(null);
 
-
-    // Fetch all initial data on component mount
     useEffect(() => {
         const fetchAllProfileData = async () => {
             try {
-                // Fetch current admin's profile
                 const adminResponse = await api.get('/admin/profile');
                 setAdminProfile(adminResponse.data.profile);
 
-                // Fetch list of admins (for the tabs)
                 const adminsResponse = await api.get('/admin/list-admins');
                 setAdmins(adminsResponse.data.admins);
 
-                // Fetch company details
                 const companyResponse = await api.get('/admin/settings/company');
                 setCompanyProfile(companyResponse.data.company);
-
-                // toast.success('Profile and company data loaded.');
             } catch (error) {
                 console.error('Error fetching profile data:', error);
-                // toast.error('Failed to load profile data.');
             }
         };
 
         fetchAllProfileData();
     }, []);
 
-    // Handlers for Admin Profile
     const handleAdminProfileChange = (e) => {
         const { name, value } = e.target;
         setAdminProfile(prev => ({ ...prev, [name]: value }));
@@ -98,16 +86,13 @@ function Profile() {
                 }
             });
             toast.success('Admin profile updated successfully!');
-            // Reset photo state
             setAdminPhotoFile(null);
             setPreviewAdminPhoto(null);
         } catch (error) {
             console.error('Error updating admin profile:', error);
-            // toast.error('Failed to update admin profile.');
         }
     };
 
-    // Handlers for Company Profile
     const handleCompanyProfileChange = (e) => {
         const { name, value } = e.target;
         setCompanyProfile(prev => ({ ...prev, [name]: value }));
@@ -140,16 +125,13 @@ function Profile() {
                 }
             });
             toast.success('Company details updated successfully!');
-            // Reset logo state
             setCompanyLogoFile(null);
             setPreviewCompanyLogo(null);
         } catch (error) {
             console.error('Error updating company profile:', error);
-            // toast.error('Failed to update company details.');
         }
     };
 
-    // Handlers for Add New Admin Modal
     const handleNewAdminChange = (e) => {
         const { name, value } = e.target;
         setNewAdmin(prev => ({ ...prev, [name]: value }));
@@ -188,7 +170,6 @@ function Profile() {
             setNewAdmin({ fullName: '', email: '', jobRole: '', department: '', roleAssignment: '' });
             setNewAdminPhotoFile(null);
             setPreviewNewAdminPhoto(null);
-            // Re-fetch the list of admins to update the tabs
             const adminsResponse = await api.get('/admin/list-admins');
             setAdmins(adminsResponse.data.admins);
         } catch (error) {
@@ -198,94 +179,105 @@ function Profile() {
     };
 
     return (
-        <div className="container">
+        <div className="space-y-8 text-xs text-slate-700">
             {/* Admin Profile Section */}
-            <div className="row g-4 mb-5">
-                <div className="col-md-12">
-                    <h5 className="fw-bold">Admin Profile</h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+                <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">Admin Profile</h4>
+                    <p className="text-slate-500 leading-relaxed text-[11px]">
+                        Manage administrator credentials, profile photos, and role access.
+                    </p>
                 </div>
-                <div className="col-md-12">
-                    <div className="card shadow-sm p-4 rounded-4 border-0">
-                        {/* Admin Tabs */}
-                        <ul className="nav nav-pills mb-3">
-                            <li className="nav-item">
-                                <button
-                                    className={`nav-link ${activeAdminTab === 'super-admin' ? 'active' : ''}`}
-                                    onClick={() => setActiveAdminTab('super-admin')}
-                                >
-                                    Super Admin
-                                </button>
-                            </li>
+                <div className="md:col-span-2 space-y-6">
+                    <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-6 bg-white space-y-6">
+                        {/* Admin Sub-Tabs */}
+                        <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-4">
+                            <button
+                                type="button"
+                                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${activeAdminTab === 'super-admin'
+                                        ? 'bg-slate-900 text-white'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                onClick={() => setActiveAdminTab('super-admin')}
+                            >
+                                Super Admin
+                            </button>
                             {admins.map((admin, index) => (
-                                <li className="nav-item" key={index}>
-                                    <button
-                                        className={`nav-link ${activeAdminTab === admin.id ? 'active' : ''}`}
-                                        onClick={() => setActiveAdminTab(admin.id)}
-                                    >
-                                        {admin.name}
-                                    </button>
-                                </li>
+                                <button
+                                    type="button"
+                                    key={index}
+                                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${activeAdminTab === admin.id
+                                            ? 'bg-slate-900 text-white'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        }`}
+                                    onClick={() => setActiveAdminTab(admin.id)}
+                                >
+                                    {admin.name}
+                                </button>
                             ))}
-                        </ul>
+                        </div>
 
-                        {/* Admin Profile Form */}
-                        <form onSubmit={handleUpdateAdminProfile}>
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-                                <div className="d-flex align-items-center">
+                        <form onSubmit={handleUpdateAdminProfile} className="space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
                                     <UserAvatar
                                         image={previewAdminPhoto || (adminProfile.photo ? `/storage/${adminProfile.photo}` : null)}
                                         firstName={adminProfile.fullName || "Admin"}
-                                        className="me-3"
-                                        size={80}
+                                        size={64}
+                                        className="rounded-full object-cover"
                                     />
                                     <div>
-                                        <p className="fw-bold mb-0">Profile Picture</p>
-                                        <input type="file" onChange={handleAdminPhotoChange} className="form-control-file" />
+                                        <span className="font-semibold text-slate-800 block mb-1">Profile Picture</span>
+                                        <input type="file" onChange={handleAdminPhotoChange} className="text-[11px] text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer" />
                                     </div>
                                 </div>
                                 <button
                                     type="button"
-                                    className="btn btn-primary"
+                                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-colors cursor-pointer text-xs self-start sm:self-center"
                                     onClick={() => setShowAddAdminModal(true)}
                                 >
-                                    Add Admin
+                                    + Add Admin
                                 </button>
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label">Full Name</label>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                     name="fullName"
                                     value={adminProfile.fullName}
                                     onChange={handleAdminProfileChange}
                                     required
                                 />
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label">Email</label>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
                                 <input
                                     type="email"
-                                    className="form-control"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                     name="email"
                                     value={adminProfile.email}
                                     onChange={handleAdminProfileChange}
                                     required
                                 />
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label">Phone</label>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">Phone Number</label>
                                 <input
                                     type="tel"
-                                    className="form-control"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                     name="phone"
                                     value={adminProfile.phone}
                                     onChange={handleAdminProfileChange}
                                 />
                             </div>
-                            <div className="text-end">
-                                <button type="submit" className="btn btn-primary">
-                                    Update
+
+                            <div className="pt-2 text-right">
+                                <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer text-xs">
+                                    Update Profile
                                 </button>
                             </div>
                         </form>
@@ -294,53 +286,55 @@ function Profile() {
             </div>
 
             {/* Company Profile Section */}
-            <div className="row g-4 mb-5 pb-5">
-                <div className="col-md-12">
-                    <h5 className="fw-bold">Company Profile</h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">Company Profile</h4>
+                    <p className="text-slate-500 leading-relaxed text-[11px]">
+                        Update your organization name, support email, and company logo.
+                    </p>
                 </div>
-                <div className="col-md-12">
-                    <div className="card shadow-sm p-4 rounded-4 border-0">
-                        <form onSubmit={handleUpdateCompanyProfile}>
-                            <div className="d-flex align-items-center mb-4">
-                                <div className="d-flex align-items-center">
-                                    <img
-                                        src={previewCompanyLogo || companyProfile.logo || "https://placehold.co/80x80/E0E7FF/000000?text=Company"}
-                                        alt="Company Logo"
-                                        className="me-3"
-                                        width="80"
-                                        height="80"
-                                    />
-                                    <div>
-                                        <p className="fw-bold mb-0">Company Logo</p>
-                                        <input type="file" onChange={handleCompanyLogoChange} className="form-control-file" />
-                                    </div>
+                <div className="md:col-span-2">
+                    <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-6 bg-white">
+                        <form onSubmit={handleUpdateCompanyProfile} className="space-y-4">
+                            <div className="flex items-center gap-4 pb-2">
+                                <img
+                                    src={previewCompanyLogo || companyProfile.logo || "https://placehold.co/80x80/E0E7FF/000000?text=Company"}
+                                    alt="Company Logo"
+                                    className="w-16 h-16 rounded-xl object-cover border border-slate-200"
+                                />
+                                <div>
+                                    <span className="font-semibold text-slate-800 block mb-1">Company Logo</span>
+                                    <input type="file" onChange={handleCompanyLogoChange} className="text-[11px] text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer" />
                                 </div>
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label">Company Name</label>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">Company Name</label>
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                     name="companyName"
                                     value={companyProfile.companyName}
                                     onChange={handleCompanyProfileChange}
                                     required
                                 />
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label">Company Email</label>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 mb-1">Company Email</label>
                                 <input
                                     type="email"
-                                    className="form-control"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                     name="companyEmail"
                                     value={companyProfile.companyEmail}
                                     onChange={handleCompanyProfileChange}
                                     required
                                 />
                             </div>
-                            <div className="text-end">
-                                <button type="submit" className="btn btn-primary">
-                                    Update
+
+                            <div className="pt-2 text-right">
+                                <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer text-xs">
+                                    Update Company
                                 </button>
                             </div>
                         </form>
@@ -348,50 +342,54 @@ function Profile() {
                 </div>
             </div>
 
-            {/* Add New Admin Modal */}
+            {/* Add New Admin Slide-over / Modal */}
             {showAddAdminModal && (
-                <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content">
-                            <form onSubmit={handleAddAdmin}>
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Add New Admin</h5>
-                                    <button type="button" className="btn-close" onClick={() => setShowAddAdminModal(false)}></button>
+                <div onClick={() => setShowAddAdminModal(false)} className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+                    <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-left">
+                        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-slate-100">
+                            <h3 className="font-bold text-slate-900 text-sm">Add New Admin</h3>
+                            <button onClick={() => setShowAddAdminModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                <i className="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div className="p-6 flex-1 overflow-y-auto">
+                            <form onSubmit={handleAddAdmin} className="space-y-4 text-xs">
+                                <div className="text-center my-2">
+                                    <UserAvatar
+                                        image={previewNewAdminPhoto}
+                                        firstName={newAdmin.fullName || "Admin"}
+                                        size={80}
+                                        className="mx-auto mb-2 rounded-full"
+                                    />
+                                    <label className="inline-block cursor-pointer">
+                                        <span className="font-semibold text-blue-600 hover:underline">Add Photo</span>
+                                        <input type="file" onChange={handleNewAdminPhotoChange} className="hidden" />
+                                    </label>
                                 </div>
-                                <div className="modal-body">
-                                    <div className="text-center mb-3">
-                                        <UserAvatar
-                                            image={previewNewAdminPhoto}
-                                            firstName={newAdmin.fullName || "Admin"}
-                                            className="mb-3"
-                                            size={80}
-                                        />
-                                        <p className="small text-secondary">Add Photo</p>
-                                        <input type="file" onChange={handleNewAdminPhotoChange} className="form-control-file" />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Full Name</label>
-                                        <input type="text" className="form-control" name="fullName" value={newAdmin.fullName} onChange={handleNewAdminChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Email Address</label>
-                                        <input type="email" className="form-control" name="email" value={newAdmin.email} onChange={handleNewAdminChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Job Role</label>
-                                        <input type="text" className="form-control" name="jobRole" value={newAdmin.jobRole} onChange={handleNewAdminChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Department</label>
-                                        <input type="text" className="form-control" name="department" value={newAdmin.department} onChange={handleNewAdminChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Role Assignment</label>
-                                        <input type="text" className="form-control" name="roleAssignment" value={newAdmin.roleAssignment} onChange={handleNewAdminChange} required />
-                                    </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
+                                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="fullName" value={newAdmin.fullName} onChange={handleNewAdminChange} required />
                                 </div>
-                                <div className="modal-footer">
-                                    <button type="submit" className="btn btn-primary w-100">Add</button>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
+                                    <input type="email" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="email" value={newAdmin.email} onChange={handleNewAdminChange} required />
+                                </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Job Role</label>
+                                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="jobRole" value={newAdmin.jobRole} onChange={handleNewAdminChange} required />
+                                </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Department</label>
+                                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="department" value={newAdmin.department} onChange={handleNewAdminChange} required />
+                                </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Role Assignment</label>
+                                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="roleAssignment" value={newAdmin.roleAssignment} onChange={handleNewAdminChange} required />
+                                </div>
+                                <div className="pt-4">
+                                    <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer">
+                                        Add Admin
+                                    </button>
                                 </div>
                             </form>
                         </div>

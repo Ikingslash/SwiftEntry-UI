@@ -5,9 +5,6 @@ import CompletedVisitTable from "./manageGuestIndividual/CompletedVisitTable";
 import CancelledVisitTable from "./manageGuestIndividual/CancelledVisitTable";
 import MissedVisitTbale from "./manageGuestIndividual/MissedVisitTbale";
 import PendingVisitsTable from "./PendingVisitsTable";
-import {toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
 
 function TabIndividual() {
   const [activeTab, setActiveTab] = useState("pre-scheduled-visit-table");
@@ -19,10 +16,8 @@ function TabIndividual() {
     pending: 0,
   });
 
-  // New, unified endpoint for fetching counts
   const fetchCounts = useCallback(async () => {
     try {
-      // Fix: Use a consistent, logical endpoint for individual counts
       const res = await api.get("/staff/guests/individual-counts");
       setCounts(res.data);
     } catch (error) {
@@ -30,10 +25,9 @@ function TabIndividual() {
     }
   }, []);
 
-  // Fetch pending visits count separately
   const fetchPendingCount = useCallback(async () => {
     try {
-      const res = await api.get("/staff/guests/staff-pending-visits", { params: { per_page: 1, page: 1 } });
+      const res = await api.get("/staff/guests/staff-pending-visits", { params: { per_page: 1, page: 1, visitor_type: "individual" } });
       setCounts((prev) => ({
         ...prev,
         pending: res.data.pagination?.total || 0,
@@ -49,72 +43,43 @@ function TabIndividual() {
   }, [fetchCounts, fetchPendingCount]);
 
   const handleVisitUpdate = () => {
-    // Refresh counts when visits are updated
     fetchCounts();
     fetchPendingCount();
   };
 
+  const tabs = [
+    { id: "pre-scheduled-visit-table", label: `Scheduled Visit (${counts.scheduled})` },
+    { id: "pending-visits", label: `Pending Visits (${counts.pending})` },
+    { id: "completed-visit", label: `Completed Visit (${counts.completed})` },
+    { id: "cancelled-visit", label: `Cancelled Visit (${counts.cancelled})` },
+    { id: "missed-visit", label: `Missed Visit (${counts.missed})` },
+  ];
+
   return (
     <div>
-      <div className="d-flex justify-content-start align-items-center">
-        <ul className="nav nav-tabs">
-          <li className="nav-item pe-4">
-            <button
-              className={`nav-link ${
-                activeTab === "pre-scheduled-visit-table"
-                  ? "active"
-                  : "text-dark"
-              }`}
-              onClick={() => setActiveTab("pre-scheduled-visit-table")}
-            >
-              Scheduled Visit ({counts.scheduled})
-            </button>
-          </li>
-          <li className="nav-item pe-4">
-            <button
-              className={`nav-link ${
-                activeTab === "pending-visits" ? "active" : "text-dark"
-              }`}
-              onClick={() => setActiveTab("pending-visits")}
-            >
-              Pending Visits ({counts.pending})
-            </button>
-          </li>
-          <li className="nav-item pe-4">
-            <button
-              className={`nav-link ${
-                activeTab === "completed-visit" ? "active" : "text-dark"
-              }`}
-              onClick={() => setActiveTab("completed-visit")}
-            >
-              Completed Visit ({counts.completed})
-            </button>
-          </li>
-          <li className="nav-item pe-4">
-            <button
-              className={`nav-link ${
-                activeTab === "cancelled-visit" ? "active" : "text-dark"
-              }`}
-              onClick={() => setActiveTab("cancelled-visit")}
-            >
-              Cancelled Visit ({counts.cancelled})
-            </button>
-          </li>
-          <li className="nav-item pe-4">
-            <button
-              className={`nav-link ${
-                activeTab === "missed-visit" ? "active" : "text-dark"
-              }`}
-              onClick={() => setActiveTab("missed-visit")}
-            >
-              Missed Visit ({counts.missed})
-            </button>
-          </li>
-        </ul>
+      {/* Tab Navigation Container: line starts at first element and ends exactly at last element */}
+      <div className="overflow-x-auto pb-px">
+        <div className="inline-flex items-center space-x-1 border-b border-slate-300">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-5 py-2.5 text-xs font-semibold rounded-t-xl transition-all duration-200 -mb-px cursor-pointer whitespace-nowrap ${isActive
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                  }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Content - Passing visitType="individual" */}
-      <div className="mt-5">
+      {/* Content */}
+      <div className="mt-6">
         {activeTab === "pre-scheduled-visit-table" && (
           <PreScheduledVisitTable
             visitType="individual"
@@ -146,18 +111,6 @@ function TabIndividual() {
           />
         )}
       </div>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
     </div>
   );
 }

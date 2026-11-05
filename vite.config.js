@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
@@ -9,14 +10,15 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
-        name: "Guest Management System",
-        short_name: "GMS",
-        description: "A visitor management system PWA",
-        theme_color: "#0d6efd",
+        name: "SwiftEntry — Visitor Management",
+        short_name: "SwiftEntry",
+        description: "A visitor management system for admins, staff, front desk, security, and visitors.",
+        theme_color: "#053561",
         background_color: "#ffffff",
         display: "standalone",
         scope: "/",

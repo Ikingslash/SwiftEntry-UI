@@ -1,12 +1,23 @@
-import { useState, useEffect } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import UserAvatar from "../components/UserAvatar";
+import {
+  Menu,
+  X,
+  Search,
+  CalendarPlus,
+  User,
+  LogOut,
+  ChevronDown,
+} from "lucide-react";
 
 function VisitorLayout({ children }) {
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -16,125 +27,181 @@ function VisitorLayout({ children }) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.user-dropdown-container')) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const navLinks = [
+    { to: "/visitor-dashboard", label: "Search Visit", icon: Search },
+    {
+      to: "/visitor-dashboard/register-visit",
+      label: "Register Visit",
+      icon: CalendarPlus,
+    },
+  ];
+
+  const linkClass = ({ isActive }) =>
+    `flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors no-underline ${
+      isActive
+        ? "bg-white/15 text-white"
+        : "text-blue-100/80 hover:text-white hover:bg-white/10"
+    }`;
+
   return (
-    <div>
-      {/* Navbar */}
-      <nav
-        className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
-        style={{ backgroundColor: "#053561" }}
-      >
-        <div className="container">
-          {/* Logo on the left */}
-          <a className="navbar-brand fw-bold text-white pt-2" href="#">
-            <img src="../image.png" width={140} alt="Logo" />
-          </a>
-
-          {/* Navbar Toggler */}
-          <button
-            className="navbar-toggler border-0"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
+    <div className="min-h-screen bg-[#F0F7FF] font-sans flex flex-col">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 bg-[#053561] shadow-md">
+        <div className="max-w-[1140px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          {/* Logo */}
+          <NavLink
+            to="/visitor-dashboard"
+            className="flex items-center shrink-0 no-underline"
           >
-            <span
-              className="navbar-toggler-icon"
-              style={{ filter: "invert(1)" }}
-            ></span>
-          </button>
+            <img
+              src="/image.png"
+              alt="SwiftEntry"
+              className="h-8 w-auto max-w-[140px] object-contain"
+            />
+          </NavLink>
 
-          {/* Navigation Links */}
-          <div
-            className="collapse navbar-collapse justify-content-center"
-            id="navbarNav"
-          >
-            <ul className="navbar-nav text-center fs-6">
-              <li className="nav-item">
-                <NavLink
-                  className={`nav-link px-3 ${location.pathname === "/visitor-dashboard"
-                      ? "text-white fw-bold"
-                      : "text-white-50"
-                    }`}
-                  to="/visitor-dashboard"
-                >
-                  Search Visit
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink
-                  className={`nav-link px-3 ${location.pathname === "/visitor-dashboard/register-visit"
-                      ? "text-white fw-bold"
-                      : "text-white-50"
-                    }`}
-                  to="/visitor-dashboard/register-visit"
-                >
-                  Register Visit
-                </NavLink>
-              </li>
-            </ul>
-          </div>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map(({ to, label, icon: Icon }) => (
+              <NavLink key={to} to={to} end className={linkClass}>
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
 
-          {/* Right Side - User Dropdown */}
-          <div className="d-flex align-items-center user-dropdown-container position-relative">
-            <button
-              className="btn btn-link text-white text-decoration-none d-flex align-items-center gap-2 p-0"
-              onClick={() => setShowDropdown(!showDropdown)}
-              style={{ border: "none", background: "transparent" }}
-            >
-              <span>Welcome, {user?.name}</span>
-              <i className={`bi bi-chevron-${showDropdown ? 'up' : 'down'}`}></i>
-            </button>
-
-            {/* Dropdown Menu */}
-            {showDropdown && (
-              <div
-                className="position-absolute bg-white rounded shadow-lg py-2"
-                style={{
-                  top: "100%",
-                  right: 0,
-                  minWidth: "150px",
-                  marginTop: "8px",
-                  zIndex: 1000,
-                }}
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {/* Profile dropdown (desktop) */}
+            <div className="relative hidden md:block" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowDropdown((v) => !v)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/10 transition-colors border-0 bg-transparent cursor-pointer text-white"
               >
-                <NavLink
-                  to="/visitor-dashboard/profile"
-                  className="dropdown-item d-flex align-items-center gap-2 px-3 py-2 text-dark text-decoration-none"
-                  onClick={() => setShowDropdown(false)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <i className="bi bi-person"></i>
-                  Profile
-                </NavLink>
-                <hr className="my-1" />
-                <button
-                  className="dropdown-item d-flex align-items-center gap-2 px-3 py-2 text-danger w-100 border-0 bg-transparent"
-                  onClick={handleLogout}
-                  style={{ cursor: "pointer" }}
-                >
-                  <i className="bi bi-box-arrow-right"></i>
-                  Logout
-                </button>
-              </div>
-            )}
+                <UserAvatar
+                  image={user?.profile_picture}
+                  firstName={user?.name || "Visitor"}
+                  size={32}
+                  className="rounded-full object-cover border border-white/30"
+                />
+                <span className="text-xs font-semibold max-w-[120px] truncate">
+                  {user?.name || "Visitor"}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-blue-200" />
+              </button>
+
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-lg border border-slate-100 py-2 overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-slate-100">
+                    <p className="text-xs font-bold text-slate-900 mb-0 truncate">
+                      {user?.name || "Visitor"}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mb-0 truncate">
+                      {user?.email || "Visitor account"}
+                    </p>
+                  </div>
+                  <NavLink
+                    to="/visitor-dashboard/profile"
+                    onClick={() => setShowDropdown(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 no-underline"
+                  >
+                    <User className="w-4 h-4 text-slate-400" />
+                    Profile
+                  </NavLink>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border-0 bg-transparent cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((v) => !v)}
+              className="md:hidden w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border-0 cursor-pointer transition-colors"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
-      </nav>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-white/10 px-4 pb-4 pt-3 space-y-1">
+            {navLinks.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end
+                onClick={() => setMobileOpen(false)}
+                className={linkClass}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </NavLink>
+            ))}
+
+            <div className="flex items-center gap-2.5 px-2 pt-3 mt-2 border-t border-white/10">
+              <UserAvatar
+                image={user?.profile_picture}
+                firstName={user?.name || "Visitor"}
+                size={34}
+                className="rounded-full object-cover border border-white/30"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-white mb-0 truncate">
+                  {user?.name || "Visitor"}
+                </p>
+                <p className="text-[10px] text-blue-200 mb-0 truncate">
+                  {user?.email || "Visitor account"}
+                </p>
+              </div>
+              <NavLink
+                to="/visitor-dashboard/profile"
+                onClick={() => setMobileOpen(false)}
+                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center no-underline transition-colors"
+                aria-label="Profile"
+              >
+                <User className="w-4 h-4" />
+              </NavLink>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-500/80 text-white flex items-center justify-center border-0 cursor-pointer transition-colors"
+                aria-label="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
 
       {/* Main Content */}
-      <div style={{ marginTop: "80px", padding: "20px" }}>
+      <main className="flex-1 w-full max-w-[1140px] mx-auto px-4 sm:px-6 pt-5 sm:pt-8 pb-16">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

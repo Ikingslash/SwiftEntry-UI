@@ -1,18 +1,15 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 import { Switch } from '@headlessui/react';
 
-// A simple utility function to safely validate boolean values from the API
 const filter_var = (value, type) => {
     if (type === 'FILTER_VALIDATE_BOOLEAN') {
-        // Handle various boolean representations correctly
         return value === true || value === 'true' || value === 1 || value === '1';
     }
     return value;
 };
 
-// The DataPrivacy component handles all data privacy-related settings
 function DataPrivacy() {
     const [dataRetentionDays, setDataRetentionDays] = useState('30');
     const [autoDeleteEnabled, setAutoDeleteEnabled] = useState(false);
@@ -24,7 +21,6 @@ function DataPrivacy() {
 
     const retentionOptions = ['30', '60', '90', '180', '365'];
 
-    // Function to fetch all data privacy settings
     useEffect(() => {
         const fetchDataPrivacySettings = async () => {
             try {
@@ -38,7 +34,6 @@ function DataPrivacy() {
                 setTotalVisitorsEnabled(filter_var(settings.total_visitors_enabled, 'FILTER_VALIDATE_BOOLEAN'));
                 setPeakVisitorHoursEnabled(filter_var(settings.peak_visitor_hours_enabled, 'FILTER_VALIDATE_BOOLEAN'));
                 setVisitorTypesEnabled(filter_var(settings.visitor_types_enabled, 'FILTER_VALIDATE_BOOLEAN'));
-
             } catch (error) {
                 console.error('Error fetching data privacy settings:', error);
             } finally {
@@ -49,13 +44,12 @@ function DataPrivacy() {
         fetchDataPrivacySettings();
     }, []);
 
-    // New generic function to update a single setting
     const updateDataPrivacySetting = async (key, value) => {
         try {
             await api.post("/admin/data-privacy/update-single", { key, value });
             toast.success(`Setting for "${key}" updated successfully!`);
         } catch (error) {
-            console.error('Error updating setting:', error); 
+            console.error('Error updating setting:', error);
         }
     };
 
@@ -75,176 +69,119 @@ function DataPrivacy() {
         updateDataPrivacySetting(key, value);
     };
 
-    // Function to handle data export
-    // const handleExportData = async () => {
-    //     try {
-    //         const response = await api.get("/admin/data-export", {
-    //             responseType: 'blob', // Important for downloading files
-    //         });
-
-    //         // Create a temporary URL to trigger the download
-    //         const url = window.URL.createObjectURL(new Blob([response.data]));
-    //         const link = document.createElement('a');
-    //         link.href = url;
-    //         link.setAttribute('download', `data_export_${new Date().toISOString()}.json`);
-    //         document.body.appendChild(link);
-    //         link.click();
-    //         link.parentNode.removeChild(link);
-    //         toast.success('Data export started successfully!');
-    //     } catch (error) {
-    //         console.error('Error exporting data:', error);
-    //         toast.error('Failed to export data.');
-    //     }
-    // };
-
-    // A reusable component for the toggle switches
     const ToggleSwitch = ({ enabled, setEnabled, label }) => (
-        <div className="d-flex justify-content-between align-items-center py-2">
-            <span className="text-muted">{label}</span>
-            <Switch
-                checked={enabled}
-                onChange={setEnabled}
-                className={`${
-                    enabled ? 'bg-primary' : 'bg-secondary'
-                } position-relative d-inline-flex align-items-center rounded-pill transition-colors`}
-                style={{ width: '44px', height: '24px' }}
-            >
-                <span className="visually-hidden">Enable {label}</span>
-                <span
-                    className={`${
-                        enabled ? 'translate-x-6' : 'translate-x-1'
-                    } d-inline-block h-4 w-4 rounded-circle bg-white shadow-sm transition-transform`}
-                    style={{ transform: `translateX(${enabled ? '20px' : '4px'})`, width: '16px', height: '16px' }}
-                />
-            </Switch>
-        </div>
-    );
-
-    // A reusable component for the select dropdowns
-    const SelectField = ({ label, value, onChange, options }) => (
-        <div className="d-flex justify-content-between align-items-center mt-5">
-            <label className="text-muted mb-0">{label}</label>
-            <select
-                value={value}
-                onChange={onChange}
-                className="form-select w-50"
-            >
-                {options.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-            </select>
-        </div>
+        <Switch
+            checked={enabled}
+            onChange={setEnabled}
+            className={`${enabled ? 'bg-blue-600' : 'bg-slate-300'
+                } relative inline-flex items-center rounded-full transition-colors w-11 h-6 cursor-pointer`}
+        >
+            <span className="sr-only">Enable {label}</span>
+            <span
+                className={`${enabled ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block w-4 h-4 transform bg-white rounded-full transition-transform shadow-sm`}
+            />
+        </Switch>
     );
 
     if (loading) {
-        return (
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
-                <p className="text-secondary">Loading settings...</p>
-            </div>
-        );
+        return <div className="text-center py-12 text-slate-500 font-medium">Loading settings...</div>;
     }
 
     return (
-        <Fragment>
+        <div className="space-y-8 text-xs text-slate-700">
             {/* Data Retention Policies Section */}
-            <div className="row g-4 mb-5">
-                <div className="col-md-4">
-                    <h5 className="fw-bold">Data Retention Policies</h5>
-                    <p className="text-secondary small">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+                <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">Data Retention Policies</h4>
+                    <p className="text-slate-500 leading-relaxed text-[11px]">
                         Set rules for how long visitor and system data are stored. Automate periodic data cleanup to maintain compliance.
                     </p>
                 </div>
-                <div className="col-md-8">
-                    <div className="card shadow-sm p-4 rounded-4 border-0">
-                        <div className="d-flex justify-content-between align-items-center pt-2">
-                            <span className="text-muted">Automatic Data Clean Up</span>
+                <div className="md:col-span-2 space-y-6">
+                    <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-4 bg-white">
+                        <div className="flex items-center justify-between">
+                            <span className="font-semibold text-slate-800">Automatic Data Clean Up</span>
                             <ToggleSwitch
                                 enabled={autoDeleteEnabled}
                                 setEnabled={handleRetentionToggleChange}
-                                // label="Automatic Data Clean Up"
+                                label="Automatic Data Clean Up"
                             />
                         </div>
-                        <hr />
-                        <SelectField
-                            label="Automatically delete visitor check-in records"
-                            value={dataRetentionDays}
-                            onChange={(e) => {
-                                setDataRetentionDays(e.target.value);
-                                updateDataPrivacySetting('data_retention_days', e.target.value);
-                            }}
-                            options={retentionOptions.map(days => ({ value: days, label: `After ${days} Days` }))}
-                        />
-                        <SelectField
-                            label="Notification Clean Up"
-                            value={notificationCleanupDays}
-                            onChange={(e) => {
-                                setNotificationCleanupDays(e.target.value);
-                                updateDataPrivacySetting('notification_cleanup_days', e.target.value);
-                            }}
-                            options={retentionOptions.map(days => ({ value: days, label: `After ${days} Days` }))}
-                        />
+                        <hr className="border-slate-100" />
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span className="font-semibold text-slate-800">Automatically delete visitor check-in records</span>
+                            <select
+                                value={dataRetentionDays}
+                                onChange={(e) => {
+                                    setDataRetentionDays(e.target.value);
+                                    updateDataPrivacySetting('data_retention_days', e.target.value);
+                                }}
+                                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors sm:w-48"
+                            >
+                                {retentionOptions.map(days => (
+                                    <option key={days} value={days}>After {days} Days</option>
+                                ))}
+                            </select>
+                        </div>
+                        <hr className="border-slate-100" />
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span className="font-semibold text-slate-800">Notification Clean Up</span>
+                            <select
+                                value={notificationCleanupDays}
+                                onChange={(e) => {
+                                    setNotificationCleanupDays(e.target.value);
+                                    updateDataPrivacySetting('notification_cleanup_days', e.target.value);
+                                }}
+                                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors sm:w-48"
+                            >
+                                {retentionOptions.map(days => (
+                                    <option key={days} value={days}>After {days} Days</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Report Customization Section */}
-            <div className="row g-4 mb-5 pb-5">
-                <div className="col-md-4">
-                    <h5 className="fw-bold">Report Customization</h5>
-                    <p className="text-secondary small">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">Report Customization</h4>
+                    <p className="text-slate-500 leading-relaxed text-[11px]">
                         Configure automated exports and report settings.
                     </p>
                 </div>
-                <div className="col-md-8">
-                    <div className="card shadow-sm p-4 rounded-4 border-0">
-                        <div className="d-flex justify-content-between align-items-center py-2">
-                            <span className="text-muted">Total Visitors Per Day/Week/Month</span>
+                <div className="md:col-span-2">
+                    <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden divide-y divide-slate-100 bg-white">
+                        <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+                            <span className="font-semibold text-slate-800">Total Visitors Per Day/Week/Month</span>
                             <ToggleSwitch
                                 enabled={totalVisitorsEnabled}
                                 setEnabled={(value) => handleReportToggleChange('total_visitors_enabled', value)}
-                                // label="Total Visitors Per Day/Week/Month"
+                                label="Total Visitors Per Day/Week/Month"
                             />
                         </div>
-                        <hr />
-                        <div className="d-flex justify-content-between align-items-center">
-                            <span className="text-muted">Peak Visitor Hours</span>
+                        <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+                            <span className="font-semibold text-slate-800">Peak Visitor Hours</span>
                             <ToggleSwitch
                                 enabled={peakVisitorHoursEnabled}
                                 setEnabled={(value) => handleReportToggleChange('peak_visitor_hours_enabled', value)}
-                                // label="Peak Visitor Hours"
+                                label="Peak Visitor Hours"
                             />
                         </div>
-                        <hr />
-                        <div className="d-flex justify-content-between align-items-center">
-                            <span className="text-muted">Visitor Types</span>
+                        <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+                            <span className="font-semibold text-slate-800">Visitor Types</span>
                             <ToggleSwitch
                                 enabled={visitorTypesEnabled}
                                 setEnabled={(value) => handleReportToggleChange('visitor_types_enabled', value)}
-                                // label="Visitor Types"
+                                label="Visitor Types"
                             />
                         </div>
                     </div>
                 </div>
             </div>
-
-            {/* Data Export Button */}
-            {/* <div className="row g-4">
-                <div className="col-md-4">
-                    <h5 className="fw-bold">Data Export</h5>
-                    <p className="text-secondary small">
-                        Download a full backup of all visitor and visit data in JSON format.
-                    </p>
-                </div>
-                <div className="col-md-8">
-                    <button
-                        onClick={handleExportData}
-                        className="btn btn-primary w-100"
-                    >
-                        Export All Visitor Data
-                    </button>
-                </div>
-            </div> */}
-        </Fragment>
+        </div>
     );
 }
 

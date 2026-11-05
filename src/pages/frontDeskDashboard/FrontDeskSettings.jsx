@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
-import { IoPencil } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../context/api";
 import { useAuth } from "../../context/AuthContext";
-import NavBar from "./include/NavBar";
+import FrontDeskTopHeader from "./include/FrontDeskTopHeader";
 
 function FrontDeskSettings() {
   const [settings, setSettings] = useState({
     notificationEmail: "",
     password: "",
-    password_confirmation: "", // Add this new state field
+    password_confirmation: "",
   });
 
   const navigate = useNavigate();
@@ -25,7 +23,7 @@ function FrontDeskSettings() {
           setSettings({
             notificationEmail: response.data.email || "",
             password: "",
-            password_confirmation: "", // Initialize it
+            password_confirmation: "",
           });
         }
       } catch (error) {
@@ -39,7 +37,6 @@ function FrontDeskSettings() {
     const { id, value } = e.target;
     setSettings((prev) => ({
       ...prev,
-      // This part of your code was incorrect. It should use the `id` directly.
       [id]: value,
     }));
   };
@@ -47,7 +44,6 @@ function FrontDeskSettings() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Check if password fields are filled before sending
       const payload = {
         notification_email: settings.notificationEmail,
       };
@@ -72,95 +68,69 @@ function FrontDeskSettings() {
   };
 
   return (
-    <div>
-      <NavBar />
-       <ToastContainer position="top-right" autoClose={5000} />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "270px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            <div className="d-flex align-items-center ">
-              <h3 className="mb-4">Front Desk settings</h3>
-            </div>
-            <div
-              className="flex-grow-1 px-4"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
-              }}
-            ></div>
-          </div>
+    <div className="min-h-screen bg-[#f3f7fc] pb-12">
+      <FrontDeskTopHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-0">Settings</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage your account settings</p>
         </div>
-      </header>
-      <div className="container my-5">
-        <div className="row">
-          <div className="col-md-6 offset-md-3">
-            <div className="card">
-              <div className="card-header">
-                <h4>Settings</h4>
-              </div>
-              <div className="card-body">
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <label htmlFor="notificationEmail" className="form-label">
-                      Notification Email
-                    </label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="notificationEmail"
-                      placeholder="Enter notification email"
-                      value={settings.notificationEmail}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
-                      Change Password
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      placeholder="Enter new password"
-                      value={settings.password}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  {/* Password Confirmation Field */}
-                  <div className="mb-3">
-                    <label htmlFor="password_confirmation" className="form-label">
-                      Confirm Password
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password_confirmation"
-                      placeholder="Re-enter new password"
-                      value={settings.password_confirmation}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-primary">
-                    <IoPencil className="me-2" />
-                    Save Changes
-                  </button>
-                </form>
-              </div>
+
+        <div className="max-w-2xl">
+          <div className="bg-white rounded-3xl shadow-xs border border-slate-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm mb-0">Account Settings</h3>
+              <p className="text-slate-500 text-xs mt-1">Update your notification preferences and password</p>
             </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div>
+                <label htmlFor="notificationEmail" className="block text-xs font-semibold text-slate-700 mb-2">
+                  Notification Email
+                </label>
+                <input
+                  type="email"
+                  id="notificationEmail"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Enter notification email"
+                  value={settings.notificationEmail}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-2">
+                  Change Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Enter new password"
+                  value={settings.password}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="password_confirmation" className="block text-xs font-semibold text-slate-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="password_confirmation"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Re-enter new password"
+                  value={settings.password_confirmation}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-sm"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

@@ -35,6 +35,15 @@
 
 
 
+/* Remove underlines from all links */
+a,
+a:hover,
+a:focus,
+a:active,
+a:visited {
+  text-decoration: none !important;
+}
+
 /* Hide the Google Translate top banner */
 .goog-te-banner-frame.skiptranslate {
   display: none !important;
@@ -55,4 +64,27 @@ body {
 .goog-te-balloon-frame,
 .goog-text-highlight {
   display: none !important;
+}
+
+/* Force rounded buttons over Bootstrap */
+button.btn-primary,
+.btn-primary,
+button[type="submit"],
+.btn.rounded-pill,
+.rounded-pill,
+button[class*="rounded-full"] {
+  border-radius: 9999px !important;
+}
+
+.form-control.rounded-pill,
+input.rounded-pill {
+  border-radius: 9999px !important;
+}
+
+/* Hide the floating "protected by reCAPTCHA" badge on every page.
+   reCAPTCHA v3 still runs and verifies in the background. */
+.grecaptcha-badge {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

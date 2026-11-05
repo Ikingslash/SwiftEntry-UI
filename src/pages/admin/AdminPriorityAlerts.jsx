@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import api from "../../context/api";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
-import NavBar from "./include/NavBar";
+import { AlertTriangle, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import AdminTopHeader from "./include/AdminTopHeader";
 
 export default function AdminPriorityAlerts() {
   const { token } = useAuth();
@@ -40,132 +41,106 @@ export default function AdminPriorityAlerts() {
     setPage(p);
   };
 
+  const currentPage = pagination.current_page || 1;
+  const lastPage = pagination.last_page || 1;
+
   return (
-    <>
-      <NavBar />
-      <header
-        className="text-white text-center d-flex align-items-center px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "300px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm rounded"
-            style={{
-              backgroundColor: "#053561",
-              minHeight: "160px",
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Priority Alerts</h3>
-              {/* <i
-                className="bi bi-plus-circle fs-1 text-white-50 p-2"
-                style={{ cursor: "pointer", transition: "0.3s" }}
-                onMouseOver={(e) => (e.target.style.color = "#0d6efd")}
-                onMouseOut={(e) => (e.target.style.color = "white")}
-              ></i> */}
-            </div>
+    <div className="min-h-screen bg-[#F0F7FF] pb-12 font-sans">
+      <AdminTopHeader />
 
-            <div
-              className="w-100 mt-3"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-              }}
-            ></div>
-          </div>
-        </div>
-      </header>
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4">
+        <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+          Priority Alerts
+        </p>
+        <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+          Visitors that need immediate attention.
+        </p>
+      </div>
 
-      <div className="container my-5">
+      <div className="max-w-[1140px] mx-auto px-4">
         {loading ? (
-          <p>Loading...</p>
+          <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center text-slate-500 text-xs font-medium">
+            Loading alerts...
+          </div>
         ) : alerts.length === 0 ? (
-          <p>No alerts.</p>
+          <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <p className="text-slate-500 text-xs font-medium mb-0">
+              No priority alerts right now.
+            </p>
+          </div>
         ) : (
           <>
-            <div className="list-group">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden divide-y divide-slate-100">
               {alerts.map((a) => (
-                <div key={a.id} className="list-group-item">
-                  <div className="d-flex align-items-center">
-                    {/* <img
-                      src={a.visitor_photo || "./images/user1.png"}
-                      alt="visitor"
-                      width="60"
-                      height="60"
-                      style={{ objectFit: "cover" }}
-                    /> */}
-                    <div className="ms-3">
-                      <div className="fw-bold">{a.visitor_name}</div>
-                      <div className="text-muted">
-                        {a.purpose} — {a.host_name}
-                      </div>
-                      <div className="small text-muted">
-                        {new Date(a.check_in).toLocaleString()}
-                      </div>
-                    </div>
+                <div
+                  key={a.id}
+                  className="p-4 sm:p-5 flex items-start gap-3 sm:gap-4 hover:bg-slate-50/60 transition-colors"
+                >
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-slate-900 text-sm mb-0 truncate">
+                      {a.visitor_name}
+                    </h3>
+                    <p className="text-slate-500 text-xs mt-1 mb-0 break-words">
+                      {a.purpose} — {a.host_name}
+                    </p>
+                    <p className="text-slate-400 text-[11px] mt-1 mb-0 flex items-center gap-1">
+                      <Clock className="w-3 h-3 shrink-0" />
+                      {new Date(a.check_in).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Simple pagination */}
-            <nav className="my-3">
-              <ul className="pagination">
-                <li
-                  className={`page-item ${
-                    pagination.current_page <= 1 ? "disabled" : ""
-                  }`}
+            {/* Pagination */}
+            <div className="flex items-center justify-between gap-3 mt-6">
+              <span className="text-slate-500 text-xs font-medium shrink-0">
+                Page {currentPage} of {lastPage}
+              </span>
+              <div className="flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <button
+                  type="button"
+                  onClick={() => handlePage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
+                  aria-label="Previous page"
                 >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                {Array.from({ length: lastPage }).map((_, i) => (
                   <button
-                    className="page-link"
-                    onClick={() => handlePage(pagination.current_page - 1)}
+                    key={i}
+                    type="button"
+                    onClick={() => handlePage(i + 1)}
+                    className={`min-w-9 h-9 px-2 rounded-xl text-xs font-bold transition-colors cursor-pointer border shrink-0 ${
+                      currentPage === i + 1
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
                   >
-                    Previous
+                    {i + 1}
                   </button>
-                </li>
-                {Array.from({ length: pagination.last_page || 1 }).map(
-                  (_, i) => (
-                    <li
-                      key={i}
-                      className={`page-item ${
-                        pagination.current_page === i + 1 ? "active" : ""
-                      }`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => handlePage(i + 1)}
-                      >
-                        {i + 1}
-                      </button>
-                    </li>
-                  )
-                )}
-                <li
-                  className={`page-item ${
-                    pagination.current_page >= (pagination.last_page || 1)
-                      ? "disabled"
-                      : ""
-                  }`}
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handlePage(currentPage + 1)}
+                  disabled={currentPage >= lastPage}
+                  className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
+                  aria-label="Next page"
                 >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePage(pagination.current_page + 1)}
-                  >
-                    Next
-                  </button>
-                </li>
-              </ul>
-            </nav>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }

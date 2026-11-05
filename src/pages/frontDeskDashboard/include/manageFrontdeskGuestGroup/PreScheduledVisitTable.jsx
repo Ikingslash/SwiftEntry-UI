@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import api from "../../../../context/api";
 import { toast } from "react-toastify";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
   const [visits, setVisits] = useState([]);
@@ -10,7 +10,6 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
   const [page, setPage] = useState(1);
   const perPage = 10;
 
-  // modal and action states
   const [selectedVisit, setSelectedVisit] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -22,14 +21,13 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
   const fetchVisits = async () => {
     setLoading(true);
     try {
-      // FIX: Dynamic and corrected endpoint for pre-scheduled visits
       const endpoint = `/front-desk/guests/${visitType}/scheduled-visits`;
       const response = await api.get(endpoint, {
         params: { per_page: perPage, page },
       });
 
-      setVisits(response.data.visits);
-      setPagination(response.data.pagination);
+      setVisits(response.data.visits || []);
+      setPagination(response.data.pagination || {});
     } catch (error) {
       console.error("Error fetching visits:", error);
       toast.error("Failed to load visits");
@@ -46,14 +44,13 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
 
     try {
       await api.post(`/front-desk/guests/visit/${selectedVisit.id}/cancel`, {
-        reason: cancelReason
+        reason: cancelReason,
       });
 
       toast.success("Visit cancelled successfully!");
       setShowCancelModal(false);
       setCancelReason("");
 
-      // Refresh the visits list - cancelled visits should disappear
       await fetchVisits();
 
       if (onVisitUpdate) {
@@ -80,58 +77,68 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
       setPage((prev) => prev + 1);
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-xs">
+        <p className="text-slate-500 text-xs font-medium mb-0">Loading scheduled visits...</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="table-responsive my-5">
+    <div className="bg-white rounded-3xl shadow-xs border border-slate-100 overflow-hidden font-sans">
+      <div className="overflow-x-auto">
         {visits.length > 0 ? (
           <>
-            <table className="table table-bordered table-hover">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr>
-                  <th>Unique ID</th>
-                  <th>Guest Name</th>
-                  <th>Host Name</th>
-                  <th>Visit Date/Time</th>
-                  <th>Contact</th>
-                  <th>Email</th>
-                  <th>Special Requirement</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-6">Unique ID</th>
+                  <th className="py-4 px-6">Guest Name</th>
+                  <th className="py-4 px-6">Host Name</th>
+                  <th className="py-4 px-6">Visit Date/Time</th>
+                  <th className="py-4 px-6">Contact</th>
+                  <th className="py-4 px-6">Email</th>
+                  <th className="py-4 px-6">Special Req.</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-
-              <tbody>
+              <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                 {visits.map((visit) => (
-                  <tr key={visit.id}>
-                    <td>{visit.id}</td>
-                    <td>{visit.visitor?.name || "N/A"}</td>
-                    <td>{visit.host_name}</td>
-                    <td>
-                      {visit.visit_time
-                        ? new Date(visit.visit_time).toLocaleString()
-                        : "N/A"}
+                  <tr key={visit.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 text-slate-400 font-semibold">#{visit.id}</td>
+                    <td className="py-4 px-6 font-bold text-slate-900">{visit.visitor?.name || "N/A"}</td>
+                    <td className="py-4 px-6 text-slate-600">{visit.host_name || "N/A"}</td>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.visit_time ? new Date(visit.visit_time).toLocaleString() : "Not Scheduled"}
                     </td>
-                    <td>{visit.visitor?.contact_number}</td>
-                    <td>{visit.visitor?.email}</td>
-                    <td>{visit.visitor?.special_requirements || "None"}</td>
-                    <td>
-                      <span className={`badge ${
-                        visit.status === 'cancelled' ? 'bg-danger' :
-                        visit.status === 'completed' ? 'bg-success' :
-                        visit.status === 'checked_in' ? 'bg-primary' :
-                        'bg-warning text-dark'
-                      }`}>
-                        {visit.status ? visit.status.replace(/_/g, ' ') : 'Pending'}
+                    <td className="py-4 px-6 text-slate-600">{visit.visitor?.contact_number || "N/A"}</td>
+                    <td className="py-4 px-6 text-slate-600">{visit.visitor?.email || "N/A"}</td>
+                    <td className="py-4 px-6 text-slate-500">
+                      {visit.visitor?.special_requirements || "None"}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span
+                        className={`px-2.5 py-1 font-semibold text-[10px] rounded-full capitalize ${
+                          visit.status === "cancelled"
+                            ? "bg-rose-50 text-rose-700"
+                            : visit.status === "completed"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : visit.status === "checked_in"
+                            ? "bg-blue-50 text-blue-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {visit.status ? visit.status.replace(/_/g, " ") : "Pending"}
                       </span>
                     </td>
-                    <td>
-                      {visit.status !== 'cancelled' && visit.status !== 'completed' && (
+                    <td className="py-4 px-6 text-right">
+                      {visit.status !== "cancelled" && visit.status !== "completed" && (
                         <button
-                          className="btn btn-danger btn-sm"
+                          type="button"
+                          className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-xl transition-all cursor-pointer border-0"
                           onClick={() => openCancelModal(visit)}
-                          disabled={visit.status === 'cancelled'}
                         >
                           Cancel
                         </button>
@@ -143,78 +150,97 @@ function PreScheduledVisitTable({ onVisitUpdate, visitType }) {
             </table>
 
             {/* Pagination */}
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <button
-                className="btn btn-primary"
-                onClick={handlePrevious}
-                disabled={pagination.current_page === 1}
-              >
-                Previous
-              </button>
-
-              <span>
-                Page {pagination.current_page} of {pagination.last_page}
-              </span>
-
-              <button
-                className="btn btn-primary"
-                onClick={handleNext}
-                disabled={pagination.current_page === pagination.last_page}
-              >
-                Next
-              </button>
-            </div>
+            {pagination.last_page > 1 && (
+              <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  onClick={handlePrevious}
+                  disabled={pagination.current_page === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+                </button>
+                <span className="text-slate-500 font-semibold">
+                  Page {pagination.current_page} of {pagination.last_page}
+                </span>
+                <button
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  onClick={handleNext}
+                  disabled={pagination.current_page === pagination.last_page}
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </>
         ) : (
-          <h1>No Data Available</h1>
+          <div className="p-12 text-center">
+            <p className="text-slate-400 text-xs font-medium mb-0">No scheduled visits available.</p>
+          </div>
         )}
       </div>
 
       {/* CANCEL VISIT MODAL */}
       {showCancelModal && (
-        <div className="modal fade show d-block" tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content p-3">
-              <h4>Cancel Visit</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-xl border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <h5 className="font-bold text-slate-900 text-base mb-0">Cancel Visit</h5>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                }}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors border-0 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              <p>
-                Are you sure you want to cancel the visit for{" "}
-                <strong>{selectedVisit.visitor?.name}</strong>?
-              </p>
+            <p className="text-xs text-slate-600 mb-0">
+              Are you sure you want to cancel the visit for{" "}
+              <strong className="text-slate-900">{selectedVisit?.visitor?.name}</strong>?
+            </p>
 
-              <div className="mb-3">
-                <label htmlFor="cancelReason" className="form-label">
-                  Reason for Cancellation
-                </label>
-                <textarea
-                  className="form-control"
-                  id="cancelReason"
-                  rows="3"
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Please provide a reason for cancellation..."
-                  required
-                ></textarea>
-              </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="cancelReason"
+                className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+              >
+                Reason for Cancellation *
+              </label>
+              <textarea
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/10 placeholder:text-slate-400"
+                id="cancelReason"
+                rows="3"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Please provide a reason for cancellation..."
+                required
+              />
+            </div>
 
-              <div className="d-flex justify-content-end gap-2">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowCancelModal(false);
-                    setCancelReason("");
-                  }}
-                >
-                  Go Back
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handleCancelVisit}
-                  disabled={!cancelReason.trim()}
-                >
-                  Confirm Cancellation
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer border-0"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                }}
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-rose-600/20 disabled:opacity-50 cursor-pointer border-0"
+                onClick={handleCancelVisit}
+                disabled={!cancelReason.trim()}
+              >
+                Confirm Cancellation
+              </button>
             </div>
           </div>
         </div>

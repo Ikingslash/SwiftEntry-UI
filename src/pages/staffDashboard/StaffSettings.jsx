@@ -1,10 +1,7 @@
-
 import { useEffect, useState } from "react";
-import { IoPencil } from "react-icons/io5";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
 import api from "../../context/api";
-import NavBar from "./include/NavBar";
+import StaffTopHeader from "./include/StaffTopHeader";
 
 function StaffSettings() {
   const [settings, setSettings] = useState({
@@ -60,7 +57,7 @@ function StaffSettings() {
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
         const errorMessages = Object.values(error.response.data.errors).flat();
-        errorMessages.forEach(msg => toast.error(msg));
+        errorMessages.forEach((msg) => toast.error(msg));
       } else {
         toast.error("Failed to update settings");
       }
@@ -68,97 +65,81 @@ function StaffSettings() {
   };
 
   return (
-    <div>
-      <NavBar />
-      <ToastContainer position="top-right" autoClose={5000} />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "270px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            <div className="d-flex align-items-center ">
-              <h3 className="mb-4">Staff settings</h3>
+    <div className="min-h-screen bg-[#F0F7FF] pb-12">
+      <StaffTopHeader />
+
+      {/* Header Container */}
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4">
+        <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+          Staff Settings
+        </p>
+        <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+          Manage your account email and password.
+        </p>
+      </div>
+
+      <div className="max-w-[1140px] mx-auto px-4">
+        <div className="max-w-2xl">
+          <div className="bg-white rounded-3xl shadow-xs border border-slate-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm mb-0">Account Settings</h3>
+              <p className="text-slate-500 text-xs mt-1">
+                Update your login credentials and password.
+              </p>
             </div>
-            <div
-              className="flex-grow-1 px-4"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
-              }}
-            ></div>
-          </div>
-        </div>
-      </header>
-      <div className="container my-5">
-        <div className="row">
-          <div className="col-md-6 offset-md-3">
-            <div className="card">
-              <div className="card-header">
-                <h4>Settings</h4>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div>
+                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Enter new email"
+                  value={settings.email}
+                  onChange={handleChange}
+                />
               </div>
-              <div className="card-body">
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="email"
-                      placeholder="Enter new email"
-                      value={settings.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
-                      Change Password
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      placeholder="Enter new password"
-                      value={settings.password}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label
-                      htmlFor="password_confirmation"
-                      className="form-label"
-                    >
-                      Confirm Password
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password_confirmation"
-                      placeholder="Confirm new password"
-                      value={settings.password_confirmation}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-primary">
-                    <IoPencil className="me-2" />
-                    Save Changes
-                  </button>
-                </form>
+
+              <div>
+                <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-2">
+                  Change Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Enter new password"
+                  value={settings.password}
+                  onChange={handleChange}
+                />
               </div>
-            </div>
+
+              <div>
+                <label htmlFor="password_confirmation" className="block text-xs font-semibold text-slate-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="password_confirmation"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Confirm new password"
+                  value={settings.password_confirmation}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-sm cursor-pointer border-0"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

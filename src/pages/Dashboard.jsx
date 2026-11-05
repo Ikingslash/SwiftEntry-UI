@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import NavBar from "./staffDashboard/include/NavBar";
+import { toast } from 'react-toastify';
+import StaffTopHeader from "./staffDashboard/include/StaffTopHeader";
 import MainDashboard from "./staffDashboard/include/components/MainDashboard";
 import RecentActivitiesPage from "./staffDashboard/include/components/RecentActivitiesPage";
 import TodaysGuestsPage from "./staffDashboard/include/components/TodaysGuestsPage";
@@ -158,9 +157,8 @@ const handleAddGuest = async (e) => {
   };
 
   return (
-    <div>
-      <NavBar />
-      <ToastContainer position="top-right" autoClose={5000} />
+    <div className="min-h-screen bg-[#F0F7FF]">
+      <StaffTopHeader />
       {renderPage()}
       <AddGuestModal
         show={showAddGuest}

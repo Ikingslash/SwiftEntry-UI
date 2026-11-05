@@ -69,9 +69,8 @@ function ManageGuestsIndividual() {
         >
           <li className="nav-item me-3">
             <button
-              className={`nav-link  fs-5 ${
-                activeTab === "individual" ? "active" : "text-light"
-              }`}
+              className={`nav-link  fs-5 ${activeTab === "individual" ? "active" : "text-light"
+                }`}
               onClick={() => setActiveTab("individual")}
             >
               Individual
@@ -79,9 +78,8 @@ function ManageGuestsIndividual() {
           </li>
           <li className="nav-item ms-3">
             <button
-              className={`nav-link  fs-5  ${
-                activeTab === "group" ? "active" : "text-light"
-              }`}
+              className={`nav-link  fs-5  ${activeTab === "group" ? "active" : "text-light"
+                }`}
               onClick={() => setActiveTab("group")}
             >
               Group

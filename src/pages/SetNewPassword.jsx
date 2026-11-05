@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
+import { Eye, EyeOff, ShieldCheck, Loader2, ArrowRight, Lock } from "lucide-react";
+
+import ForgotPasswordImage from "../assets/forgot-password.jpg";
+import SwiftEntryLogo from "/pwa-512x512.png";
 
 function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const navigate = useNavigate();
   const { resetPassword, resetFlowData } = useAuth();
 
@@ -79,100 +84,162 @@ function ResetPassword() {
   };
 
   return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center vh-100"
-      style={{ backgroundColor: "#F5FAFE" }}
-    >
-      {/* Navbar */}
-      <nav className="navbar w-100 px-4 py-3">
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          <a href="#" className="navbar-brand">
-            <img src="./image.png" alt="Logo" width="150" />
-          </a>
-          <Link to="/" className="text-primary fw-bold">
-            Go to Login
-          </Link>
-        </div>
-      </nav>
-      <ToastContainer position="top-right" autoClose={5000} />
+    <div className="w-full h-dvh bg-[#edf5ff] flex items-center justify-center p-0 m-0 overflow-hidden font-sans">
 
-      {/* Main Section */}
-      <div className="container mt-3 vh-100">
-        <div className="row text-center justify-content-center">
-          <div className="col-md-6 col-lg-5 col-12">
-            <div className="text-center">
-              <img
-                src="./images/key.png"
-                width={60}
-                className="my-3"
-                alt="Logo"
-              />
-              <h2 className="mb-3">Reset Password</h2>
-              <p className="text-muted">
-                Enter your new password for **{resetFlowData.email || "your account"}**
-              </p>
-              {resetFlowData.userRole && (
-                <p className="text-muted small">
-                  User type: {resetFlowData.userRole}
+      {/* Main Full-Screen 50/50 Split View */}
+      <div className="w-full h-full grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-white">
+
+        {/* LEFT SIDE: Brand Image Panel */}
+        <aside className="hidden lg:block lg:col-span-6 xl:col-span-6 relative h-full overflow-hidden bg-[#02213d]">
+          <img
+            src={ForgotPasswordImage}
+            alt="Forgot Password"
+            className="w-full h-full object-cover select-none pointer-events-none"
+          />
+        </aside>
+
+        {/* RIGHT SIDE: Form Section */}
+        <div className="lg:col-span-6 xl:col-span-6 p-6 sm:p-8 xl:p-10 flex flex-col justify-between relative bg-[rgb(252,253,255)] h-full overflow-y-auto">
+
+          {/* Mobile Brand Header */}
+          <div className="flex lg:hidden items-center justify-center w-full mb-3">
+            <img
+              src={SwiftEntryLogo}
+              alt="SwiftEntry"
+              className="h-14 sm:h-16 w-auto object-contain"
+            />
+          </div>
+
+          {/* Form Inputs Container */}
+          <div className="max-w-md w-full mx-auto space-y-3 pt-6">
+
+            {/* Header Logo & Title Aligned */}
+            <div className="space-y-2 mb-4">
+              <div className="hidden lg:flex items-center justify-center mt-4">
+                <img
+                  src={SwiftEntryLogo}
+                  alt="SwiftEntry"
+                  className="h-20 w-auto object-contain"
+                />
+              </div>
+
+              <div className="space-y-0.5">
+                <p className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Reset Password
                 </p>
-              )}
-            </div>
-
-            {/* Reset Password Form */}
-            <div className="my-5">
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3 text-start">
-                  <label className="form-label">New Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="Enter New Password (min. 8 characters)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength="8"
-                  />
-                </div>
-
-                <div className="mb-3 text-start">
-                  <label className="form-label">Confirm Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="Confirm New Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength="8"
-                  />
-                </div>
-
-                {password !== confirmPassword && confirmPassword.length > 0 && (
-                  <div className="alert alert-danger py-2">
-                    Passwords do not match
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-50 my-3"
-                  disabled={isLoading || password.length < 8 || password !== confirmPassword}
-                >
-                  {isLoading ? "Resetting..." : "Reset Password"}
-                </button>
-              </form>
-
-              <div className="text-center mt-3">
-                <Link
-                  to="/forgot-password"
-                  className="text-decoration-none text-primary fw-bold"
-                >
-                  Need to start over?
-                </Link>
+                <p className="text-xs text-[#7a8aa3] font-medium">
+                  Enter your new password for {resetFlowData.email || "your account"}
+                </p>
               </div>
             </div>
+
+            <form onSubmit={handleSubmit} className="space-y-2">
+
+              {/* New Password Field */}
+              <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                  New Password *
+                </label>
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    name="password"
+                    placeholder="Enter New Password (min. 8 characters)"
+                    required
+                    minLength="8"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 border-0 bg-transparent p-0 cursor-pointer"
+                    aria-label={passwordVisible ? "Hide password" : "Show password"}
+                  >
+                    {passwordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                  Confirm Password *
+                </label>
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input
+                    type={confirmPasswordVisible ? "text" : "password"}
+                    name="password_confirmation"
+                    placeholder="Confirm New Password"
+                    required
+                    minLength="8"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                    className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 border-0 bg-transparent p-0 cursor-pointer"
+                    aria-label={confirmPasswordVisible ? "Hide password" : "Show password"}
+                  >
+                    {confirmPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {password !== confirmPassword && confirmPassword.length > 0 && (
+                <div className="text-xs text-red-600 font-semibold">
+                  Passwords do not match
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div className="pt-1">
+                <button
+                  type="submit"
+                  disabled={isLoading || password.length < 8 || password !== confirmPassword}
+                  className="w-full h-11 bg-gradient-to-r from-[#1798f5] to-[#0755e8] hover:opacity-95 text-white font-bold !rounded-full text-xs transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer border-0"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Resetting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-4 h-4" />
+                      <span>Reset Password</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Navigation Link */}
+              <p className="text-center text-xs text-slate-500 font-medium pt-1">
+                <Link to="/forgot-password" className="text-blue-600 hover:underline font-bold">
+                  Need to start over?
+                </Link>
+              </p>
+
+            </form>
           </div>
+
+          {/* Security Footer Line */}
+          <footer className="security-note flex items-center gap-4 w-full max-w-md mx-auto pt-2 text-[#8291aa] text-[11px]">
+            <span className="h-[1px] flex-1 bg-[#dce4ee]" />
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <ShieldCheck className="w-4 h-4 text-[#6684ab]" />
+              <p className="m-0">Your security is our priority.</p>
+            </div>
+            <span className="h-[1px] flex-1 bg-[#dce4ee]" />
+          </footer>
+
         </div>
+
       </div>
     </div>
   );

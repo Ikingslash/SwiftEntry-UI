@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import NavBar from "./include/NavBar";
+import StaffTopHeader from "./include/StaffTopHeader";
 import api from "../../context/api";
 import { useNotifications } from "../../context/NotificationContext";
 import echo from "../../context/echo";
@@ -25,45 +25,46 @@ const Pagination = ({ pagination, handlePageChange }) => {
   }
 
   return (
-    <nav aria-label="Page navigation" className="mt-4">
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${current_page === 1 ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={(e) => { e.preventDefault(); handlePageChange(current_page - 1); }}
+    <nav aria-label="Page navigation" className="mt-5">
+      <div className="flex items-center justify-center gap-1 overflow-x-auto max-w-full pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <button
+          type="button"
+          onClick={() => handlePageChange(current_page - 1)}
+          disabled={current_page === 1}
+          className="px-3 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-bold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
+        >
+          Previous
+        </button>
+        {pages.map((page) => (
+          <button
+            key={page}
+            type="button"
+            onClick={() => handlePageChange(page)}
+            className={`min-w-9 h-9 px-2 rounded-xl text-[11px] font-bold transition-colors cursor-pointer border shrink-0 ${
+              current_page === page
+                ? "bg-blue-600 border-blue-600 text-white"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
           >
-            Previous
-          </a>
-        </li>
-        {pages.map(page => (
-          <li key={page} className={`page-item ${current_page === page ? 'active' : ''}`}>
-            <a
-              className="page-link"
-              href="#"
-              onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-            >
-              {page}
-            </a>
-          </li>
+            {page}
+          </button>
         ))}
-        <li className={`page-item ${current_page === last_page ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={(e) => { e.preventDefault(); handlePageChange(current_page + 1); }}
-          >
-            Next
-          </a>
-        </li>
-      </ul>
+        <button
+          type="button"
+          onClick={() => handlePageChange(current_page + 1)}
+          disabled={current_page === last_page}
+          className="px-3 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-bold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
+        >
+          Next
+        </button>
+      </div>
     </nav>
   );
 };
 
 
 
-function SecurityNotifications() {
+function Notifications() {
  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,7 +88,7 @@ const fetchNotifications = async (page = 1) => {
     });
     if (response.data && Array.isArray(response.data.notifications)) {
       setNotifications(response.data.notifications);
-      setPagination(response.data.pagination);
+      setPagination(response.data.pagination ?? {});
       setMessage(response.data.message || "Notifications fetched successfully.");
       if (response.data.notifications.length === 0) {
         setMessage("No Notifications Yet");
@@ -172,90 +173,52 @@ const fetchNotifications = async (page = 1) => {
     };
 
   return (
-    <div>
-      <NavBar />
-      <header
-        className="text-white text-center d-flex align-items-center px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "300px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm rounded"
-            style={{
-              backgroundColor: "#053561",
-              minHeight: "160px",
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Notifications</h3>
-            </div>
+    <div className="min-h-screen bg-[#F0F7FF] pb-12">
+      <StaffTopHeader />
 
-            <div
-              className="w-100 mt-3"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-              }}
-            ></div>
-          </div>
-        </div>
-      </header>
+      {/* Header Container */}
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4">
+        <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+          Notifications
+        </p>
+        <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+          Stay updated with latest activities.
+        </p>
+      </div>
 
-      <section id="notifications" className="container p-4">
+      <section id="notifications" className="max-w-[1140px] mx-auto px-4">
         {loading ? (
-          <p className="text-center">{message}</p>
+          <p className="text-center text-sm text-slate-500">{message}</p>
         ) : notifications.length > 0 ? (
           <>
-            <div className="row">
+            <div className="space-y-2">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className="col-12 col-md-10 mx-auto mb-3"
+                  className="bg-white rounded-2xl shadow-xs border border-slate-100 px-4 py-3 flex items-start gap-3"
                 >
-                  <div
-                    className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                    style={{ borderRadius: "12px" }}
-                  >
-                    <div className="d-flex align-items-center w-100">
-                      <div
-                        className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center"
-                        style={{ backgroundColor: "#e9f5ff" }}
-                      >
-                        {getNotificationIcon(notification.category)}
-                      </div>
-                      <div className="flex-grow-1">
-                        <h6 className="mb-1 fw-bold text-dark">
-                          {notification.title || "No Title"}
-                        </h6>
-                        <p
-                          className="mb-0 text-muted"
-                          style={{ fontSize: "14px" }}
-                        >
-                          {notification.message || "No message"}
-                        </p>
-                        <small className="text-muted">
-                          {notification.created_at
-                            ? new Date(notification.created_at).toLocaleString()
-                            : "Just now"}
-                        </small>
-                      </div>
-                    </div>
-                    <span
-                      className={`ms-md-3 mt-3 mt-md-0 ${getStatusColor(
-                        notification.status
-                      )}`}
-                      style={{ fontSize: "18px" }}
-                    >
-                      ●
-                    </span>
+                  <div className="p-2 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                    {getNotificationIcon(notification.category)}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <h6 className="mb-1 font-bold text-slate-900 text-xs">
+                      {notification.title || "No Title"}
+                    </h6>
+                    <p className="mb-0 text-slate-500 text-[11px] leading-relaxed">
+                      {notification.message || "No message"}
+                    </p>
+                    <small className="text-slate-400 text-[10px]">
+                      {notification.created_at
+                        ? new Date(notification.created_at).toLocaleString()
+                        : "Just now"}
+                    </small>
+                  </div>
+                  <span
+                    className={`shrink-0 mt-1 ${getStatusColor(notification.status)}`}
+                    style={{ fontSize: "14px" }}
+                  >
+                    ●
+                  </span>
                 </div>
               ))}
             </div>
@@ -267,15 +230,8 @@ const fetchNotifications = async (page = 1) => {
             )}
           </>
         ) : (
-          <div className="text-center align-items-center p-5 text-muted">
-            <img
-              src="../images/notification_bucket.png"
-              width="400"
-              height="400"
-              alt="Notification"
-              className=""
-            />
-            <h4 className="text-muted">{message}</h4>
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-10 text-center">
+            <h4 className="text-slate-400 text-sm font-medium">{message}</h4>
           </div>
         )}
       </section>
@@ -283,4 +239,4 @@ const fetchNotifications = async (page = 1) => {
   );
 }
 
-export default SecurityNotifications;
+export default Notifications;

@@ -1,48 +1,33 @@
+
 import { useState, useEffect } from "react";
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 
 const Pagination = ({ pagination, handlePageChange }) => {
   const { current_page, last_page } = pagination;
-  const pages = [];
-  for (let i = 1; i <= last_page; i++) {
-    pages.push(i);
-  }
 
   return (
-    <nav aria-label="Page navigation">
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${current_page === 1 ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={() => handlePageChange(current_page - 1)}
-          >
-            Previous
-          </a>
-        </li>
-        {pages.map(page => (
-          <li key={page} className={`page-item ${current_page === page ? 'active' : ''}`}>
-            <a
-              className="page-link"
-              href="#"
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </a>
-          </li>
-        ))}
-        <li className={`page-item ${current_page === last_page ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={() => handlePageChange(current_page + 1)}
-          >
-            Next
-          </a>
-        </li>
-      </ul>
-    </nav>
+    <div className="flex items-center justify-between px-2 my-6">
+      <span className="text-slate-500 text-xs font-medium">
+        Page {current_page} of {last_page}
+      </span>
+      <div className="inline-flex p-1 bg-white border border-slate-200 rounded-2xl shadow-2xs gap-1">
+        <button
+          onClick={() => handlePageChange(current_page - 1)}
+          disabled={current_page === 1}
+          className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-35 rounded-xl transition-colors cursor-pointer"
+        >
+          <i className="bi bi-chevron-left text-xs"></i>
+        </button>
+        <button
+          onClick={() => handlePageChange(current_page + 1)}
+          disabled={current_page === last_page}
+          className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-35 rounded-xl transition-colors cursor-pointer"
+        >
+          <i className="bi bi-chevron-right text-xs"></i>
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -68,7 +53,7 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
           search: searchQuery,
           per_page: 8,
           page: currentPage,
-          days_old: 10, // Show visits from last 10 days only
+          days_old: 10,
         },
       });
 
@@ -106,99 +91,89 @@ function TabOutgoing({ filters, searchQuery, refreshKey }) {
 
   return (
     <div>
-      <div className="alert alert-info mb-4">
-        <i className="bi bi-info-circle me-2"></i>
-        Showing visits checked out within the last 10 days. Older visits are
-        archived.
+      <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-4 text-blue-700 text-xs mb-6 flex items-center gap-2">
+        <i className="bi bi-info-circle text-sm"></i>
+        <span>Showing visits checked out within the last 10 days. Older visits are archived.</span>
       </div>
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Loading outgoing visits...</p>
+        <div className="text-center py-12 text-slate-500 text-xs font-medium">
+          Loading outgoing visits...
         </div>
       ) : visits.length === 0 ? (
-        <div className="text-center py-5">
-          <i className="bi bi-door-closed fs-1 text-muted"></i>
-          <h5 className="mt-3 text-muted">No outgoing visits</h5>
-          <p className="text-muted">Check out visitors from Incoming tab</p>
+        <div className="bg-white rounded-3xl shadow-xs border border-slate-100 p-12 text-center">
+          <i className="bi bi-door-closed text-slate-300 text-3xl"></i>
+          <p className="mt-3 text-slate-700 font-semibold text-xs">No outgoing visits</p>
+          <p className="text-slate-400 text-xs mt-1">Check out visitors from Incoming tab</p>
         </div>
       ) : (
         <>
-          <div className="row row-cols-1 row-cols-md-2 g-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {visits.map((visit) => (
-              <div key={visit.id} className="col my-4">
-                <div className="card h-100 shadow rounded-3 border-start border-4 border-secondary">
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <div>
-                        <h6 className="card-title mb-1 fw-bold">
-                          {visit.visitor_name}
-                        </h6>
-                        <small className="text-muted">
-                          {visit.visitor_email}
-                        </small>
-                      </div>
-                      <span className="badge bg-secondary">Checked Out</span>
+              <div key={visit.id} className="bg-white rounded-3xl p-6 shadow-xs border border-slate-100 flex flex-col justify-between hover:border-slate-200 transition-all">
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h6 className="font-bold text-slate-900 text-sm mb-0.5">
+                        {visit.visitor_name}
+                      </h6>
+                      <span className="text-slate-400 text-xs">{visit.visitor_email}</span>
                     </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">
+                      Checked Out
+                    </span>
+                  </div>
 
-                    <div className="row g-2 mb-3">
-                      <div className="col-6">
-                        <small className="text-muted d-block">ID No</small>
-                        <strong>{visit.visit_code}</strong>
-                      </div>
-                      <div className="col-6">
-                        <small className="text-muted d-block">Duration</small>
-                        <strong>
-                          {calculateDuration(visit.check_in, visit.check_out)}
-                        </strong>
-                      </div>
-                      <div className="col-6">
-                        <small className="text-muted d-block">Check-in</small>
-                        <small>{formatDateTime(visit.check_in)}</small>
-                      </div>
-                      <div className="col-6">
-                        <small className="text-muted d-block">Check-out</small>
-                        <small>{formatDateTime(visit.check_out)}</small>
-                      </div>
-                      <div className="col-6 my-3">
-                        <small className="text-muted d-block">Host</small>
-                        <strong>{visit.host_name}</strong>
-                      </div>
-
-                      <div className="col-6 my-3">
-                        <small className="text-muted d-block">Purpose</small>
-                        <p className="mb-0">{visit.purpose}</p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">ID No</span>
+                      <strong className="text-slate-800 mt-0.5 block">{visit.visit_code}</strong>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Duration</span>
+                      <strong className="text-slate-800 mt-0.5 block">{calculateDuration(visit.check_in, visit.check_out)}</strong>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Check-in</span>
+                      <span className="text-slate-700 mt-0.5 block font-medium">{formatDateTime(visit.check_in)}</span>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Check-out</span>
+                      <span className="text-slate-700 mt-0.5 block font-medium">{formatDateTime(visit.check_out)}</span>
                     </div>
                   </div>
-                  <div className="card-footer bg-light border-top-0">
-                    <div className="d-flex justify-content-between">
-                      <small className="text-muted">
-                        <i className="bi bi-calendar me-1"></i>
-                        Visit date:{" "}
-                        {new Date(visit.visit_date || visit.check_in).toLocaleDateString()}
-                      </small>
-                      <small className="text-muted">
-                        <i className="bi bi-person-check me-1"></i>
-                        Host: {visit.host_name}
-                      </small>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Host</span>
+                      <strong className="text-slate-800 mt-0.5 block">{visit.host_name}</strong>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Purpose</span>
+                      <p className="text-slate-800 font-medium mb-0 mt-0.5 truncate">{visit.purpose}</p>
                     </div>
                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-slate-400 text-[11px]">
+                  <span>
+                    <i className="bi bi-calendar me-1"></i>
+                    Visit date: {new Date(visit.visit_date || visit.check_in).toLocaleDateString()}
+                  </span>
+                  <span>
+                    <i className="bi bi-person-check me-1"></i>
+                    Host: {visit.host_name}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
 
           {pagination.last_page > 1 && (
-            <div className="mt-4">
-              <Pagination
-                pagination={pagination}
-                handlePageChange={handlePageChange}
-              />
-            </div>
+            <Pagination
+              pagination={pagination}
+              handlePageChange={handlePageChange}
+            />
           )}
         </>
       )}

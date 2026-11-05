@@ -1,7 +1,8 @@
-import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
+import { createContext, useState, useEffect, useCallback, useContext } from "react";
 import api from "./api";
 import echo from "./echo";
 import { useAuth } from "./AuthContext";
+import { isMockEnabled } from "../mocks/index.js";
 
 export const NotificationContext = createContext();
 
@@ -58,7 +59,11 @@ export const NotificationProvider = ({ children }) => {
     if (!user || !rolePrefix || isUnauthorized) return;
     try {
       const response = await api.get(`/${rolePrefix}/notifications/latest-unread`);
-      setLatestUnread(response.data.latest_unread_notifications || []);
+      setLatestUnread(
+        response.data.latest_unread_notifications ??
+          response.data.notifications ??
+          []
+      );
     } catch (error) {
       console.error("Error fetching latest unread notifications:", error);
       if (error.response && error.response.status === 401) {
@@ -103,9 +108,17 @@ export const NotificationProvider = ({ children }) => {
     fetchLatestUnread(); // 👈 Fetch dropdown list on load
   }, [fetchNotificationCount, fetchLatestUnread]);
 
+  // A different user must never inherit the previous user's unread badge.
+  useEffect(() => {
+    setNotifications([]);
+    setUnreadCount(0);
+    setLatestUnread([]);
+    setIsUnauthorized(false);
+  }, [user?.id]);
+
   // Real-time updates (WebSocket listener)
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !isMockEnabled) {
       const channel = echo.private(`notifications.${user.id}`);
       channel.listen(".new-notification", (event) => {
         console.log("📢 New notification (WebSocket):", event);
@@ -150,6 +163,7 @@ export const NotificationProvider = ({ children }) => {
         addNotification,
         clearNotifications,
         markNotificationsAsRead,
+        markAllAsRead: markNotificationsAsRead,
         markAsRead,
         setUnreadCount,
         latestUnread, // 👈 Export latest unread list

@@ -1,10 +1,30 @@
 import { useEffect, useState } from "react";
-import NavBar from "./include/NavBar";
 import TabPreRegisteredVisitors from "./include/TabPreRegisteredVisitors";
 import TabWalkInVisitors from "./include/TabWalkInVisitors";
-import { IoCheckmark } from "react-icons/io5";
 import api from "../../context/api";
-import { toast } from 'react-toastify'; // Import toast
+import { toast } from "react-toastify";
+import { CalendarDays } from "lucide-react";
+
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const visitorTypes = [
+  { label: "All", value: "all" },
+  { label: "Individual", value: "individual" },
+  { label: "Group", value: "group" },
+];
 
 function VisitSecurityHistory() {
   const [activeTab, setActiveTab] = useState("pre-registered-visitors");
@@ -13,20 +33,18 @@ function VisitSecurityHistory() {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState("");
-  const [category, setCategory] = useState("all"); // Optional: add more filters
-  const [currentPage, setCurrentPage] = useState(1); // State for current page
+  const [category, setCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Define perPage here or pass it as a prop if it can be changed by the user
   const perPage = 10;
 
   useEffect(() => {
-    // Reset currentPage to 1 when filters or tabs change
     setCurrentPage(1);
   }, [activeFilter, month, category, activeTab]);
 
   useEffect(() => {
     fetchHistory();
-  }, [activeFilter, month, category, activeTab, currentPage]); // Add currentPage to dependencies
+  }, [activeFilter, month, category, activeTab, currentPage]);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -35,7 +53,6 @@ function VisitSecurityHistory() {
         ? new Date(`${month} 1, 2025`).getMonth() + 1
         : null;
 
-      // Determine the status based on the activeTab
       let statusParam = null;
       if (activeTab === "pre-registered-visitors") {
         statusParam = "pre_registered_visit";
@@ -50,253 +67,136 @@ function VisitSecurityHistory() {
           purpose: category,
           status: statusParam,
           per_page: perPage,
-          page: currentPage, // Pass currentPage to the backend
+          page: currentPage,
         },
       });
       setGroupedVisits(response.data.grouped_visits || {});
       setPagination(response.data.pagination || {});
     } catch (err) {
       console.error("Error fetching history:", err);
-      toast.error("Failed to load visit history. Please try again."); // Toast for error
+      toast.error("Failed to load visit history. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to handle page changes from child components
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  console.log("Grouped Visits: ", groupedVisits);
+  const tabs = [
+    { id: "pre-registered-visitors", label: "Pre-Registered Visitors" },
+    { id: "walk-in-visitors", label: "Walk-in Visitors" },
+  ];
 
   return (
-    <div>
-      <NavBar />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "270px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        {/* Left Content */}
-        <div className="container">
-          <div
-            className="text-white shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            {/* Row for Welcome Text & Plus Icon */}
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bod mb-0">History</h3>
+    <div className="min-h-full bg-[#F0F7FF] pb-12 font-sans">
+      {/* Page Header */}
+      <div className="max-w-[1140px] mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-4">
+        <p className="text-lg sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+          History
+        </p>
+        <p className="text-slate-500 text-[11px] sm:text-xs font-medium mb-0 mt-1">
+          Browse pre-registered and walk-in visitor records.
+        </p>
+      </div>
 
-              {/* Plus Icon */}
-
-            </div>
-
-            {/* Badge & Line Row */}
-            <div className="d-flex align-items-center  mt-2">
-              {/* Badge */}
-              <p
-                className="badge text-white"
-                style={{
-                  backgroundColor: "rgba(25, 88, 148, 0.8)",
-                }}
-              >
-                Sydani Group{" "}
-                <span
-                  className="badge text-light p-1"
-                  style={{
-                    backgroundColor: "rgba(13, 46, 78, 0.8)",
-                  }}
+      <div className="max-w-[1140px] mx-auto px-4 sm:px-6">
+        {/* Tabs */}
+        <div className="overflow-x-auto pb-px">
+          <div className="inline-flex items-center space-x-1 border-b border-slate-300">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-2.5 text-xs font-semibold rounded-t-xl transition-all duration-200 -mb-px cursor-pointer whitespace-nowrap border-0 ${
+                    isActive
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                  }`}
                 >
-                  Company
-                </span>
-              </p>
-
-              {/* Extending Line */}
-              <div
-                className="flex-grow-1 ms-3 mb-3"
-                style={{
-                  height: "2px",
-                  backgroundColor: "rgba(168, 172, 176, 0.8)",
-                }}
-              ></div>
-            </div>
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </header>
 
-      {/* Tabs Navigation (Positioned Below Header) */}
-      <div className="container mt-5">
-        <div className="d-flex align-items-center justify-content-between">
-          {/* Tabs Section */}
-          <div className="d-flex flex-column w-100 position-relative">
-            {/* Full-width thin bottom line */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                width: "100%",
-                height: "1px",
-                backgroundColor: "rgb(200, 200, 200)", // Light grey bottom border
-              }}
-            ></div>
-
-            <ul className="nav d-flex flex-wrap">
-              <li className="nav-item">
-                <a
-                  className="nav-link px-4 py-2 text-center"
-                  onClick={() => setActiveTab("pre-registered-visitors")}
-                  style={{
-                    borderBottom:
-                      activeTab === "pre-registered-visitors"
-                        ? "4px solid rgb(0, 123, 255)"
-                        : "4px solid transparent",
-                    color:
-                      activeTab === "pre-registered-visitors"
-                        ? "#007bff"
-                        : "rgba(0, 0, 0, 0.5)",
-                    fontWeight:
-                      activeTab === "pre-registered-visitors"
-                        ? "bold"
-                        : "normal",
-                    transition: "all 0.3s ease-in-out",
-                    cursor: "pointer",
-                    minWidth: "180px",
-                  }}
-                >
-                  Pre-Registered Visitors
-                </a>
-              </li>
-              <li className="nav-item">
-                <a
-                  className="nav-link px-4 py-2 text-center"
-                  onClick={() => setActiveTab("walk-in-visitors")}
-                  style={{
-                    borderBottom:
-                      activeTab === "walk-in-visitors"
-                        ? "4px solid rgb(0, 123, 255)"
-                        : "4px solid transparent",
-                    color:
-                      activeTab === "walk-in-visitors"
-                        ? "#007bff"
-                        : "rgba(0, 0, 0, 0.5)",
-                    fontWeight:
-                      activeTab === "walk-in-visitors" ? "bold" : "normal",
-                    transition: "all 0.3s ease-in-out",
-                    cursor: "pointer",
-                    minWidth: "150px",
-                  }}
-                >
-                  Walk-in Visitors
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Filters Section */}
-          <div className="d-flex gap-2">
-            {/* Month Filter */}
+        {/* Filters Bar */}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <CalendarDays className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
-              className="form-select me-3"
-              style={{ minWidth: "150px", flex: "1" }}
+              className="appearance-none bg-white border border-slate-200/80 shadow-2xs rounded-2xl pl-10 pr-4 py-3 text-xs font-semibold text-slate-700 hover:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
               onChange={(e) => setMonth(e.target.value)}
-              value={month} // Controlled component
+              value={month}
             >
               <option value="">Select Month</option>
-              {[
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December",
-              ].map((monthName, index) => (
+              {months.map((monthName) => (
                 <option key={monthName} value={monthName}>
                   {monthName}
                 </option>
               ))}
             </select>
+          </div>
 
-            <select
-              className="form-select me-3"
-              style={{ minWidth: "150px", flex: "1" }}
-              onChange={(e) => setCategory(e.target.value)}
-              value={category}
-            >
-              <option value="all">All Categories</option>
-              <option value="recruitment">Recruitment</option>
-              <option value="business meeting">Business Meeting</option>
-              <option value="repairs/maintenance">Repairs/Maintenance</option>
-              <option value="personal/official">Personal/Official</option>
-              <option value="other">Other</option>
-            </select>
+          <select
+            className="appearance-none bg-white border border-slate-200/80 shadow-2xs rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 hover:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+            onChange={(e) => setCategory(e.target.value)}
+            value={category}
+          >
+            <option value="all">All Categories</option>
+            <option value="recruitment">Recruitment</option>
+            <option value="business meeting">Business Meeting</option>
+            <option value="repairs/maintenance">Repairs/Maintenance</option>
+            <option value="personal/official">Personal/Official</option>
+            <option value="other">Other</option>
+          </select>
 
-            {/* Visitor Type Filter */}
-            {[
-              { label: "All", value: "all", width: "60px" },
-              {
-                label: "Individual",
-                value: "individual",
-                width: "180px",
-              },
-              { label: "Group", value: "group", width: "160px" },
-            ].map((item) => (
-              <a
-                key={item.value}
-                onClick={() => setActiveFilter(item.value)}
-                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${activeFilter === item.value ? "border-primary" : "border"
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="inline-flex w-max p-1.5 bg-white border border-slate-200/80 rounded-full shadow-sm">
+              {visitorTypes.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setActiveFilter(item.value)}
+                  className={`px-4 sm:px-6 py-2 rounded-full text-xs font-bold transition-all duration-200 border-0 cursor-pointer whitespace-nowrap ${
+                    activeFilter === item.value
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-transparent text-slate-600 hover:text-slate-900"
                   }`}
-                style={{
-                  minWidth: item.width,
-                  borderRadius: "7px",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease-in-out",
-                }}
-              >
-                <small>{item.label}</small>
-                {activeFilter === item.value && (
-                  <IoCheckmark className="fs-5 text-primary" />
-                )}
-              </a>
-            ))}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tab Content */}
-      <div className="container mt-5">
-        {activeTab === "pre-registered-visitors" && (
-          <TabPreRegisteredVisitors
-            groupedVisits={groupedVisits}
-            pagination={pagination}
-            loading={loading}
-            handlePageChange={handlePageChange} // Pass handlePageChange
-            currentPage={currentPage} // Pass currentPage
-          />
-        )}
-        {activeTab === "walk-in-visitors" && (
-          <TabWalkInVisitors
-            groupedVisits={groupedVisits}
-            pagination={pagination}
-            loading={loading}
-            handlePageChange={handlePageChange} // Pass handlePageChange
-            currentPage={currentPage} // Pass currentPage
-          />
-        )}
+        {/* Tab Content */}
+        <div className="mt-6">
+          {activeTab === "pre-registered-visitors" && (
+            <TabPreRegisteredVisitors
+              groupedVisits={groupedVisits}
+              pagination={pagination}
+              loading={loading}
+              handlePageChange={handlePageChange}
+              currentPage={currentPage}
+            />
+          )}
+          {activeTab === "walk-in-visitors" && (
+            <TabWalkInVisitors
+              groupedVisits={groupedVisits}
+              pagination={pagination}
+              loading={loading}
+              handlePageChange={handlePageChange}
+              currentPage={currentPage}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

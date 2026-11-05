@@ -2,14 +2,22 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../context/api";
-import NavBar from "./include/NavBar";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
 import UserAvatar from "../../components/UserAvatar";
+import {
+  User,
+  Mail,
+  Briefcase,
+  Building2,
+  CreditCard,
+  ShieldCheck,
+  LogOut,
+  Loader2,
+} from "lucide-react";
 
 export default function SecurityProfile() {
   const navigate = useNavigate();
-  const { logout, updateUser } = useAuth();
+  const { logout } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,122 +50,98 @@ export default function SecurityProfile() {
     }
   };
 
-
-
-  const defaultProfilePicture = "https://placehold.co/120x120/E0E7FF/6B7280?text=No+Image";
-
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="min-h-full bg-[#F0F7FF] flex items-center justify-center">
+        <Loader2 className="w-7 h-7 text-blue-600 animate-spin" />
       </div>
     );
   }
 
+  const details = [
+    { label: "Name", value: profileData?.name, icon: User },
+    { label: "Company Email", value: profileData?.email, icon: Mail },
+    { label: "Position", value: profileData?.position, icon: Briefcase },
+    { label: "Company", value: profileData?.company_name, icon: Building2 },
+    { label: "Employee ID", value: profileData?.employee_id, icon: CreditCard },
+  ];
+
   return (
-    <>
-      <NavBar />
-      <ToastContainer position="top-right" autoClose={5000} />
-      <div
-        className="container-fluid py-5"
-        style={{ backgroundColor: "#F5FAFE", minHeight: "100vh" }}
-      >
-        <div className="container mt-5">
-          <div className="row justify-content-center">
-            <div className="col-12 col-md-8 col-lg-6">
-              <div className="card shadow rounded-4 p-4 mt-5">
-                <div className="text-center pt-3">
-                  <h3 className="fw-bold">Profile</h3>
-                </div>
+    <div className="min-h-full bg-[#F0F7FF] pb-12 font-sans">
+      {/* Page Header */}
+      <div className="max-w-xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-4">
+        <p className="text-lg sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+          Profile
+        </p>
+        <p className="text-slate-500 text-[11px] sm:text-xs font-medium mb-0 mt-1">
+          Your account details and information.
+        </p>
+      </div>
 
-                {/* Profile Picture and Staff Badge */}
-                <div className="text-center mt-4">
-                  <UserAvatar
-                    image={profileData?.profile_picture}
-                    firstName={profileData?.name || "User"}
-                    size={120}
-                    className="rounded-circle mb-3 mx-auto"
-                  />
-                  <div
-                    className="d-inline-block px-3 py-1 rounded-pill bg-light text-primary fw-bold"
-                    style={{ border: "1px solid #ccc" }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      className="bi bi-person-badge-fill me-2"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm4.5 0a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-                    </svg>
-                    Staff
-                  </div>
-                </div>
-
-                {/* Profile Details */}
-                <div className="mt-5 border p-4 rounded-4">
-                  <ul className="list-group list-group-flush">
-                    <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Name</span>
-                      <span>{profileData?.name}</span>
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Company Email</span>
-                      <span>{profileData?.email}</span>
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Position</span>
-                      <span>{profileData?.position}</span>
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Company</span>
-                      <span>{profileData?.company_name}</span>
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center p-3">
-                      <span className="text-muted fw-bold">Employee ID</span>
-                      <span>{profileData?.employee_id}</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Log Out Button */}
-                <div className="d-grid mt-3 px-3">
-                  <button
-                    onClick={handleLogout}
-                    className="btn btn-danger btn-lg rounded-pill fw-bold"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      fill="currentColor"
-                      className="bi bi-box-arrow-right me-2"
-                      viewBox="0 0 16 16"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"
-                      />
-                      <path
-                        fillRule="evenodd"
-                        d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"
-                      />
-                    </svg>
-                    Log Out
-                  </button>
-                </div>
-              </div>
+      <div className="max-w-xl mx-auto px-4 sm:px-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-slate-100 p-5 sm:p-8">
+          {/* Avatar and Badge */}
+          <div className="flex flex-col items-center text-center pb-6 sm:pb-8 border-b border-slate-100">
+            <div className="mb-4">
+              <UserAvatar
+                image={profileData?.profile_picture}
+                firstName={profileData?.name || "User"}
+                size={96}
+                className="rounded-full object-cover shadow-sm border-2 border-white"
+              />
             </div>
+
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-1 break-words max-w-full">
+              {profileData?.name || "Security"}
+            </h2>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 font-bold text-[11px] mt-1 border border-blue-100/60">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Security
+            </div>
+          </div>
+
+          {/* Information List */}
+          <div className="py-5 sm:py-6 space-y-3">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+              Information
+            </span>
+
+            <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden divide-y divide-slate-100 text-xs">
+              {details.map(({ label, value, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-white hover:bg-slate-50/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-semibold text-slate-600 truncate">
+                      {label}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-slate-900 text-right break-words min-w-0">
+                    {value || "N/A"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Log Out Button */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer border border-rose-100"
+            >
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
           </div>
         </div>
       </div>
-
-
-
-    </>
+    </div>
   );
 }

@@ -1,8 +1,7 @@
 import { Route, Routes } from "react-router-dom";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 
 import SignIn from "./pages/SignIn";
 import AdminRegister from "./pages/AdminRegister";
@@ -12,8 +11,13 @@ import ForgotPassword from "./pages/ForgotPassword";
 import VerifyAccount from "./pages/VerifyAccount";
 import SetNewPassword from "./pages/SetNewPassword";
 import { AuthProvider } from "./context/AuthContext";
+import { TenantProvider } from "./context/TenantContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import PrivateRoute from "./customRoute/PrivateRoute";
+import Forbidden from "./pages/Forbidden";
+import TenantHome from "./pages/TenantHome";
+import DevIsolationCheck from "./pages/DevIsolationCheck";
+import DevTenantDock from "./components/dev/DevTenantDock";
 
 import StaffLayout from "./layout/StaffLayout";
 import Dashboard from "./pages/Dashboard";
@@ -32,7 +36,6 @@ import FrontDeskProfile from "./pages/frontDeskDashboard/FrontDeskProfile";
 import FrontDeskSettings from "./pages/frontDeskDashboard/FrontDeskSettings";
 import ManageFrontdeskGuestsIndividual from "./pages/frontDeskDashboard/ManageFrontdeskGuestsIndividual";
 import ConfirmVisitor from "./pages/frontDeskDashboard/ConfirmVisitor";
-
 
 import SecurityLayout from "./layout/SecurityLayout";
 import SecurityDashboard from "./pages/SecurityDashboard";
@@ -67,10 +70,6 @@ import VisitorSelfServiceDashboard from "./pages/VisitorSelfServiceDashboard";
 import VisitorWalkInRegistration from "./pages/VisitorWalkInRegistration";
 import VisitorProfile from "./pages/VisitorProfile";
 
-
-<Route path="/admin/new-guest" element={<AdminNewGuest />} />
-
-
 function App() {
   return (
     <GoogleReCaptchaProvider
@@ -78,145 +77,192 @@ function App() {
       scriptProps={{
         async: true,
         defer: true,
-        appendTo: 'head',
+        appendTo: "head",
       }}
     >
       <div className="App">
         <AuthProvider>
-          <NotificationProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<SignIn />} />
-              <Route path="/admin-register" element={<AdminRegister />} />
-              <Route path="/loading" element={<Loading />} />
-              <Route path="/password-success" element={<PasswordSuccessAlert />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/verify-account" element={<VerifyAccount />} />
-              <Route path="/set-new-password" element={<SetNewPassword />} />
-              <Route path="/setup-password" element={<SetupPassword />} />
-              <Route path="/frontdesk-setup-password" element={<FrontdeskSetupPassword />} />
-              <Route path="/security-setup-password" element={<SecuritySetupPassword />} />
-
-              {/* Protected Routes */}
-              <Route
-                path="/staff-dashboard/*"
-                element={
-                  <PrivateRoute requiredRole="staff">
-                    <StaffLayout />
-                  </PrivateRoute>
-                }
-              >
-                <Route index element={<Dashboard />} />
-                <Route path="new-guest" element={<NewGuest />} />
-                <Route path="manage-guest" element={<ManageGuestsIndividual />} />
-                <Route path="notifications" element={<Notifications />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="staff-settings" element={<StaffSettings />} />
-              </Route>
-
-              <Route
-                path="/front-desk-dashboard/*"
-                element={
-                  <PrivateRoute requiredRole="front_desk">
-                    <FrontDeskLayout />
-                  </PrivateRoute>
-                }
-              >
-                <Route index element={<FrontDeskDashboard />} />
-                <Route path="register-guest" element={<RegisterGuest />} />
-                <Route path="history" element={<VisitHistory />} />
-                <Route path="notifications" element={<FrontDeskNotifications />} />
+          <TenantProvider>
+            <NotificationProvider>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<SignIn />} />
+                <Route path="/admin-register" element={<AdminRegister />} />
+                <Route path="/loading" element={<Loading />} />
+                <Route path="/password-success" element={<PasswordSuccessAlert />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/verify-account" element={<VerifyAccount />} />
+                <Route path="/set-new-password" element={<SetNewPassword />} />
+                <Route path="/setup-password" element={<SetupPassword />} />
                 <Route
-                  path="manage-frontdesk-guests"
-                  element={<ManageFrontdeskGuestsIndividual />}
+                  path="/frontdesk-setup-password"
+                  element={<FrontdeskSetupPassword />}
                 />
-                <Route path="profile" element={<FrontDeskProfile />} />
                 <Route
-                  path="front-desk-settings"
-                  element={<FrontDeskSettings />}
+                  path="/security-setup-password"
+                  element={<SecuritySetupPassword />}
                 />
-                <Route path="confirm-visitor" element={<ConfirmVisitor />} />
-              </Route>
+                <Route path="/forbidden" element={<Forbidden />} />
+                <Route path="/dev/isolation" element={<DevIsolationCheck />} />
 
-              <Route
-                path="/admin-dashboard/*"
-                element={
-                  <PrivateRoute requiredRole="admin">
-                    <AdminLayout />
-                  </PrivateRoute>
-                }
-              >
-                <Route index element={<AdminDashboard />} />
-                <Route path="visitors" element={<AdminVisitors />} />
-                <Route path="staffs" element={<AdminStaff />} />
-                <Route path="admins" element={<AdminManagement />} />
-                <Route path="frontdesk" element={<AdminFrontdesk />} />
-                <Route path="security" element={<AdminSecurity />} />
-                <Route path="self-service" element={<AdminSelfService />} />
+                {/* Tenant admin workspace */}
                 <Route
-                  path="analytical-report"
-                  element={<AnalyticalAndReport />}
-                />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="new-guest" element={<AdminNewGuest />} />
-                <Route path="profile" element={<AdminProfile />} />
-                <Route path="notifications" element={<AdminNotifications />} />
-                <Route path="alerts" element={<AdminPriorityAlerts />} />
-                <Route path="updates" element={<AdminLatestUpdates />} />
-              </Route>
+                  path="/tenant-dashboard/*"
+                  element={
+                    <PrivateRoute requiredRole="admin" requiredScope="tenant">
+                      <AdminLayout />
+                    </PrivateRoute>
+                  }
+                >
+                  <Route index element={<TenantHome />} />
+                  <Route path="new-guest" element={<AdminNewGuest />} />
+                  <Route path="visitors" element={<AdminVisitors />} />
+                  <Route
+                    path="visits"
+                    element={<AdminVisitors initialTab="visit" />}
+                  />
+                  <Route path="staffs" element={<AdminStaff />} />
+                  <Route path="frontdesk" element={<AdminFrontdesk />} />
+                  <Route
+                    path="analytical-report"
+                    element={<AnalyticalAndReport />}
+                  />
+                  <Route path="profile" element={<AdminProfile />} />
+                  <Route path="notifications" element={<AdminNotifications />} />
+                  <Route path="alerts" element={<AdminPriorityAlerts />} />
+                  <Route path="updates" element={<AdminLatestUpdates />} />
+                </Route>
 
-              <Route
-                path="/security-dashboard/*"
-                element={
-                  <PrivateRoute requiredRole="security">
-                    <SecurityLayout />
-                  </PrivateRoute>
-                }
-              >
-                <Route index element={<SecurityDashboard />} />
-                <Route path="generate-qr-code" element={<GenerateQRCode />} />
+                {/* Building admin workspace */}
                 <Route
-                  path="generate-by-unique-code"
-                  element={<GenerateByUniqueCode />}
-                />
-                <Route path="register-new-guest" element={<RegisterNewGuest />} />
-                <Route path="history" element={<VisitSecurityHistory />} />
-                <Route path="notifications" element={<SecurityNotifications />} />
-                <Route
-                  path="manage-security-guests"
-                  element={<ManageSecurityGuestsIndividual />}
-                />
-                <Route path="profile" element={<SecurityProfile />} />
-                <Route path="security-settings" element={<SecuritySettings />} />
-              </Route>
+                  path="/admin-dashboard/*"
+                  element={
+                    <PrivateRoute requiredRole="admin" requiredScope="building">
+                      <AdminLayout />
+                    </PrivateRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="visitors" element={<AdminVisitors />} />
+                  <Route
+                    path="visits"
+                    element={<AdminVisitors initialTab="visit" />}
+                  />
+                  <Route path="staffs" element={<AdminStaff />} />
+                  <Route path="admins" element={<AdminManagement />} />
+                  <Route path="frontdesk" element={<AdminFrontdesk />} />
+                  <Route path="security" element={<AdminSecurity />} />
+                  <Route path="self-service" element={<AdminSelfService />} />
+                  <Route
+                    path="analytical-report"
+                    element={<AnalyticalAndReport />}
+                  />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="new-guest" element={<AdminNewGuest />} />
+                  <Route path="profile" element={<AdminProfile />} />
+                  <Route path="notifications" element={<AdminNotifications />} />
+                  <Route path="alerts" element={<AdminPriorityAlerts />} />
+                  <Route path="updates" element={<AdminLatestUpdates />} />
+                </Route>
 
-              {/* Visitor Self-Service Routes */}
-              <Route
-                path="/visitor-dashboard/*"
-                element={
-                  <PrivateRoute requiredRole="self_service">
-                    <VisitorSelfServiceDashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/visitor-dashboard/register-visit"
-                element={
-                  <PrivateRoute requiredRole="self_service">
-                    <VisitorWalkInRegistration />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/visitor-dashboard/profile"
-                element={
-                  <PrivateRoute requiredRole="self_service">
-                    <VisitorProfile />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </NotificationProvider>
+                {/* Staff workspace */}
+                <Route
+                  path="/staff-dashboard/*"
+                  element={
+                    <PrivateRoute requiredRole="staff">
+                      <StaffLayout />
+                    </PrivateRoute>
+                  }
+                >
+                  <Route index element={<Dashboard />} />
+                  <Route path="new-guest" element={<NewGuest />} />
+                  <Route path="manage-guest" element={<ManageGuestsIndividual />} />
+                  <Route path="notifications" element={<Notifications />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="staff-settings" element={<StaffSettings />} />
+                </Route>
+
+                {/* Shared front desk workspace */}
+                <Route
+                  path="/front-desk-dashboard/*"
+                  element={
+                    <PrivateRoute requiredRole="front_desk">
+                      <FrontDeskLayout />
+                    </PrivateRoute>
+                  }
+                >
+                  <Route index element={<FrontDeskDashboard />} />
+                  <Route path="register-guest" element={<RegisterGuest />} />
+                  <Route path="history" element={<VisitHistory />} />
+                  <Route path="notifications" element={<FrontDeskNotifications />} />
+                  <Route
+                    path="manage-frontdesk-guests"
+                    element={<ManageFrontdeskGuestsIndividual />}
+                  />
+                  <Route path="profile" element={<FrontDeskProfile />} />
+                  <Route
+                    path="front-desk-settings"
+                    element={<FrontDeskSettings />}
+                  />
+                  <Route path="confirm-visitor" element={<ConfirmVisitor />} />
+                </Route>
+
+                {/* Security workspace */}
+                <Route
+                  path="/security-dashboard/*"
+                  element={
+                    <PrivateRoute requiredRole="security">
+                      <SecurityLayout />
+                    </PrivateRoute>
+                  }
+                >
+                  <Route index element={<SecurityDashboard />} />
+                  <Route path="generate-qr-code" element={<GenerateQRCode />} />
+                  <Route
+                    path="generate-by-unique-code"
+                    element={<GenerateByUniqueCode />}
+                  />
+                  <Route path="register-new-guest" element={<RegisterNewGuest />} />
+                  <Route path="history" element={<VisitSecurityHistory />} />
+                  <Route path="notifications" element={<SecurityNotifications />} />
+                  <Route
+                    path="manage-security-guests"
+                    element={<ManageSecurityGuestsIndividual />}
+                  />
+                  <Route path="profile" element={<SecurityProfile />} />
+                  <Route path="security-settings" element={<SecuritySettings />} />
+                </Route>
+
+                {/* Visitor Self-Service Routes */}
+                <Route
+                  path="/visitor-dashboard/*"
+                  element={
+                    <PrivateRoute requiredRole="self_service">
+                      <VisitorSelfServiceDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/visitor-dashboard/register-visit"
+                  element={
+                    <PrivateRoute requiredRole="self_service">
+                      <VisitorWalkInRegistration />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/visitor-dashboard/profile"
+                  element={
+                    <PrivateRoute requiredRole="self_service">
+                      <VisitorProfile />
+                    </PrivateRoute>
+                  }
+                />
+              </Routes>
+
+              <DevTenantDock />
+            </NotificationProvider>
+          </TenantProvider>
         </AuthProvider>
         <ToastContainer position="top-right" autoClose={5000} />
       </div>

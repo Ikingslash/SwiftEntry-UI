@@ -1,5 +1,4 @@
 import { useState } from "react";
-import NavBar from "./include/NavBar";
 import TabGroup from "./include/SecurityTabGroup";
 import TabIndividual from "./include/SecurityTabIndividual";
 
@@ -7,93 +6,46 @@ function ManageSecurityGuestsIndividual() {
   const [activeTab, setActiveTab] = useState("individual");
 
   return (
-    <div>
-      <NavBar />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "352px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        {/* Left Content */}
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
+    <div className="min-h-full bg-[#F0F7FF] pb-12 font-sans">
+
+      {/* Header Container */}
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+            Manage Guests
+          </p>
+          <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+            View, confirm and track all guest visits.
+          </p>
+        </div>
+
+        {/* Pill Switcher */}
+        <div className="inline-flex self-start sm:self-auto p-1.5 bg-white border border-slate-200/80 rounded-full shadow-sm">
+          <button
+            type="button"
+            className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-200 border-0 cursor-pointer ${activeTab === "individual"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            onClick={() => setActiveTab("individual")}
           >
-            {/* Row for Welcome Text & Plus Icon */}
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Manage Guest</h3>
-
-              {/* Plus Icon */}
-            </div>
-
-            <div
-              className="flex-grow-1 px-4"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
-              }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Core Values Section */}
-        <div
-          className="container position-absolute start-50 translate-middle-x w-100 px-3"
-          style={{ bottom: "-90px" }}
-        >
-          <div className="row g-3 justify-content-md-center">
-            <div className="col-lg-4 col-md-6"></div>
-            <div className="col-lg-4 col-md-6"></div>
-          </div>
-        </div>
-      </header>
-
-      {/* Tabs Navigation (Positioned Below Header) */}
-      <div className="position-relative">
-        <ul
-          className="nav nav-tabs container"
-          style={{
-            position: "absolute",
-            top: "-47px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
-          <li className="nav-item me-3">
-            <button
-              className={`nav-link  fs-5 ${
-                activeTab === "individual" ? "active" : "text-light"
+            Individual
+          </button>
+          <button
+            type="button"
+            className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-200 border-0 cursor-pointer ${activeTab === "group"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-transparent text-slate-600 hover:text-slate-900"
               }`}
-              onClick={() => setActiveTab("individual")}
-            >
-              Individual
-            </button>
-          </li>
-          <li className="nav-item ms-3">
-            <button
-              className={`nav-link  fs-5  ${
-                activeTab === "group" ? "active" : "text-light"
-              }`}
-              onClick={() => setActiveTab("group")}
-            >
-              Group
-            </button>
-          </li>
-        </ul>
+            onClick={() => setActiveTab("group")}
+          >
+            Group
+          </button>
+        </div>
       </div>
 
       {/* Tab Content */}
-      <div className="container mt-5">
+      <div className="max-w-[1140px] mx-auto px-4">
         {activeTab === "individual" && <TabIndividual />}
         {activeTab === "group" && <TabGroup />}
       </div>

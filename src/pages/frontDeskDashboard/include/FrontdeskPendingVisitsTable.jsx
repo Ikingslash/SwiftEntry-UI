@@ -1,53 +1,54 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../../../context/api";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import { Check, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [pendingCount, setPendingCount] = useState(0);
   const perPage = 10;
 
   const fetchVisits = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get(
-        "front-desk/guests/frontdesk-pending-visits",
-        { params: { per_page: perPage, page } }
+        "/front-desk/guests/frontdesk-pending-visits",
+        {
+          params: {
+            per_page: perPage,
+            page,
+            ...(visitType ? { visitor_type: visitType } : {}),
+          },
+        }
       );
 
       setVisits(response.data.visits || []);
       setPagination(response.data.pagination || {});
-      setPendingCount(response.data.pagination?.total || 0);
     } catch (error) {
       console.error("Error fetching pending visits:", error);
-      const errorMessage = error.response?.data?.error || "Failed to load pending visits.";
+      const errorMessage =
+        error.response?.data?.error || "Failed to load pending visits.";
       toast.error(errorMessage);
       setVisits([]);
-      setPendingCount(0);
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, visitType]);
 
   useEffect(() => {
     fetchVisits();
   }, [fetchVisits]);
 
   const handleAction = async (visitId, action) => {
-    const newStatus = action === 'accept' ? 'approved' : 'rejected';
+    const newStatus = action === "accept" ? "approved" : "rejected";
 
     // Optimistic UI update
     setVisits((currentVisits) =>
       currentVisits.map((visit) =>
         visit.id === visitId
-          ? {
-            ...visit,
-            temp_status: newStatus,
-            is_processing: true,
-          }
+          ? { ...visit, temp_status: newStatus, is_processing: true }
           : visit
       )
     );
@@ -55,29 +56,31 @@ function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
     try {
       const endpoint =
         action === "accept"
-          ? `front-desk/guests/visit/${visitId}/approve-frontdesk-host`
-          : `front-desk/guests/visit/${visitId}/reject-frontdesk-host`;
+          ? `/front-desk/guests/visit/${visitId}/approve-frontdesk-host`
+          : `/front-desk/guests/visit/${visitId}/reject-frontdesk-host`;
 
       await api.post(endpoint);
 
-      toast.success(`Visit ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully. Notification sent to visitor.`);
+      toast.success(
+        `Visit ${
+          newStatus === "approved" ? "approved" : "rejected"
+        } successfully. Notification sent to visitor.`
+      );
 
-      // Remove the visit from the list after successful action
       setVisits((currentVisits) =>
         currentVisits.filter((visit) => visit.id !== visitId)
       );
 
-      // Update pending count
-      setPendingCount((prev) => Math.max(0, prev - 1));
-
-      // Call the parent callback to refresh counts
       if (onVisitUpdate) {
         onVisitUpdate();
       }
-
     } catch (error) {
       console.error(`Error ${action}ing visit:`, error);
-      toast.error(`Failed to ${action} visit: ${error.response?.data?.error || 'Server error'}`);
+      toast.error(
+        `Failed to ${action} visit: ${
+          error.response?.data?.error || "Server error"
+        }`
+      );
 
       // Rollback UI on failure
       setVisits((currentVisits) =>
@@ -91,74 +94,97 @@ function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
   };
 
   const handlePrevious = () => {
-    if (pagination.current_page > 1) {
-      setPage((prev) => prev - 1);
-    }
+    if (pagination.current_page > 1) setPage((prev) => prev - 1);
   };
 
   const handleNext = () => {
-    if (pagination.current_page < pagination.last_page) {
+    if (pagination.current_page < pagination.last_page)
       setPage((prev) => prev + 1);
-    }
   };
 
   if (loading) {
-    return <p>Loading pending visits...</p>;
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-xs">
+        <p className="text-slate-500 text-xs font-medium mb-0">Loading pending visits...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="table-responsive my-5">
+    <div className="bg-white rounded-3xl shadow-xs border border-slate-100 overflow-hidden font-sans">
+      <div className="overflow-x-auto">
         {visits.length > 0 ? (
           <>
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>ID</th>
-                  <th>Visitor Name</th>
-                  <th>Purpose</th>
-                  <th>Scheduled Time</th>
-                  <th>Contact</th>
-                  <th>Action</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-6">ID</th>
+                  <th className="py-4 px-6">Visitor Name</th>
+                  <th className="py-4 px-6">Purpose</th>
+                  <th className="py-4 px-6">Scheduled Time</th>
+                  <th className="py-4 px-6">Contact</th>
+                  <th className="py-4 px-6 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                 {visits.map((visit) => (
-                  <tr key={visit.id}>
-                    <td>{visit.id}</td>
-                    <td>{visit.visitor?.name || "N/A"}</td>
-                    <td>{visit.purpose}</td>
-                    <td>
-                      {new Date(visit.visit_time).toLocaleString(undefined, {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
+                  <tr key={visit.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 text-slate-400 font-semibold">#{visit.id}</td>
+                    <td className="py-4 px-6 font-bold text-slate-900">
+                      {visit.visitor?.name || "N/A"}
                     </td>
-                    <td>{visit.visitor?.contact_number || "N/A"}</td>
-                    <td>
-                      {visit.temp_status === 'approved' ? (
-                        <span className="badge bg-success">Approved</span>
-                      ) : visit.temp_status === 'rejected' ? (
-                        <span className="badge bg-danger">Rejected</span>
+                    <td className="py-4 px-6 text-slate-600">{visit.purpose || "N/A"}</td>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.visit_time
+                        ? new Date(visit.visit_time).toLocaleString(undefined, {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })
+                        : "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.visitor?.contact_number || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      {visit.temp_status === "approved" ? (
+                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-semibold text-[10px] rounded-full">
+                          Approved
+                        </span>
+                      ) : visit.temp_status === "rejected" ? (
+                        <span className="px-2.5 py-1 bg-rose-50 text-rose-700 font-semibold text-[10px] rounded-full">
+                          Rejected
+                        </span>
                       ) : (
-                        <>
+                        <div className="inline-flex items-center gap-2">
                           <button
-                            className="btn btn-sm btn-success me-2"
-                            onClick={() => handleAction(visit.id, 'accept')}
+                            type="button"
+                            className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer border-0"
+                            onClick={() => handleAction(visit.id, "accept")}
                             disabled={visit.is_processing}
                             title="Approve this visit"
                           >
-                            {visit.is_processing ? "Processing..." : "Accept"}
+                            {visit.is_processing ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Check className="w-3 h-3" />
+                            )}
+                            <span>Accept</span>
                           </button>
                           <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleAction(visit.id, 'reject')}
+                            type="button"
+                            className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer border-0"
+                            onClick={() => handleAction(visit.id, "reject")}
                             disabled={visit.is_processing}
                             title="Reject this visit"
                           >
-                            {visit.is_processing ? "Processing..." : "Reject"}
+                            {visit.is_processing ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <X className="w-3 h-3" />
+                            )}
+                            <span>Reject</span>
                           </button>
-                        </>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -168,29 +194,35 @@ function FrontdeskPendingVisitsTable({ visitType, onVisitUpdate }) {
 
             {/* Pagination Controls */}
             {pagination.last_page > 1 && (
-              <div className="d-flex justify-content-between align-items-center mt-3">
+              <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs">
                 <button
-                  className="btn btn-primary btn-sm"
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
                   onClick={handlePrevious}
                   disabled={pagination.current_page === 1}
                 >
-                  ← Previous
+                  <ChevronLeft className="w-4 h-4" /> Previous
                 </button>
-                <span className="small">
+                <span className="text-slate-500 font-semibold">
                   Page {pagination.current_page} of {pagination.last_page}
                 </span>
                 <button
-                  className="btn btn-primary btn-sm"
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
                   onClick={handleNext}
                   disabled={pagination.current_page === pagination.last_page}
                 >
-                  Next →
+                  Next <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
           </>
         ) : (
-          <div className="alert alert-info">No visits requiring your approval.</div>
+          <div className="p-12 text-center">
+            <p className="text-slate-400 text-xs font-medium mb-0">
+              No visits requiring your approval.
+            </p>
+          </div>
         )}
       </div>
     </div>

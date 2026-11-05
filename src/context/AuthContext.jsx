@@ -1,8 +1,10 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import api from "./api";
 import { toast } from "react-toastify";
+import api, { API_ORIGIN } from "./api";
+import { dashboardFor, getScope } from "../tenancy/scope.js";
+import { SCOPES } from "../tenancy/constants.js";
 
 const AuthContext = createContext();
 
@@ -45,87 +47,71 @@ const AUTH_PATHS = {
   },
 };
 
+/**
+ * The new backend contract is a single login endpoint. Until it ships, live
+ * deployments keep the legacy five-probe flow. The prototype defaults to the
+ * single endpoint because the mock adapter implements it.
+ */
+const USE_SINGLE_LOGIN =
+  import.meta.env.VITE_USE_MOCK_API === "true" ||
+  import.meta.env.VITE_SINGLE_LOGIN === "true";
+
 const normalizeUser = (rawUser) => {
   if (!rawUser || typeof rawUser !== "object") {
     return null;
   }
 
-  // Get user data from localStorage as fallback
   let storedUser = null;
   try {
     storedUser = JSON.parse(localStorage.getItem("user"));
-  } catch (e) {
-    console.warn("Failed to parse stored user from localStorage");
+  } catch {
+    storedUser = null;
   }
 
-  // CASE 1: Profile endpoint shape (from /profile)
   const profile = rawUser.profile ?? null;
+  // Raw fields override the profile, but normalized identity fields below
+  // override both so a stray raw key cannot erase scope or tenant.
+  const source = profile ? { ...profile, ...rawUser } : rawUser;
 
-  if (profile) {
-    // Try to get ID from multiple possible sources
-    const userId = rawUser.id ??
-      profile.id ??
-      (storedUser && storedUser.id) ??
-      null;
+  const userId = rawUser.id ?? rawUser.user_id ?? profile?.id ?? storedUser?.id ?? null;
+  const userRole = rawUser.role ?? profile?.role ?? storedUser?.role ?? "";
 
-    // Try to get role from multiple possible sources
-    const userRole = rawUser.role ??
-      profile.role ??
-      (storedUser && storedUser.role) ??
-      "";
+  const tenantId =
+    rawUser.tenant_id ??
+    rawUser.tenantId ??
+    rawUser.tenant?.id ??
+    profile?.tenant_id ??
+    storedUser?.tenant_id ??
+    null;
 
-    if (!userId) {
-      console.warn("normalizeUser: Could not determine user ID", {
-        rawUser,
-        profile,
-        storedUser
-      });
-    }
+  const scope =
+    rawUser.scope ??
+    profile?.scope ??
+    storedUser?.scope ??
+    (tenantId != null ? SCOPES.TENANT : null);
 
-    const normalized = {
-      id: userId,
-      role: userRole,
-      name: profile.fullName ?? profile.name ?? "",
-      email: profile.email ?? "",
-      phone: profile.phone ?? "",
-      department: profile.department ?? "",
-      company_name: profile.company_name ?? "",
-      profile_picture: profile.photo ?? profile.profile_picture ?? "",
-      // Keep raw fields for safety
-      ...profile,
-      ...rawUser,
-    };
+  const tenant = rawUser.tenant ?? profile?.tenant ?? storedUser?.tenant ?? null;
+  const permissions =
+    rawUser.permissions ?? profile?.permissions ?? storedUser?.permissions ?? [];
 
-    // console.log("normalizeUser: Profile case result", normalized);
-    return normalized;
-  }
-
-  // CASE 2: Login endpoint shape or already normalized
-  const userId = rawUser.id ?? (storedUser && storedUser.id) ?? null;
-  const userRole = rawUser.role ?? (storedUser && storedUser.role) ?? "";
-
-  if (!userId) {
-    console.warn("normalizeUser: Login case - missing ID", {
-      rawUser,
-      storedUser
-    });
-  }
-
-  const normalized = {
+  return {
+    ...source,
     id: userId,
-    name: rawUser.name ?? "",
-    email: rawUser.email ?? "",
     role: userRole,
-    department: rawUser.department ?? "",
-    profile_picture: rawUser.profile_picture ?? rawUser.photo ?? "",
-    company_name: rawUser.company_name ?? "",
-    phone: rawUser.phone ?? "",
-    ...rawUser,
+    name: profile?.fullName ?? profile?.name ?? source.name ?? "",
+    email: source.email ?? "",
+    phone: source.phone ?? "",
+    department: source.department ?? "",
+    company_name: source.company_name ?? "",
+    profile_picture: source.photo ?? source.profile_picture ?? "",
+    scope,
+    tenant_id: tenantId,
+    tenant,
+    building_id:
+      rawUser.building_id ?? profile?.building_id ?? storedUser?.building_id ?? null,
+    permissions,
   };
-
-  return normalized;
 };
-
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -149,221 +135,255 @@ export const AuthProvider = ({ children }) => {
 
   const getProfileEndpoint = (userRole) => AUTH_PATHS[userRole]?.profile;
 
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    setRole(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("viewingTenantId");
+    delete api.defaults.headers.common["Authorization"];
+    navigate("/");
+  };
+
+  /**
+   * Writes a session from either the new single-login payload or the legacy
+   * role endpoint. Keeps local storage, axios headers and navigation aligned.
+   */
+  const persistSession = (payload, { navigateToDashboard = true } = {}) => {
+    const rawUser = payload.user ?? payload;
+    const userData = normalizeUser({
+      ...rawUser,
+      role: rawUser.role ?? payload.role,
+    });
+
+    if (!userData?.id) {
+      throw new Error("Login succeeded but the user payload has no id.");
+    }
+
+    let previousUserId = null;
+    try {
+      previousUserId = JSON.parse(localStorage.getItem("user"))?.id ?? null;
+    } catch {
+      previousUserId = null;
+    }
+    if (String(previousUserId) !== String(userData.id)) {
+      // The tenant filter belongs to the previous persona, not the new one.
+      sessionStorage.removeItem("viewingTenantId");
+    }
+
+    const nextToken = payload.token ?? localStorage.getItem("token");
+    const nextRole = userData.role ?? role;
+
+    setUser(userData);
+    setToken(nextToken);
+    setRole(nextRole);
+
+    if (nextToken) localStorage.setItem("token", nextToken);
+    if (nextRole) localStorage.setItem("userRole", nextRole);
+    localStorage.setItem("user", JSON.stringify(userData));
+
+    if (nextToken) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${nextToken}`;
+    }
+
+    if (navigateToDashboard) navigate(dashboardFor(userData));
+    return userData;
+  };
+
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
       const storedToken = localStorage.getItem("token");
       const storedRole = localStorage.getItem("userRole");
       const storedUserRaw = localStorage.getItem("user");
 
-      // No auth data → stop and exit
-      if (!storedToken || !storedRole || !storedUserRaw) {
-        console.log("checkAuth: Missing auth data in localStorage");
-        setLoading(false);
+      if (!storedToken || !storedUserRaw) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+
+      if (USE_SINGLE_LOGIN) {
+        try {
+          const response = await api.get("/me");
+          if (!cancelled) {
+            persistSession(
+              { token: storedToken, user: response.data.user ?? response.data },
+              { navigateToDashboard: false }
+            );
+          }
+        } catch (error) {
+          if (error.response?.status === 401) {
+            if (!cancelled) logout();
+          } else {
+            // Offline or mock cold start: keep the cached user rather than
+            // logging the person out for a transient failure.
+            try {
+              const storedUser = JSON.parse(storedUserRaw);
+              const normalized = normalizeUser(storedUser);
+              if (!cancelled && normalized?.id) {
+                setUser(normalized);
+                setToken(storedToken);
+                setRole(storedRole ?? normalized.role);
+              }
+            } catch {
+              if (!cancelled) logout();
+            }
+          }
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
         return;
       }
 
       try {
-        // Parse stored user first
         let storedUser = null;
         try {
           storedUser = JSON.parse(storedUserRaw);
-        } catch (e) {
-          console.error("Failed to parse stored user:", e);
+        } catch {
           logout();
           return;
         }
 
-        // Attach token for API requests
-        api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
-
         const profileEndpoint = getProfileEndpoint(storedRole);
 
         if (!profileEndpoint) {
-          console.warn("No profile endpoint for role:", storedRole);
-
-          // Use stored user data
           const normalized = normalizeUser(storedUser);
-
           if (normalized?.id) {
             setUser(normalized);
             setToken(storedToken);
             setRole(storedRole);
-            console.log("checkAuth: Using stored user data", normalized);
           } else {
-            console.error("checkAuth: Invalid stored user data");
             logout();
           }
-
           setLoading(false);
           return;
         }
 
         try {
-          // Fetch profile from backend
           const response = await api.get(profileEndpoint);
           const rawUser = response.data.user ?? response.data;
-
-          // Merge with stored user data to ensure we have ID and role
           const mergedUser = {
             ...storedUser,
             ...rawUser,
             id: rawUser.id ?? storedUser.id,
-            role: rawUser.role ?? storedRole, // Use storedRole as fallback
+            role: rawUser.role ?? storedRole,
           };
-
-          const normalized = normalizeUser(mergedUser);
-
-          if (!normalized || !normalized.id) {
-            console.error("Invalid normalized user after profile fetch:", normalized);
-            // Try with just stored data as fallback
-            const fallbackNormalized = normalizeUser(storedUser);
-            if (fallbackNormalized?.id) {
-              console.log("Using fallback stored user data");
-              setUser(fallbackNormalized);
-              setToken(storedToken);
-              setRole(storedRole);
-            } else {
-              logout();
-            }
-            return;
-          }
-
-          // Store fresh normalized user
-          setUser(normalized);
-          setToken(storedToken);
-          setRole(storedRole);
-
-          // Update localStorage with the fresh data
-          localStorage.setItem("user", JSON.stringify(normalized));
-
-          console.log("User authenticated via profile endpoint:", normalized);
+          persistSession(
+            { token: storedToken, user: mergedUser },
+            { navigateToDashboard: false }
+          );
         } catch (profileError) {
-          console.error("Profile fetch failed:", profileError);
-
-          if (profileError.response && profileError.response.status === 401) {
-            console.warn("Token expired or invalid. Logging out.");
+          if (profileError.response?.status === 401) {
             logout();
             return;
           }
-
-          // If profile fetch fails for other reasons (e.g., network offline), use stored user data
           const normalized = normalizeUser(storedUser);
           if (normalized?.id) {
             setUser(normalized);
             setToken(storedToken);
             setRole(storedRole);
-            console.log("Using stored user after profile fetch failure", normalized);
           } else {
             logout();
           }
         }
-
       } catch (error) {
         console.error("Auth refresh failed:", error);
         logout();
       }
 
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
 
     checkAuth();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Global session failures are raised by the axios interceptor.
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      if (localStorage.getItem("token")) {
+        toast.error("Your session has expired. Please sign in again.");
+        logout();
+      }
+    };
+    const handleSuspended = (event) => {
+      toast.error(event.detail?.message ?? "This tenant has been suspended.");
+      logout();
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    window.addEventListener("tenant:suspended", handleSuspended);
+    return () => {
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+      window.removeEventListener("tenant:suspended", handleSuspended);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getRecaptcha = async (getRecaptchaToken, action = "login") => {
+    if (typeof getRecaptchaToken === "function") {
+      return getRecaptchaToken(action);
+    }
+    return getRecaptchaToken;
+  };
 
   const login = async (email, password, getRecaptchaToken) => {
-    const roles = ["admin", "staff", "security", "front_desk", "self_service"];
-    let dashboard = "/";
-
     try {
-      // Get CSRF cookie before making login attempts
+      // The mock adapter answers this harmlessly; live deployments need it
+      // before the Sanctum cookie flow.
       try {
-        await api.get("/sanctum/csrf-cookie", {
-          // baseURL: "http://127.0.0.1:8000",
-          baseURL: "https://api.theswiftentry.com",
-        });
-      } catch (csrfError) {
-        console.warn("Could not fetch CSRF cookie:", csrfError);
+        await api.get("/sanctum/csrf-cookie", { baseURL: API_ORIGIN });
+      } catch {
+        // Cookie bootstrap is best-effort.
       }
 
-      for (const role of roles) {
-        const path = AUTH_PATHS[role].login;
-        try {
-          // Get a fresh reCAPTCHA token for each attempt
-          // reCAPTCHA v3 tokens can only be used once
-          let recaptchaToken;
-          if (typeof getRecaptchaToken === 'function') {
-            recaptchaToken = await getRecaptchaToken('login');
-          } else {
-            // Backward compatibility: if a string token is passed directly
-            recaptchaToken = getRecaptchaToken;
-          }
+      if (USE_SINGLE_LOGIN) {
+        const recaptchaToken = await getRecaptcha(getRecaptchaToken, "login");
+        const response = await api.post("/auth/login", {
+          email,
+          password,
+          recaptcha_token: recaptchaToken,
+        });
+        persistSession(response.data);
+        toast.success("Login successful!");
+        return true;
+      }
 
+      // Legacy fallback: the backend does not expose /auth/login yet.
+      const roles = ["admin", "staff", "security", "front_desk", "self_service"];
+      for (const candidateRole of roles) {
+        const path = AUTH_PATHS[candidateRole].login;
+        try {
+          const recaptchaToken = await getRecaptcha(getRecaptchaToken, "login");
           const response = await api.post(path, {
             email,
             password,
-            recaptcha_token: recaptchaToken
+            recaptcha_token: recaptchaToken,
           });
 
           if (response.data.token) {
-            const rawUser = response.data.user || response.data;
-
-            // Ensure the user object has role and id
-            const userWithRole = {
-              ...rawUser,
-              role: role,
-              // Make sure ID is included
-              id: rawUser.id || rawUser.user_id || null,
-            };
-
-            const userData = normalizeUser(userWithRole);
-
-            // Validate that we have an ID
-            if (!userData.id) {
-              console.error("Login succeeded but user ID is missing:", userData);
-              toast.error("Login failed: User data incomplete");
-              return false;
-            }
-
-            setUser(userData);
-            setToken(response.data.token);
-            setRole(role);
-
-            switch (role) {
-              case "admin":
-                dashboard = "/admin-dashboard";
-                break;
-              case "staff":
-                dashboard = "/staff-dashboard";
-                break;
-              case "security":
-                dashboard = "/security-dashboard";
-                break;
-              case "front_desk":
-                dashboard = "/front-desk-dashboard";
-                break;
-              case "self_service":
-                dashboard = "/visitor-dashboard";
-                break;
-              default:
-                dashboard = "/";
-            }
-
-            // Store in localStorage
-            localStorage.setItem("token", response.data.token);
-            localStorage.setItem("userRole", role);
-            localStorage.setItem("user", JSON.stringify(userData));
-
-            // Set authorization header
-            api.defaults.headers.common[
-              "Authorization"
-            ] = `Bearer ${response.data.token}`;
-
-            navigate(dashboard);
+            const rawUser = response.data.user ?? response.data;
+            persistSession({
+              token: response.data.token,
+              user: {
+                ...rawUser,
+                role: candidateRole,
+                id: rawUser.id ?? rawUser.user_id ?? null,
+              },
+            });
             toast.success("Login successful!");
             return true;
           }
         } catch (error) {
-          console.error(
+          console.warn(
             `Failed login attempt at ${path}`,
             error.response?.data || error.message
           );
@@ -373,21 +393,36 @@ export const AuthProvider = ({ children }) => {
       toast.error("Invalid credentials or user not found.");
       return false;
     } catch (error) {
-      console.error("Login failed due to unexpected error:", error);
-      toast.error("An error occurred. Please try again.");
+      const message =
+        error.response?.data?.message ??
+        error.response?.data?.error ??
+        "An error occurred. Please try again.";
+      toast.error(message);
       return false;
     }
   };
-  const logout = () => {
-    console.log("Logging out user...");
-    setUser(null);
-    setToken(null);
-    setRole(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("user");
-    delete api.defaults.headers.common["Authorization"];
-    navigate("/");
+
+  /** Dev-only shortcut used by the persona switcher. */
+  const demoLogin = async (email) => {
+    try {
+      const response = await api.post("/auth/demo-login", { email });
+      persistSession(response.data);
+      toast.success(`Signed in as ${response.data.user?.name ?? email}`);
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message ?? "Could not start the demo session.");
+      return false;
+    }
+  };
+
+  const refreshUser = async () => {
+    const storedToken = localStorage.getItem("token");
+    if (!storedToken) return null;
+    const response = await api.get("/me");
+    return persistSession(
+      { token: storedToken, user: response.data.user ?? response.data },
+      { navigateToDashboard: false }
+    );
   };
 
   const updateUser = (newUserData) => {
@@ -398,7 +433,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // NEW FUNCTIONS FOR PASSWORD RESET FLOW
+  // ---- password reset flow (unchanged behaviour, cleaned logging) ----
   const forgotPassword = async (email, getRecaptchaToken) => {
     setResetFlowData({ email: null, resetToken: null, userRole: null });
 
@@ -407,80 +442,45 @@ export const AuthProvider = ({ children }) => {
     let mailFailed = false;
 
     try {
-      // Get CSRF cookie before making forgot password attempts
       try {
-        await api.get("/sanctum/csrf-cookie", {
-          // baseURL: "http://127.0.0.1:8000",
-          baseURL: "https://api.theswiftentry.com",
-        });
-      } catch (csrfError) {
-        console.warn("Could not fetch CSRF cookie:", csrfError);
+        await api.get("/sanctum/csrf-cookie", { baseURL: API_ORIGIN });
+      } catch {
+        // Best-effort.
       }
 
-      for (const role of roles) {
-        const path = AUTH_PATHS[role].forgot;
+      for (const candidateRole of roles) {
+        const path = AUTH_PATHS[candidateRole].forgot;
         try {
-          // Get a fresh reCAPTCHA token for each attempt
-          // reCAPTCHA v3 tokens can only be used once
-          let recaptchaToken;
-          if (typeof getRecaptchaToken === 'function') {
-            recaptchaToken = await getRecaptchaToken('forgot_password');
-          } else {
-            // Backward compatibility: if a string token is passed directly
-            recaptchaToken = getRecaptchaToken;
-          }
-
+          const recaptchaToken = await getRecaptcha(getRecaptchaToken, "forgot_password");
           const response = await api.post(path, {
             email,
-            recaptcha_token: recaptchaToken
+            recaptcha_token: recaptchaToken,
           });
 
           if (response.status >= 200 && response.status < 300) {
-            userRole = role;
-            console.log("Matched role:", role);
+            userRole = candidateRole;
             break;
           }
         } catch (error) {
           if (error.response?.status === 500) {
-            console.error(
-              `Mail sending failed for ${role} path:`,
-              error.response?.data || error.message
-            );
             mailFailed = true;
-          } else {
-            // Expected errors: 404/401 (user not found in this role's table)
-            console.warn(
-              `Forgot password check failed for ${role}:`,
-              error.response?.data || error.message
-            );
           }
         }
       }
 
       if (mailFailed) {
-        toast.error(
-          "Failed to send verification email. Please contact support."
-        );
+        toast.error("Failed to send verification email. Please contact support.");
         return false;
       }
 
       if (userRole) {
-        setResetFlowData({
-          email: email,
-          resetToken: null,
-          userRole: userRole,
-        });
+        setResetFlowData({ email, resetToken: null, userRole });
         toast.success("Verification code sent to your email.");
-        return true;
       } else {
         toast.info("If this email is registered, a code has been sent.");
-        setResetFlowData({
-          email: email,
-          resetToken: null,
-          userRole: null,
-        });
-        return true;
+        setResetFlowData({ email, resetToken: null, userRole: null });
       }
+      return true;
     } catch (error) {
       console.error("Forgot Password failed:", error);
       toast.error("An error occurred. Please try again.");
@@ -507,34 +507,20 @@ export const AuthProvider = ({ children }) => {
         }));
         toast.success("OTP verified. Set your new password.");
         return true;
-      } else {
-        console.error("No reset_token in response:", response.data);
-        toast.error("Verification failed. Please try again.");
-        return false;
       }
+
+      toast.error("Verification failed. Please try again.");
+      return false;
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.error || "Invalid or expired verification code.";
-      toast.error(errorMessage);
-      console.error("OTP verification failed:", error);
+      toast.error(error.response?.data?.error ?? "Invalid or expired verification code.");
       return false;
     }
   };
 
-  const resetPassword = async (
-    email,
-    resetToken,
-    password,
-    confirmPassword
-  ) => {
+  const resetPassword = async (email, resetToken, password, confirmPassword) => {
     const { userRole } = resetFlowData;
 
     if (!email || !resetToken || !userRole) {
-      console.error("Missing reset flow data:", {
-        email,
-        resetToken,
-        userRole,
-      });
       toast.error("Password reset process failed. Please restart.");
       navigate("/forgot-password");
       return false;
@@ -542,66 +528,38 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const path = AUTH_PATHS[userRole].reset;
-      console.log("Reset password attempt:", {
-        email,
-        userRole,
-        path,
-        token_length: resetToken.length,
-        token_prefix: resetToken.substring(0, 10) + "...",
-      });
-
-      // Prepare request data - all roles use the same field names
-      const requestData = {
+      const response = await api.post(path, {
         email,
         reset_token: resetToken,
         password,
         password_confirmation: confirmPassword,
-      };
-
-      console.log("Sending request data:", {
-        ...requestData,
-        password: "***", // Hide password in logs
-        password_confirmation: "***"
       });
 
-      const response = await api.post(path, requestData);
-
-      console.log("Reset password response:", response.data);
-
       if (response.data.message) {
-        // Clear all reset flow data upon success
         setResetFlowData({ email: null, resetToken: null, userRole: null });
         toast.success("Password successfully reset! Please sign in.");
         return true;
       }
+      return false;
     } catch (error) {
-      console.error("Password reset failed:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-        config: error.config?.data ? JSON.parse(error.config.data) : null
-      });
-
       let errorMessage = "Failed to reset password. Token may have expired.";
-
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.response?.status === 401) {
-        errorMessage = "Invalid or expired reset token. Please start the process again.";
+        errorMessage = "Invalid or expired reset token. Please start again.";
       } else if (error.response?.status === 422) {
-        errorMessage = "Validation failed: " + JSON.stringify(error.response.data.errors);
+        errorMessage = "Validation failed. Please check your new password.";
       }
 
       toast.error(errorMessage);
-
-      // If token is invalid, clear reset flow data
       if (error.response?.status === 401) {
         setResetFlowData({ email: null, resetToken: null, userRole: null });
       }
-
       return false;
     }
   };
+
+  const scopeInfo = getScope(user);
 
   return (
     <AuthContext.Provider
@@ -609,7 +567,13 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         role,
+        scope: scopeInfo.scope,
+        tenant: user?.tenant ?? null,
+        isBuildingScope: scopeInfo.isBuilding,
+        isTenantScope: scopeInfo.isTenant,
         login,
+        demoLogin,
+        refreshUser,
         updateUser,
         logout,
         loading,
@@ -617,6 +581,7 @@ export const AuthProvider = ({ children }) => {
         verifyOtp,
         resetPassword,
         resetFlowData,
+        singleLoginEnabled: USE_SINGLE_LOGIN,
       }}
     >
       {children}

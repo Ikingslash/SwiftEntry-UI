@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import api from "../../../../context/api";
-import { toast } from "react-toastify"; // Added missing toast import
+import { toast } from "react-toastify";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Added visitType prop
 function MissedVisitTable({ visitType }) {
-const [visits, setVisits] = useState([]);
+  const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -12,29 +12,28 @@ const [visits, setVisits] = useState([]);
 
   useEffect(() => {
     fetchVisits();
-  }, [page, visitType]); // Added visitType as dependency
+  }, [page, visitType]);
 
   const fetchVisits = async () => {
     setLoading(true);
     try {
-        // FIX: Dynamic endpoint for missed visits
       const endpoint = `/front-desk/guests/${visitType}/missed-visits`;
       const response = await api.get(endpoint, {
-          params: {
-            per_page: perPage,
-            page: page,
-          },
-        });
+        params: {
+          per_page: perPage,
+          page: page,
+        },
+      });
 
-        setVisits(response.data.visits);
-        setPagination(response.data.pagination);
-      } catch (error) {
-        console.error('Error fetching visits:', error);
-        toast.error("Failed to load missed visits"); // Added error toast
-      } finally {
-        setLoading(false);
-      }
-    };
+      setVisits(response.data.visits);
+      setPagination(response.data.pagination ?? {});
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+      toast.error("Failed to load missed visits");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) {
@@ -49,69 +48,77 @@ const [visits, setVisits] = useState([]);
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-xs">
+        <p className="text-slate-500 text-xs font-medium mb-0">Loading missed visits...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="table-responsive my-5">
-      {visits.length > 0 ? (
+    <div className="bg-white rounded-3xl shadow-xs border border-slate-100 overflow-hidden font-sans">
+      <div className="overflow-x-auto">
+        {visits.length > 0 ? (
           <>
-        <table className="table table-bordered table-hover">
-          <thead>
-            <tr>
-              <th>Unique ID</th>
-              <th>Guest Name</th>
-              <th>Host Name</th>
-              <th>Visit Date/Time</th>
-              <th>Contact</th>
-              <th>Email Address</th>
-              <th>Special Requirement</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visits.map((visit) => (
-              <tr key={visit.id}>
-                <td>{visit.id}</td>
-                <td>{visit.visitor?.name}</td>
-                <td>{visit.host_name}</td>
-                <td>
-                    {visit.visit_time
-                        ? new Date(visit.visit_time).toLocaleString()
-                        : "N/A"
-                    }
-                </td>
-                <td>{visit.visitor?.contact_number}</td>
-                <td>{visit.visitor?.email}</td>
-                <td>{visit.visitor?.special_requirements || 'None'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-           {/* Pagination Controls */}
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <button
-                className="btn btn-primary"
-                onClick={handlePrevious}
-                disabled={pagination.current_page === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {pagination.current_page} of {pagination.last_page}
-              </span>
-              <button
-                className="btn btn-primary"
-                onClick={handleNext}
-                disabled={pagination.current_page === pagination.last_page}
-              >
-                Next
-              </button>
-            </div>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-6">Unique ID</th>
+                  <th className="py-4 px-6">Guest Name</th>
+                  <th className="py-4 px-6">Host Name</th>
+                  <th className="py-4 px-6">Visit Date/Time</th>
+                  <th className="py-4 px-6">Contact</th>
+                  <th className="py-4 px-6">Email Address</th>
+                  <th className="py-4 px-6">Special Requirement</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                {visits.map((visit) => (
+                  <tr key={visit.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 text-slate-400 font-semibold">#{visit.id}</td>
+                    <td className="py-4 px-6 font-bold text-slate-900">{visit.visitor?.name}</td>
+                    <td className="py-4 px-6 text-slate-600">{visit.host_name}</td>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.visit_time ? new Date(visit.visit_time).toLocaleString() : "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-slate-600">{visit.visitor?.contact_number}</td>
+                    <td className="py-4 px-6 text-slate-600">{visit.visitor?.email}</td>
+                    <td className="py-4 px-6 text-slate-500">{visit.visitor?.special_requirements || 'None'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination Controls */}
+            {pagination.last_page > 1 && (
+              <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  onClick={handlePrevious}
+                  disabled={pagination.current_page === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+                </button>
+                <span className="text-slate-500 font-semibold">
+                  Page {pagination.current_page} of {pagination.last_page}
+                </span>
+                <button
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  onClick={handleNext}
+                  disabled={pagination.current_page === pagination.last_page}
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </>
-          ) : (
-            <h1>No Missed Visit</h1>
-          )}
+        ) : (
+          <div className="p-12 text-center">
+            <p className="text-slate-400 text-xs font-medium mb-0">No Missed Visit</p>
+          </div>
+        )}
       </div>
     </div>
   );

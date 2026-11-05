@@ -4,45 +4,29 @@ import { toast } from 'react-toastify';
 
 const Pagination = ({ pagination, handlePageChange }) => {
   const { current_page, last_page } = pagination;
-  const pages = [];
-  for (let i = 1; i <= last_page; i++) {
-    pages.push(i);
-  }
 
   return (
-    <nav aria-label="Page navigation">
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${current_page === 1 ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={() => handlePageChange(current_page - 1)}
-          >
-            Previous
-          </a>
-        </li>
-        {pages.map(page => (
-          <li key={page} className={`page-item ${current_page === page ? 'active' : ''}`}>
-            <a
-              className="page-link"
-              href="#"
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </a>
-          </li>
-        ))}
-        <li className={`page-item ${current_page === last_page ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={() => handlePageChange(current_page + 1)}
-          >
-            Next
-          </a>
-        </li>
-      </ul>
-    </nav>
+    <div className="flex items-center justify-between px-2 my-6">
+      <span className="text-slate-500 text-xs font-medium">
+        Page {current_page} of {last_page}
+      </span>
+      <div className="inline-flex p-1 bg-white border border-slate-200 rounded-2xl shadow-2xs gap-1">
+        <button
+          onClick={() => handlePageChange(current_page - 1)}
+          disabled={current_page === 1}
+          className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-35 rounded-xl transition-colors cursor-pointer"
+        >
+          <i className="bi bi-chevron-left text-xs"></i>
+        </button>
+        <button
+          onClick={() => handlePageChange(current_page + 1)}
+          disabled={current_page === last_page}
+          className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-35 rounded-xl transition-colors cursor-pointer"
+        >
+          <i className="bi bi-chevron-right text-xs"></i>
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -60,7 +44,7 @@ function TabPendingVisits({ filters, searchQuery, refreshKey, onVisitAction }) {
     setLoading(true);
     try {
       const visitorType = filters.group && !filters.individual ? "group" :
-                         filters.individual && !filters.group ? "individual" : "all";
+        filters.individual && !filters.group ? "individual" : "all";
 
       const response = await api.get("/front-desk/guests/visits/pending", {
         params: {
@@ -100,101 +84,97 @@ function TabPendingVisits({ filters, searchQuery, refreshKey, onVisitAction }) {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      'pending': { color: 'bg-warning text-dark', text: 'Pending' },
-      'scheduled_visit': { color: 'bg-info', text: 'Scheduled' },
-      'pre_registered_visit': { color: 'bg-secondary', text: 'Pre-registered' },
-      'Walk_In': { color: 'bg-primary', text: 'Walk-in' }
+      'pending': { color: 'bg-amber-100 text-amber-700', text: 'Pending' },
+      'scheduled_visit': { color: 'bg-blue-100 text-blue-700', text: 'Scheduled' },
+      'pre_registered_visit': { color: 'bg-slate-100 text-slate-700', text: 'Pre-registered' },
+      'Walk_In': { color: 'bg-emerald-100 text-emerald-700', text: 'Walk-in' }
     };
 
-    const statusInfo = statusMap[status] || { color: 'bg-secondary', text: status };
-    return <span className={`badge ${statusInfo.color}`}>{statusInfo.text}</span>;
+    const statusInfo = statusMap[status] || { color: 'bg-slate-100 text-slate-700', text: status };
+    return <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${statusInfo.color}`}>{statusInfo.text}</span>;
   };
 
   return (
     <div>
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Loading pending visits...</p>
+        <div className="text-center py-12 text-slate-500 text-xs font-medium">
+          Loading pending visits...
         </div>
       ) : visits.length === 0 ? (
-        <div className="text-center py-5">
-          <i className="bi bi-calendar-x fs-1 text-muted"></i>
-          <h5 className="mt-3 text-muted">No pending visits found</h5>
-          <p className="text-muted">All visits are confirmed or completed</p>
+        <div className="bg-white rounded-3xl shadow-xs border border-slate-100 p-12 text-center">
+          <i className="bi bi-calendar-x text-slate-300 text-3xl"></i>
+          <p className="mt-3 text-slate-700 font-semibold text-xs">No pending visits found</p>
+          <p className="text-slate-400 text-xs mt-1">All visits are confirmed or completed</p>
         </div>
       ) : (
         <>
-          <div className="row row-cols-1 row-cols-md-2 g-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {visits.map((visit) => (
-              <div key={visit.id} className="col my-4">
-                <div className="card h-100 shadow border-0 rounded-3">
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <div>
-                        <h6 className="card-title mb-1 fw-bold">
-                          {visit.visitor_name}
-                        </h6>
-                        <small className="text-muted">
-                          {visit.visitor_email}
-                        </small>
-                      </div>
-                      {getStatusBadge(visit.status)}
+              <div key={visit.id} className="bg-white rounded-3xl p-6 shadow-xs border border-slate-100 flex flex-col justify-between hover:border-slate-200 transition-all">
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h6 className="font-bold text-slate-900 text-sm mb-0.5">
+                        {visit.visitor_name}
+                      </h6>
+                      <span className="text-slate-400 text-xs">{visit.visitor_email}</span>
                     </div>
+                    {getStatusBadge(visit.status)}
+                  </div>
 
-                    <div className="row g-2">
-                      <div className="col-6">
-                        <small className="text-muted d-block">ID No</small>
-                        <strong>{visit.visit_code}</strong>
-                      </div>
-                      <div className="col-6">
-                        <small className="text-muted d-block">Visit Time</small>
-                        <strong>{visit.visit_time}</strong>
-                      </div>
-                      <div className="col-6">
-                        <small className="text-muted d-block">Host</small>
-                        <strong>{visit.host_name}</strong>
-                      </div>
-                      <div className="col-6">
-                        <small className="text-muted d-block">Contact</small>
-                        <strong>{visit.visitor_contact_number}</strong>
-                      </div>
-
-                      <div className="my-3 col-6">
-                        <small className="text-muted d-block">Purpose</small>
-                        <p className="mb-0">{visit.purpose}</p>
-                      </div>
-
-                      {visit.special_requirements &&
-                        visit.special_requirements !== "None" && (
-                          <div className="alert alert-warning my-3 col-6">
-                            <small>
-                              <i className="bi bi-exclamation-triangle me-1"></i>
-                              {visit.special_requirements}
-                            </small>
-                          </div>
-                        )}
+                  <div className="grid grid-cols-2 gap-3 text-xs mb-4">
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">ID No</span>
+                      <strong className="text-slate-800 mt-0.5 block">{visit.visit_code}</strong>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Visit Time</span>
+                      <strong className="text-slate-800 mt-0.5 block">{visit.visit_time}</strong>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Host</span>
+                      <strong className="text-slate-800 mt-0.5 block">{visit.host_name}</strong>
+                    </div>
+                    <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-slate-400 text-[10px] uppercase font-semibold block">Contact</span>
+                      <strong className="text-slate-800 mt-0.5 block">{visit.visitor_contact_number}</strong>
                     </div>
                   </div>
-                  <div className="card-footer bg-light border-top-0">
-                    <small className="text-muted">
-                      Registered: {visit.registered_at}
-                    </small>
+
+                  <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-100 text-xs mb-3">
+                    <span className="text-slate-400 text-[10px] uppercase font-semibold block">Purpose</span>
+                    <p className="text-slate-800 font-medium mb-0 mt-0.5">{visit.purpose}</p>
                   </div>
+
+                  {visit.special_requirements && visit.special_requirements !== "None" && (
+                    <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-3 text-amber-800 text-xs mb-3 flex items-center gap-2">
+                      <i className="bi bi-exclamation-triangle text-sm"></i>
+                      <span>{visit.special_requirements}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-slate-400 text-[11px]">
+                    Registered: {visit.registered_at}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleConfirmVisit(visit.id)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
+                  >
+                    Confirm Visit
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
           {pagination.last_page > 1 && (
-            <div className="my-4">
-              <Pagination
-                pagination={pagination}
-                handlePageChange={handlePageChange}
-              />
-            </div>
+            <Pagination
+              pagination={pagination}
+              handlePageChange={handlePageChange}
+            />
           )}
         </>
       )}

@@ -1,14 +1,15 @@
 import { useState } from "react";
 import UserAvatar from "../../../components/UserAvatar";
-import NavBar from "../include/NavBar";
 import ManageAdminsTable from "./ManageAdminsTable";
 import BulkUploadModal from "../include/BulkUploadModal";
 import BulkDeleteConfirmModal from "../include/BulkDeleteConfirmModal";
 import api from "../../../context/api";
-import { ToastContainer, toast } from 'react-toastify';
-import "react-toastify/dist/ReactToastify.css";
+import { useTenant } from "../../../context/TenantContext";
+import { toast } from 'react-toastify';
+import AdminTopHeader from "../include/AdminTopHeader";
 
 function AdminManagement() {
+    const { tenants } = useTenant();
     const [refreshKey, setRefreshKey] = useState(0);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
@@ -100,6 +101,15 @@ function AdminManagement() {
             }
         });
 
+        // "Department" selects the tenant this admin belongs to.
+        const selectedTenant = tenants.find(
+            (tenant) => String(tenant.id) === String(newAdminFormData.department)
+        );
+        formData.set("department", selectedTenant?.name ?? "");
+        if (selectedTenant) {
+            formData.set("tenant_id", String(selectedTenant.id));
+        }
+
         try {
             const response = await api.post("admin/admins", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -130,93 +140,47 @@ function AdminManagement() {
     };
 
     return (
-        <div>
-            <NavBar />
-            <ToastContainer position="top-right" autoClose={5000} />
-            {/* Header */}
-            <header
-                id="home"
-                className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-                style={{
-                    backgroundColor: "#053561",
-                    minHeight: "270px",
-                    marginTop: "56px",
-                    textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-                    borderBottomLeftRadius: "3%",
-                    borderBottomRightRadius: "3%",
-                }}
-            >
-                <div className="container">
-                    <div
-                        className="text-white p-4 shadow-sm"
-                        style={{ backgroundColor: "#053561", minHeight: "180px" }}
-                    >
-                        <div className="d-flex align-items-center justify-content-between">
-                            <h3 className="fw-bold mb-0">Manage Admins</h3>
-                        </div>
-                        <div className="d-flex align-items-center mt-4">
-                            <p
-                                className="badge text-white"
-                                style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}
-                            >
-                                Sydani Group
-                                <span
-                                    className="badge text-light p-1"
-                                    style={{ backgroundColor: "rgba(13, 46, 78, 0.8)" }}
-                                >
-                                    Company
-                                </span>
-                            </p>
-                            <div
-                                className="flex-grow-1 ms-3 mb-3"
-                                style={{
-                                    height: "2px",
-                                    backgroundColor: "rgba(168, 172, 176, 0.8)",
-                                }}
-                            ></div>
-                        </div>
-                    </div>
-                </div>
-            </header>
+        <div className="min-h-screen bg-[#F0F7FF] pb-12">
+            <AdminTopHeader />
 
-            {/* Add Admin Button */}
-            <div className="position-relative">
-                <div
-                    className="d-flex justify-content-between align-items-center container gap-2"
-                    style={{
-                        position: "absolute",
-                        top: "-47px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: "100%",
-                    }}
-                >
+            {/* Header Container aligned to max-w-[1140px] */}
+            <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+                        Manage Admins
+                    </p>
+                    <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+                        View, invite, and manage administrator accounts.
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
                     <button
-                        className="btn btn-danger rounded-3 ms-auto"
                         onClick={handleBulkDeleteClick}
                         disabled={selectedUsers.length === 0}
+                        className="inline-flex items-center px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-2xs"
                     >
-                        <i className="bi bi-trash me-2"></i>
+                        <i className="bi bi-trash mr-2"></i>
                         Bulk Delete {selectedUsers.length > 0 && `(${selectedUsers.length})`}
                     </button>
                     <button
-                        className="btn btn-success rounded-3"
                         onClick={() => setShowBulkUploadModal(true)}
+                        className="inline-flex items-center px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-2xs"
                     >
-                        <i className="bi bi-cloud-arrow-up me-2"></i>
+                        <i className="bi bi-cloud-arrow-up mr-2"></i>
                         Bulk Upload
                     </button>
                     <button
-                        className="btn btn-primary rounded-3"
                         onClick={() => setShowAddModal(true)}
+                        className="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
                     >
-                        + Add New Admin
+                        <i className="bi bi-plus-lg mr-2"></i> Add New Admin
                     </button>
                 </div>
             </div>
 
-            {/* Admin Table */}
-            <div className="d-flex justify-content-between align-items-center">
+            {/* Admin Table Container matching exact width */}
+            <div className="max-w-[1140px] mx-auto px-4 mt-3">
                 <ManageAdminsTable
                     refreshKey={refreshKey}
                     triggerRefresh={triggerRefresh}
@@ -224,152 +188,128 @@ function AdminManagement() {
                 />
             </div>
 
-            {/* Add Admin Modal */}
+            {/* Add Admin Slide-over Modal */}
             {showAddModal && (
                 <div
-                    className="modal fade show d-block"
-                    style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
                     onClick={handleAddModalClose}
+                    className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs animate-fade-in"
                 >
                     <div
-                        className="modal-dialog modal-lg py-4"
-                        style={{
-                            position: "fixed",
-                            top: 0,
-                            right: 0,
-                            width: "50%",
-                            maxWidth: "40%",
-                            height: "100vh",
-                            overflowY: "auto",
-                        }}
                         onClick={(e) => e.stopPropagation()}
+                        className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-left"
                     >
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">Add Admin</h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={handleAddModalClose}
-                                ></button>
-                            </div>
-                            <div className="modal-body p-4">
-                                <form onSubmit={handleAddNewAdmin}>
-                                    <div className="d-flex flex-column gap-3">
-                                        {/* Photo Upload */}
-                                        <div className="my-4 text-center">
-                                            <label className="form-label d-block">
-                                                <small>Add Photo (Optional)</small>
-                                            </label>
-                                            <input
-                                                name="photo"
-                                                type="file"
-                                                className="d-none"
-                                                id="fileUpload"
-                                                accept="image/*"
-                                                onChange={handleImageChange}
-                                            />
-                                            <label htmlFor="fileUpload" className="d-inline-block">
-                                                <div
-                                                    className="rounded-circle border d-flex justify-content-center align-items-center"
-                                                    style={{
-                                                        width: "100px",
-                                                        height: "100px",
-                                                        backgroundColor: "#f8f9fa",
-                                                        cursor: "pointer",
-                                                    }}
-                                                >
-                                                    {selectedImage ? (
-                                                        <UserAvatar
-                                                            image={selectedImage}
-                                                            firstName={newAdminFormData.name || "New Admin"}
-                                                            size={100}
-                                                            className="rounded-circle"
-                                                        />
-                                                    ) : (
-                                                        <i
-                                                            className="bi bi-camera"
-                                                            style={{ fontSize: "24px" }}
-                                                        ></i>
-                                                    )}
-                                                </div>
-                                            </label>
-                                        </div>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <h3 className="font-bold text-slate-900 text-sm">Add New Admin</h3>
+                            <button
+                                onClick={handleAddModalClose}
+                                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            >
+                                <i className="bi bi-x-lg"></i>
+                            </button>
+                        </div>
 
-                                        {/* Text Fields */}
-                                        <div className="mb-3">
-                                            <label className="form-label">Full Name</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="name"
-                                                value={newAdminFormData.name}
-                                                onChange={handleNewAdminFormChange}
-                                                placeholder="Enter full name"
-                                                required
-                                            />
-                                            {formErrors.name && (
-                                                <div className="text-danger small">
-                                                    {formErrors.name[0]}
-                                                </div>
+                        <div className="p-6 flex-1 overflow-y-auto">
+                            <form onSubmit={handleAddNewAdmin} className="space-y-4 text-xs">
+                                <div className="text-center my-2">
+                                    <input
+                                        name="photo"
+                                        type="file"
+                                        className="hidden"
+                                        id="fileUpload"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                    />
+                                    <label htmlFor="fileUpload" className="inline-block cursor-pointer group">
+                                        <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-200 group-hover:border-blue-500 bg-slate-50 flex items-center justify-center mx-auto overflow-hidden transition-colors">
+                                            {selectedImage ? (
+                                                <UserAvatar
+                                                    image={selectedImage}
+                                                    firstName={newAdminFormData.name || "New Admin"}
+                                                    size={80}
+                                                    className="rounded-full w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <i className="bi bi-camera text-slate-400 text-xl group-hover:text-blue-500 transition-colors"></i>
                                             )}
                                         </div>
+                                        <span className="block mt-2 font-semibold text-slate-600 text-[11px]">Add Photo (Optional)</span>
+                                    </label>
+                                </div>
 
-                                        <div className="mb-3">
-                                            <label className="form-label">Email*</label>
-                                            <input
-                                                type="email"
-                                                className="form-control"
-                                                name="email"
-                                                value={newAdminFormData.email}
-                                                onChange={handleNewAdminFormChange}
-                                                placeholder="Enter email"
-                                                required
-                                            />
-                                            <small className="text-muted">An invitation email will be sent to this address</small>
-                                            {formErrors.email && (
-                                                <div className="text-danger small">
-                                                    {formErrors.email[0]}
-                                                </div>
-                                            )}
-                                        </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={newAdminFormData.name}
+                                        onChange={handleNewAdminFormChange}
+                                        placeholder="Enter full name"
+                                        required
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    {formErrors.name && (
+                                        <div className="text-rose-600 text-[10px] mt-1">{formErrors.name[0]}</div>
+                                    )}
+                                </div>
 
-                                        <div className="mb-3">
-                                            <label className="form-label">Department</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="department"
-                                                value={newAdminFormData.department}
-                                                onChange={handleNewAdminFormChange}
-                                                placeholder="Enter department"
-                                                required
-                                            />
-                                        </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Email Address *</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={newAdminFormData.email}
+                                        onChange={handleNewAdminFormChange}
+                                        placeholder="Enter email address"
+                                        required
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <span className="block text-slate-400 text-[10px] mt-1">An invitation email will be sent to this address</span>
+                                    {formErrors.email && (
+                                        <div className="text-rose-600 text-[10px] mt-1">{formErrors.email[0]}</div>
+                                    )}
+                                </div>
 
-                                        <div className="mt-4 text-center">
-                                            <button
-                                                type="submit"
-                                                className="btn btn-primary w-50"
-                                                disabled={isSubmitting}
-                                            >
-                                                {isSubmitting ? (
-                                                    <>
-                                                        <span
-                                                            className="spinner-border spinner-border-sm me-2"
-                                                            role="status"
-                                                            aria-hidden="true"
-                                                        ></span>
-                                                        Sending Invitation...
-                                                    </>
-                                                ) : (
-                                                    "Send Invitation"
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">Select Tenant *</label>
+                                    <select
+                                        name="department"
+                                        value={newAdminFormData.department}
+                                        onChange={handleNewAdminFormChange}
+                                        required
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">Select a tenant</option>
+                                        {tenants.map((tenant) => (
+                                            <option key={tenant.id} value={String(tenant.id)}>
+                                                {tenant.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <span className="block text-slate-400 text-[10px] mt-1">
+                                        The admin will be assigned to the selected tenant.
+                                    </span>
+                                    {formErrors.department && (
+                                        <div className="text-rose-600 text-[10px] mt-1">{formErrors.department[0]}</div>
+                                    )}
+                                </div>
+
+                                <div className="pt-4">
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                                                Sending Invitation...
+                                            </>
+                                        ) : (
+                                            "Send Invitation"
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import api from "../../context/api";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
-import NavBar from "./include/NavBar";
+import AdminTopHeader from "./include/AdminTopHeader";
+import UserAvatar from "../../components/UserAvatar";
 
 export default function AdminLatestUpdates() {
   const { token } = useAuth();
@@ -41,105 +42,100 @@ export default function AdminLatestUpdates() {
   };
 
   return (
-    <>
-      <NavBar />
-      <header
-        className="text-white text-center d-flex align-items-center px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "300px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm rounded"
-            style={{
-              backgroundColor: "#053561",
-              minHeight: "160px",
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Latest Visitors</h3>
-              {/* <i
-                className="bi bi-plus-circle fs-1 text-white-50 p-2"
-                style={{ cursor: "pointer", transition: "0.3s" }}
-                onMouseOver={(e) => (e.target.style.color = "#0d6efd")}
-                onMouseOut={(e) => (e.target.style.color = "white")}
-              ></i> */}
-            </div>
+    <div className="min-h-screen bg-slate-50/50 pb-12">
+      <AdminTopHeader />
 
-            <div
-              className="w-100 mt-3"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-              }}
-            ></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pt-6">
+        <section className="bg-white p-6 rounded-3xl shadow-xs border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-0">
+              Visitors Update Log
+            </h3>
           </div>
-        </div>
-      </header>
 
-      <div className="container my-5">
-        {loading ? (
-          <p>Loading...</p>
-        ) : visitors.length === 0 ? (
-          <p>No visitors yet.</p>
-        ) : (
-          <>
-            <div className="list-group">
-              {visitors.map((v) => (
-                <div
-                  key={v.id}
-                  className="list-group-item d-flex align-items-center"
-                >
-                  {/* <img
-                    src={v.photo || "./images/user1.png"}
-                    alt="visitor"
-                    width="60"
-                    height="60"
-                    style={{ objectFit: "cover" }}
-                  /> */}
-                  <div className="ms-3">
-                    <div className="fw-bold">{v.name}</div>
-                    <div className="text-muted">
-                      {v.email || v.contact_number}
-                    </div>
-                    <div className="small text-muted">
-                      {new Date(v.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 text-black text-[11px] uppercase tracking-wider font-semibold">
+                  <th className="pb-3 px-4">Icon</th>
+                  <th className="pb-3 px-4">Name</th>
+                  <th className="pb-3 px-4">Date</th>
+                  <th className="pb-3 px-4">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {loading ? (
+                  <tr>
+                    <td colSpan="4" className="text-center text-black py-6">
+                      Loading updates...
+                    </td>
+                  </tr>
+                ) : visitors.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="text-center text-black py-6">
+                      No recent visitors
+                    </td>
+                  </tr>
+                ) : (
+                  visitors.map((v, idx) => {
+                    const dateObj = new Date(v.created_at);
+                    const dateStr = dateObj.toLocaleDateString();
+                    const timeStr = dateObj.toLocaleTimeString();
+                    return (
+                      <tr
+                        key={v.id ?? idx}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center">
+                            <UserAvatar
+                              image={v.photo}
+                              firstName={v.name || "Visitor"}
+                              size={34}
+                              className="rounded-full object-cover"
+                            />
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-black">
+                          {v.name}
+                        </td>
+                        <td className="py-3 px-4 text-black font-medium">
+                          {dateStr}
+                        </td>
+                        <td className="py-3 px-4 text-black font-medium">
+                          {timeStr}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
 
-            <nav className="my-3">
-              <ul className="pagination">
-                <li
-                  className={`page-item ${
-                    pagination.current_page <= 1 ? "disabled" : ""
-                  }`}
-                >
+          {pagination.last_page && pagination.last_page > 1 && (
+            <nav className="mt-6 flex justify-center">
+              <ul className="flex items-center gap-1 overflow-x-auto max-w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <li>
                   <button
-                    className="page-link"
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${pagination.current_page <= 1
+                        ? "text-slate-400 cursor-not-allowed"
+                        : "text-slate-600 hover:bg-slate-50"
+                      }`}
                     onClick={() => handlePage(pagination.current_page - 1)}
+                    disabled={pagination.current_page <= 1}
                   >
                     Previous
                   </button>
                 </li>
                 {Array.from({ length: pagination.last_page || 1 }).map(
                   (_, i) => (
-                    <li
-                      key={i}
-                      className={`page-item ${
-                        pagination.current_page === i + 1 ? "active" : ""
-                      }`}
-                    >
+                    <li key={i}>
                       <button
-                        className="page-link"
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${pagination.current_page === i + 1
+                            ? "bg-blue-50 text-blue-600"
+                            : "text-slate-600 hover:bg-slate-50"
+                          }`}
                         onClick={() => handlePage(i + 1)}
                       >
                         {i + 1}
@@ -147,25 +143,25 @@ export default function AdminLatestUpdates() {
                     </li>
                   )
                 )}
-                <li
-                  className={`page-item ${
-                    pagination.current_page >= (pagination.last_page || 1)
-                      ? "disabled"
-                      : ""
-                  }`}
-                >
+                <li>
                   <button
-                    className="page-link"
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${pagination.current_page >= (pagination.last_page || 1)
+                        ? "text-slate-400 cursor-not-allowed"
+                        : "text-slate-600 hover:bg-slate-50"
+                      }`}
                     onClick={() => handlePage(pagination.current_page + 1)}
+                    disabled={
+                      pagination.current_page >= (pagination.last_page || 1)
+                    }
                   >
                     Next
                   </button>
                 </li>
               </ul>
             </nav>
-          </>
-        )}
+          )}
+        </section>
       </div>
-    </>
+    </div>
   );
 }

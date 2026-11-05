@@ -4,8 +4,7 @@ import NavBar from "./securityDashboard/include/NavBar";
 import api from "../context/api";
 import AddGuestModal from "./securityDashboard/include/AddGuestModal";
 import { PlusCircle } from "lucide-react";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
 
 function SecurityDashboard() {
@@ -188,7 +187,6 @@ function SecurityDashboard() {
   return (
     <div>
       <NavBar />
-      <ToastContainer position="top-right" autoClose={5000} />
       <header
         className="text-white text-center position-relative px-4"
         style={{

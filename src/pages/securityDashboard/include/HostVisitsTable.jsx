@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../../context/api";
-import {toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 function HostVisitsTable({ onBack }) {
   const [visits, setVisits] = useState([]);
@@ -19,7 +18,7 @@ function HostVisitsTable({ onBack }) {
       );
 
       setVisits(response.data.visits);
-      setPagination(response.data.pagination);
+      setPagination(response.data.pagination ?? {});
     } catch (error) {
       console.error("Error fetching host visits:", error);
       const errorMessage = error.response?.data?.error || "Failed to load host visits. Check server logs.";
@@ -178,7 +177,6 @@ const handleAction = async (visitId, action) => {
           <div className="alert alert-info">No visits requiring your approval.</div>
         )}
       </div>
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   );
 }

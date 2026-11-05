@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import 'tailwindcss';
 
 :root {
   --primary: #007bff;
@@ -53,34 +54,35 @@
   --highlight: #f3e6ff;
 }
 
-/* Use these variables across your styles */
+/* Base Resets */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: var(--background);
-  color: #000;
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
-  transition: background-color var(--transition-base), color var(--transition-base);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep standalone (PWA) content clear of device notches */
+.safe-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* ============================================================
-   BOOTSTRAP COMPAT
-   ============================================================ */
-.btn-primary {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-}
-
-.card-highlight {
-  background-color: var(--highlight);
-}
-
-.form-control::placeholder {
-  color: var(--color-text-muted) !important;
-  opacity: 1;
-}
-
-/* ============================================================
-   MODERN UTILITIES
+   MODERN UTILITIES & ANIMATIONS
    ============================================================ */
 .stat-card {
   background: var(--color-surface);
@@ -101,28 +103,6 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-}
-
-.input-modern {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.input-modern::placeholder {
-  color: var(--color-text-muted);
-}
-
-.input-modern:focus {
-  border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgba(26, 111, 196, 0.12);
 }
 
 .btn-modern {
@@ -192,156 +172,93 @@ body {
 }
 
 /* ============================================================
-   SIGN-IN PAGE
+   ADMIN MODERN TABLES
    ============================================================ */
-.signin-wrapper {
-  min-height: 100vh;
-  display: flex;
-  background: var(--color-bg);
-}
-
-.signin-left {
-  flex: 0 0 46%;
-  position: relative;
-  overflow: hidden;
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .signin-left {
-    display: block;
-  }
-}
-
-.signin-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.signin-left-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top,
-      rgba(5, 30, 60, 0.88) 0%,
-      rgba(5, 30, 60, 0.30) 55%,
-      transparent 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 44px;
-}
-
-.signin-left-tagline {
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.4;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+.admin-page-heading {
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
-.signin-left-sub {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.95rem;
-  margin-top: 8px;
+.admin-table-card {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
 }
 
-.signin-right {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl) var(--space-lg);
-}
-
-.signin-card {
+.admin-table {
   width: 100%;
-  max-width: 460px;
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  padding: 52px 44px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border);
+  margin: 0;
+  border-collapse: collapse;
+  /* Changed from separate to collapse for clean grid lines */
+  background: #ffffff;
 }
 
-@media (max-width: 480px) {
-  .signin-card {
-    padding: 36px 24px;
-    border-radius: var(--radius-lg);
-  }
-}
-
-.signin-label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: 6px;
-  letter-spacing: 0.02em;
-}
-
-.signin-input-wrap {
-  position: relative;
-}
-
-.signin-eye-btn {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  transition: color var(--transition-fast);
-}
-
-.signin-eye-btn:hover {
-  color: var(--color-primary);
-}
-
-.signin-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-  color: var(--color-text-muted);
-  font-size: 0.82rem;
-}
-
-.signin-divider::before,
-.signin-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-}
-
-.signin-link {
-  color: var(--color-primary);
-  font-weight: 500;
-  text-decoration: none;
-  transition: opacity var(--transition-fast);
-}
-
-.signin-link:hover {
-  opacity: 0.8;
-  text-decoration: underline;
-}
-
-.signin-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
+.admin-table thead th {
+  background: #f8fafc;
+  /* Giving headers a subtle soft background tint like modern dashboards */
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
+  padding: 14px 16px;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 13px;
+  /* Slightly bumped up for crisp readability */
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table tbody tr:hover>td {
+  background: #f8fafc;
+}
+
+.admin-table .admin-cell-strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.admin-table .admin-group-row>td {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 16px;
+  text-transform: uppercase;
+}
+
+.admin-table .dropdown-menu {
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  font-size: 13px;
+  min-width: 190px;
+  padding: 6px;
+}
+
+.admin-table .dropdown-item {
+  border-radius: 8px;
+  color: #334155;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.admin-table .dropdown-item:hover {
+  background: #f1f5f9;
 }

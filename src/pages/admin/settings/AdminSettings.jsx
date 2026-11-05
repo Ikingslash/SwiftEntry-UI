@@ -5,118 +5,60 @@ import Notification from "./Notification";
 import DataPrivacy from "./DataPrivacy";
 import SystemSecurity from "./SystemSecurity";
 import Profile from "./Profile";
-
-import NavBar from "../include/NavBar";
+import AdminTopHeader from "../include/AdminTopHeader";
 
 function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general-settings");
 
+  const tabs = [
+    { id: "general-settings", label: "General Settings" },
+    // { id: "user-role-permission", label: "User Role and Permission" },
+    { id: "notification", label: "Notification" },
+    { id: "data-privacy", label: "Data and Privacy" },
+    { id: "system-security", label: "System Security" },
+    { id: "profile", label: "Profile" },
+  ];
+
   return (
-    <div>
-      <NavBar />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "270px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        {/* Left Content */}
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            {/* Row for Welcome Text & Plus Icon */}
-            <div className="d-flex align-items-center ">
-              <h3 className="mb-4">Manage Visitors</h3>
-            </div>
-            <div
-              className="flex-grow-1 px-4"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
-              }}
-            ></div>
+    <div className="min-h-screen bg-[#F0F7FF] pb-12">
+      <AdminTopHeader />
+
+      {/* Header Container aligned to max-w-[1140px] */}
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4">
+        <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+          Settings
+        </p>
+        <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+          Manage your account preferences, system security, and configuration options.
+        </p>
+      </div>
+
+      {/* Tabs Navigation Bar Container: line starts at first element and ends exactly at last element */}
+      <div className="max-w-[1140px] mx-auto px-4 mt-2">
+        <div className="overflow-x-auto pb-px">
+          <div className="inline-flex items-center space-x-1 border-b border-slate-300">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-2.5 text-xs font-semibold rounded-t-xl transition-all duration-200 -mb-px cursor-pointer whitespace-nowrap ${isActive
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                    }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </header>
-      <div className="container mt-5">
-        <div className="d-flex justify-content-between align-items-center">
-          {/* Bootstrap Nav Tabs */}
-          <ul className="nav nav-tabs">
-            <li className="nav-item pe-4">
-              <button
-                className={`nav-link ${
-                  activeTab === "general-settings"
-                    ? "active"
-                    : "text-dark"
-                }`}
-                onClick={() => setActiveTab("general-settings")}
-              >
-                General Settings
-              </button>
-            </li>
-            {/* <li className="nav-item pe-4">
-              <button
-                className={`nav-link ${
-                  activeTab === "user-role-permission" ? "active" : "text-dark"
-                }`}
-                onClick={() => setActiveTab("user-role-permission")}
-              >
-                User Role and Permission
-              </button>
-            </li> */}
-            <li className="nav-item pe-4">
-              <button
-                className={`nav-link ${
-                  activeTab === "notification" ? "active" : "text-dark"
-                }`}
-                onClick={() => setActiveTab("notification")}
-              >
-                Notification
-              </button>
-            </li>
-            <li className="nav-item pe-4">
-              <button
-                className={`nav-link ${
-                  activeTab === "data-privacy" ? "active" : "text-dark"
-                }`}
-                onClick={() => setActiveTab("data-privacy")}
-              >
-                Data and Privacy
-              </button>
-            </li>
-            <li className="nav-item pe-4">
-              <button
-                className={`nav-link ${
-                  activeTab === "system-security" ? "active" : "text-dark"
-                }`}
-                onClick={() => setActiveTab("system-security")}
-              >
-                System Security
-              </button>
-            </li>
-            <li className="nav-item pe-4">
-              <button
-                className={`nav-link ${
-                  activeTab === "profile" ? "active" : "text-dark"
-                }`}
-                onClick={() => setActiveTab("profile")}
-              >
-                Profile
-              </button>
-            </li>
-          </ul>
+      </div>
 
-        </div>
-        {/* Content */}
-        <div className="mt-5">
+      {/* Content Area Container */}
+      <div className="max-w-[1140px] mx-auto px-4 mt-6">
+        <div className="bg-white rounded-b-3xl rounded-tr-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
           {activeTab === "general-settings" && <GeneralSettings />}
           {/* {activeTab === "user-role-permission" && <UserRolePermission />} */}
           {activeTab === "notification" && <Notification />}

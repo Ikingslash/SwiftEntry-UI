@@ -1,304 +1,239 @@
-import { useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Bell, LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { useNotifications } from "../../../context/NotificationContext";
 import UserAvatar from "../../../components/UserAvatar";
 
+const links = [
+  { to: "/security-dashboard", label: "Guest Confirmation", end: true },
+  { to: "/security-dashboard/register-new-guest", label: "Register Guest" },
+  { to: "/security-dashboard/history", label: "History" },
+  { to: "/security-dashboard/manage-security-guests", label: "Manage Guests" },
+];
+
 function Navbar() {
-  const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout, loading } = useAuth();
-  // Destructure latestUnread and markAsRead for the dropdown functionality
-  const { unreadCount, markAllAsRead, latestUnread, markAsRead } =
+  const { unreadCount, latestUnread, markAsRead, fetchLatestUnread } =
     useNotifications();
 
-  useEffect(() => {
-    // Check if user navigates to the *full* notification page
-    if (
-      location.pathname === "/notifications" &&
-      unreadCount > 0
-    ) {
-      // markNotificationsAsRead is called in AdminNotifications.jsx's useEffect,
-      // but keeping this redundant check here is a safe fallback if navigation is faster than component mount.
-      // Removed setUnreadCount(0) to rely on the markAllAsRead in AdminNotifications.jsx updating the count.
-    }
-  }, [location, unreadCount, markAllAsRead]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const notificationRef = useRef(null);
+  const profileRef = useRef(null);
 
-  // Handle click on an item in the dropdown
-  const handleDropdownNotificationClick = (notificationId) => {
-    markAsRead(notificationId); // Mark the single notification as read (Point 4)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfile(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    setShowProfile(false);
+    logout();
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
-      style={{ backgroundColor: "#053561" }}
-    >
-      <div className="container">
-        {/* Logo on the left */}
-        <a className="navbar-brand fw-bold text-white pt-2" href="#">
-          <img src="../image.png" width={140} alt="Logo" />
-        </a>
-
-        {/* Navbar Toggler */}
-        <button
-          className="navbar-toggler border-0"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
+      <div className="max-w-[1140px] mx-auto px-4 h-[72px] flex items-center justify-between gap-4">
+        {/* Brand */}
+        <Link
+          to="/security-dashboard"
+          className="flex items-center gap-2 shrink-0 no-underline"
         >
-          <span
-            className="navbar-toggler-icon"
-            style={{ filter: "invert(1)" }}
-          ></span>
-        </button>
+          <img src="../image.png" alt="Logo" className="h-9 w-auto" />
+        </Link>
 
-        {/* Navigation Links */}
-        <div
-          className="collapse navbar-collapse justify-content-center"
-          id="navbarNav"
-        >
-          <ul className="navbar-nav text-center fs-6">
-            <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${location.pathname === "/security-dashboard"
-                  ? "text-white fw-bold "
-                  : "text-white-50"
-                  }`}
-                to="/security-dashboard"
-              >
-                Guest Confirmation
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${location.pathname === "/security-dashboard/register-new-guest"
-                  ? "text-white fw-bold"
-                  : "text-white-50"
-                  }`}
-                to="/security-dashboard/register-new-guest"
-              >
-                Register Guest
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${location.pathname === "/security-dashboard/history"
-                  ? "text-white fw-bold"
-                  : "text-white-50"
-                  }`}
-                to="/security-dashboard/history"
-              >
-                History
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${location.pathname ===
-                  "/security-dashboard/manage-security-guests"
-                  ? "text-white fw-bold"
-                  : "text-white-50"
-                  }`}
-                to="/security-dashboard/manage-security-guests"
-              >
-                Manage Guests
-              </NavLink>
-            </li>
-            {/* <li className="nav-item">
-              <NavLink
-                className={`nav-link px-3 ${
-                  location.pathname === "/security-dashboard/notifications"
-                    ? "text-white fw-bold"
-                    : "text-white-50"
-                }`}
-                to="/security-dashboard/notifications"
-              >
-                Notifications
-              </NavLink>
-            </li> */}
-          </ul>
-        </div>
-
-        {/* Right Side Icons */}
-        <div className="d-flex align-items-center">
-          {/* Notification Icon Dropdown (Point 1, 2, 3, 4) */}
-          <div className="dropdown me-3">
-            <a
-              href="#"
-              className="position-relative d-flex align-items-center"
-              id="notificationDropdown"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+        {/* Desktop Nav */}
+        <nav className="hidden lg:flex items-center gap-1 p-1 bg-slate-50 border border-slate-100 rounded-full">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 no-underline ${
+                  isActive
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                }`
+              }
             >
-              <i
-                className="bi bi-bell fs-4 text-white rounded-circle p-2"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  transition: "0.3s ease-in-out",
-                }}
-              ></i>
-              {/* Point 1: Notification Count on Bell Icon */}
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Notifications */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              type="button"
+              onMouseEnter={() => {
+                setShowNotifications(true);
+                fetchLatestUnread?.();
+              }}
+              onClick={() => navigate("/security-dashboard/notifications")}
+              className="relative p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors duration-200 border-0 bg-transparent cursor-pointer flex items-center justify-center focus-visible:outline-none"
+            >
+              <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span
-                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  style={{ fontSize: "0.7em" }}
-                >
+                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
                   {unreadCount > 9 ? "9+" : unreadCount}
-                  <span className="visually-hidden">unread messages</span>
                 </span>
               )}
-            </a>
+            </button>
 
-            {/* Point 2: Dropdown Menu showing recent 3 */}
-            <ul
-              className="dropdown-menu dropdown-menu-end shadow"
-              aria-labelledby="notificationDropdown"
-              style={{ width: "320px", maxHeight: "400px", overflowY: "auto" }}
-            >
-              <li className="dropdown-header fw-bold">Recent Notifications</li>
-              {latestUnread.length > 0 ? (
-                latestUnread.map((notification) => (
-                  <li key={notification.id}>
-                    {/* Point 3 & 4: Clicking takes user to full page and marks as read */}
-                    <NavLink
-                      className="dropdown-item d-flex align-items-start py-2"
-                      to="/security-dashboard/notifications"
-                      onClick={() =>
-                        handleDropdownNotificationClick(notification.id)
-                      }
-                      style={{
-                        // Highlight the item visually distinct (Point 4)
-                        backgroundColor: notification.is_read
-                          ? "transparent"
-                          : "#f8f9fa",
-                      }}
-                    >
-                      <div>
-                        <small className="fw-bold text-dark">
-                          {notification.title}
-                        </small>
-                        <p
-                          className="mb-0 text-muted text-wrap"
-                          style={{ fontSize: "0.85em" }}
-                        >
-                          {notification.message}
-                          <br />
-                          <span className="badge bg-success text-light fw-normal">
-                            {notification.created_at}
-                          </span>
-                        </p>
+            {showNotifications && (
+              <div
+                onMouseLeave={() => setShowNotifications(false)}
+                className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-lg border border-slate-100 z-50 overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <h6 className="font-bold text-slate-900 text-xs mb-0">
+                    Recent Notifications
+                  </h6>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-semibold">
+                      {unreadCount} New
+                    </span>
+                  )}
+                </div>
 
-                      </div>
-                    </NavLink>
-                  </li>
-                ))
-              ) : (
-                <li>
-                  <span className="dropdown-item text-center text-muted">
-                    No new notifications
-                  </span>
-                </li>
-              )}
+                <div className="flex flex-col divide-y divide-slate-50 max-h-60 overflow-y-auto">
+                  {latestUnread?.length > 0 ? (
+                    latestUnread.map((notification) => (
+                      <Link
+                        key={notification.id}
+                        to="/security-dashboard/notifications"
+                        onClick={() => markAsRead(notification.id)}
+                        className="px-4 py-2.5 hover:bg-slate-50/80 transition-colors flex items-start gap-2.5 cursor-pointer no-underline"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+                          <Bell className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 mb-0">
+                            {notification.title}
+                          </p>
+                          <p className="text-[10px] text-slate-500 mb-0 leading-tight mt-0.5">
+                            {notification.message}
+                          </p>
+                          {notification.created_at && (
+                            <span className="text-[9px] text-slate-400">
+                              {notification.created_at}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="px-4 py-4 text-center text-[11px] text-slate-400">
+                      No new notifications
+                    </div>
+                  )}
+                </div>
 
-              {/* Point 3: "View All" Link */}
-              <li>
-                <hr className="dropdown-divider" />
-              </li>
-              <li>
-                <NavLink
-                  className="dropdown-item text-center text-success fw-bold"
-                  to="/security-dashboard/notifications"
-                >
-                  View All Notifications
-                </NavLink>
-              </li>
-            </ul>
+                <div className="p-2.5 bg-slate-50/50 border-t border-slate-100 text-center">
+                  <Link
+                    to="/security-dashboard/notifications"
+                    className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 no-underline transition-colors block"
+                  >
+                    See all notifications
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* User Profile Dropdown */}
-          <div className="dropdown">
-            {loading ? (
-              <span className="text-white">Loading...</span>
-            ) : user ? (
-              <button
-                className="btn text-white d-flex align-items-center dropdown-toggle"
-                type="button"
-                id="profileDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                style={{
-                  gap: "0.5rem",
-                  background: "transparent",
-                  border: "none",
-                }}
-              >
-                <span className="fw-semibold">{user.name}</span>
-                <UserAvatar
-                  image={user?.profile_picture}
-                  firstName={user.name || "User"}
-                  size={40}
-                  className="rounded-circle border"
-                />
-              </button>
-            ) : (
-              <NavLink to="/login" className="btn btn-light">
-                Login
-              </NavLink>
-            )}
-
-            {/* Remove the default arrow using inline style or override */}
-            <style>
-              {`
-                #profileDropdown::after {
-                  display: none !important;
-                }
-              `}
-            </style>
-            <ul
-              className="dropdown-menu dropdown-menu-end"
-              aria-labelledby="profileDropdown"
+          {/* Profile */}
+          <div className="relative" ref={profileRef}>
+            <button
+              type="button"
+              onClick={() => setShowProfile((prev) => !prev)}
+              className="flex items-center gap-2.5 ps-3 border-l border-slate-200 bg-transparent border-0 cursor-pointer"
             >
-              <li>
-                <NavLink
-                  className={`dropdown-item py-2 ${location.pathname === "/security-dashboard/profile"
-                    ? "text-primary bg-white fw-bold"
-                    : "text-dark bg-white"
-                    }`}
+              <UserAvatar
+                image={user?.photo || user?.profile_picture}
+                firstName={user?.name || "Security"}
+                size={38}
+                className="rounded-full object-cover shadow-sm"
+              />
+              <div className="text-left hidden sm:block">
+                <p className="text-xs font-bold text-slate-900 mb-0 leading-tight">
+                  {loading ? "Loading..." : user?.name || "Security"}
+                </p>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Security
+                </span>
+              </div>
+            </button>
+
+            {showProfile && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-slate-100 z-50 overflow-hidden py-1.5">
+                <Link
                   to="/security-dashboard/profile"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 no-underline transition-colors"
                 >
-                  Profile
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  className={`dropdown-item py-2 ${location.pathname === "/security-dashboard/settings"
-                    ? "text-primary bg-white fw-bold"
-                    : "text-dark bg-white"
-                    }`}
-                  to="/security-dashboard/settings"
+                  <User className="w-4 h-4 text-slate-400" /> Profile
+                </Link>
+                <Link
+                  to="/security-dashboard/security-settings"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 no-underline transition-colors"
                 >
-                  Settings
-                </NavLink>
-              </li>
-              <li>
-                <hr className="dropdown-divider" />
-              </li>
-              <li>
-                <button
-                  className="dropdown-item py-2 text-danger"
-                  onClick={logout}
-                >
-                  Logout
-                </button>
-              </li>
-            </ul>
+                  <Settings className="w-4 h-4 text-slate-400" /> Settings
+                </Link>
+                <div className="border-t border-slate-100 mt-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 bg-transparent border-0 cursor-pointer transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Nav */}
+      <div className="lg:hidden border-t border-slate-100 bg-white overflow-x-auto">
+        <nav className="flex items-center gap-1 px-3 py-2 min-w-max">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              className={({ isActive }) =>
+                `px-3.5 py-2 rounded-full text-[11px] font-bold transition-all no-underline whitespace-nowrap ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+    </header>
   );
 }
 

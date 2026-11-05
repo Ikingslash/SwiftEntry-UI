@@ -4,6 +4,7 @@ import { requestForToken, onMessageListener } from "../../../context/firebase";
 import QRCode from "react-qr-code";
 import html2pdf from "html2pdf.js";
 import { toast } from "react-toastify";
+import { User, Phone, Mail, MapPin, Calendar, Clock, Building, Layers, FileText, ShieldAlert, PhoneCall, CheckCircle2, ArrowRight, X, Printer, Download, Share2 } from "lucide-react";
 
 // Helper function to format date to DD/MM/YYYY
 const formatDateToDDMMYYYY = (dateString) => {
@@ -38,11 +39,9 @@ export default function NewGuestIndividual() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showVisitCardModal, setShowVisitCardModal] = useState(false);
   const [guestDetails, setGuestDetails] = useState({});
-  const [appUsers, setAppUsers] = useState([]);
   const [visitPurposes, setVisitPurposes] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
@@ -66,7 +65,6 @@ export default function NewGuestIndividual() {
 
   // useEffect to handle Firebase messaging and token registration, AND to fetch users.
   useEffect(() => {
-    // Request permission and get the FCM token
     requestForToken()
       .then((fcmToken) => {
         if (fcmToken) {
@@ -75,7 +73,6 @@ export default function NewGuestIndividual() {
       })
       .catch(() => { });
 
-    // Fetch the list of visit purposes from the backend
     api
       .get("/admin/settings/visit-purposes")
       .then((response) => {
@@ -85,17 +82,14 @@ export default function NewGuestIndividual() {
       })
       .catch(() => { });
 
-    // Fetch buildings, floors, special requirements
     api.get("/admin/settings/buildings").then((r) => { if (Array.isArray(r.data)) setBuildings(r.data); }).catch(() => { });
     api.get("/admin/settings/floors").then((r) => { if (Array.isArray(r.data)) setFloors(r.data); }).catch(() => { });
     api.get("/admin/settings/special-requirements").then((r) => { if (Array.isArray(r.data)) setSpecialRequirements(r.data); }).catch(() => { });
 
-    // Set up the listener for incoming messages.
     const unsubscribe = onMessageListener((payload) => {
       toast.info(`${payload.notification.title}: ${payload.notification.body}`);
     });
 
-    // Cleanup function to detach the listener when the component unmounts
     return () => unsubscribe();
   }, []);
 
@@ -119,8 +113,6 @@ export default function NewGuestIndividual() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
-
 
   const showValidationErrors = (error) => {
     if (error.response && error.response.status === 422) {
@@ -150,7 +142,6 @@ export default function NewGuestIndividual() {
     e.preventDefault();
     setLoading(true);
 
-    // Validate host data before submission
     if (!formData.host_id || !formData.host_role || !formData.host_name) {
       toast.error("Host information is missing. Please refresh the page.");
       setLoading(false);
@@ -159,7 +150,6 @@ export default function NewGuestIndividual() {
 
     const formDataToSend = new FormData();
 
-    // Append individual guest fields (not group fields)
     Object.entries(formData).forEach(([key, value]) => {
       if (
         key !== "visit_time" &&
@@ -171,22 +161,16 @@ export default function NewGuestIndividual() {
       }
     });
 
-    // Format visit_time - datetime-local already provides local time
     if (formData.visit_time) {
-      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
-      // Just replace T with space and add seconds for the API format
       const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
       formDataToSend.append("visit_time", formattedVisitTime);
-      console.log("Formatted visit time:", formattedVisitTime);
     }
 
-    // Append host fields
     formDataToSend.append("host_id", formData.host_id);
     formDataToSend.append("host_role", formData.host_role);
     formDataToSend.append("host_name", formData.host_name);
 
     try {
-
       const response = await api.post(
         "/admin/register-individual-guest",
         formDataToSend,
@@ -201,7 +185,6 @@ export default function NewGuestIndividual() {
         const visit = response.data.visit;
         const visitor = response.data.visitor;
 
-        // Trigger notification to host
         if (formData.host_id && formData.host_role) {
           try {
             await api.post("/admin/notify-admin-host", {
@@ -211,7 +194,6 @@ export default function NewGuestIndividual() {
               purpose: formData.purpose,
             });
           } catch (notificationError) {
-            // Notification failure should not block the main flow
             console.error("Failed to notify host:", notificationError);
           }
         }
@@ -229,7 +211,6 @@ export default function NewGuestIndividual() {
               hour12: true
             });
           } catch (e) {
-            console.error("Error parsing visit time for badge:", e);
             const visitTimeParts = visit.visit_time.split(" ");
             date = visitTimeParts[0] || "";
             time = visitTimeParts[1] ? visitTimeParts[1].slice(0, 8) : "";
@@ -250,7 +231,7 @@ export default function NewGuestIndividual() {
         if (visit.code) {
           const qrData = JSON.stringify({
             code: visit.code,
-            id: visit.code, // Fallback for some scanners
+            id: visit.code,
             visit_id: visit.id,
             name: visitor.name,
             host: visit.host_name,
@@ -277,7 +258,6 @@ export default function NewGuestIndividual() {
           emergency_contact: "",
           details: "",
         });
-        setSelectedImage(null);
         toast.success("Individual visitor registered!");
         setShowSuccessModal(true);
         setTimeout(() => {
@@ -299,10 +279,10 @@ export default function NewGuestIndividual() {
     const printWindow = window.open("", "", "height=600,width=800");
     printWindow.document.write("<html><head><title>Visitor Badge</title>");
     printWindow.document.write(
-      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">'
+      '<script src="https://cdn.tailwindcss.com"></script>'
     );
-    printWindow.document.write("</head><body >");
-    printWindow.document.write('<div class="p-5">');
+    printWindow.document.write("</head><body>");
+    printWindow.document.write('<div class="p-5 flex justify-center">');
     printWindow.document.write(element.outerHTML);
     printWindow.document.write("</div>");
     printWindow.document.write("</body></html>");
@@ -333,357 +313,328 @@ export default function NewGuestIndividual() {
 
   return (
     <>
-      <div
-        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-          }`}
-      >
-        <form onSubmit={handleSubmit} encType="multipart/form-data">
-          <div className="row">
-            {/* Left Column */}
-            <div className="col-md-6">
-              <div className="d-flex flex-column gap-3">
-                {/* Guest Information */}
-                <div className=" p-4">
-                  <h5 className="fw-bold">Guest Information</h5>
-                  <div className="mb-3">
-                    <label className="form-label">Visitors Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter visitor's name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Contact Number</label>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          placeholder="Enter contact number"
-                          name="contact_number"
-                          value={formData.contact_number}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          placeholder="Enter email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Address</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
+      <div className={`w-full mt-4 transition-all duration-300 ${showSuccessModal || showVisitCardModal ? "blur-sm" : ""}`}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data" className="bg-white p-6 sm:p-8 rounded-3xl shadow-xs border border-slate-100 space-y-8">
 
-                {/* Visit Information */}
-                <div className=" p-4 mb-5">
-                  <h5 className="fw-bold">Visit Information</h5>
-                  <div className="mb-3">
-                    <label className="form-label">Visit Time</label>
-                    <input
-                      type="datetime-local"
-                      className="form-control"
-                      name="visit_time"
-                      value={formData.visit_time}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  {/* Hidden inputs for host data */}
-                  <input type="hidden" name="host_id" value={formData.host_id} />
-                  <input type="hidden" name="host_role" value={formData.host_role} />
-
-                  {/* Display only - show the host name to user */}
-                  <div className="mb-3">
-                    <label className="form-label">Host Name</label>
-                    <input
-                      type="text"
-                      className="form-control rounded-pill"
-                      name="host_name"
-                      value={formData.host_name}
-                      readOnly
-                      placeholder="Host will be automatically assigned"
-                    />
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="my-3">
-                        <label className="form-label">Building</label>
-                        <select
-                          className="form-select"
-                          name="building"
-                          value={formData.building}
-                          onChange={handleChange}
-                        >
-                          <option value="">None</option>
-                          {buildings.map((b, i) => (
-                            <option key={i} value={b}>{b}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="col-md-6">
-                      <div className="my-3">
-                        <label className="form-label">Floor</label>
-                        <select
-                          className="form-select"
-                          name="floor"
-                          value={formData.floor}
-                          onChange={handleChange}
-                        >
-                          <option value="">None</option>
-                          {floors.map((f, i) => (
-                            <option key={i} value={f}>{f}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="my-3">
-                    <label className="form-label">Purpose of Visit</label>
-                    <select
-                      className="form-select"
-                      name="purpose"
-                      value={formData.purpose}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select Purpose</option>
-                      {visitPurposes.map((purpose, index) => (
-                        <option key={purpose} value={purpose}>
-                          {purpose}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="my-3">
-                    <label className="form-label">Details (Optional)</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      placeholder="Enter visit details"
-                      name="details"
-                      value={formData.details}
-                      onChange={handleChange}
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
+          {/* SECTION 1: PERSONAL INFORMATION */}
+          <div>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
+              <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-full w-8 h-8 shrink-0">
+                <User className="w-4 h-4" />
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm tracking-tight mb-0">Personal Information</h3>
             </div>
 
-            {/* Right Column */}
-            <div className="col-md-6">
-              <div className="d-flex flex-column gap-3">
-                {/* Additional Information */}
-                <div className="p-4">
-                  <h5 className="fw-bold">Additional Information</h5>
-
-                </div>
-                <div className="mb-4">
-                  <label className="form-label">Special Requirements</label>
-                  <select
-                    className="form-select"
-                    name="special_requirements"
-                    value={formData.special_requirements}
-                    onChange={handleChange}
-                  >
-                    <option value="">None</option>
-                    {specialRequirements.map((r, i) => (
-                      <option key={i} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="my-3">
-                  <label className="form-label">Emergency Contact</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    placeholder="Enter emergency contact"
-                    name="emergency_contact"
-                    value={formData.emergency_contact}
-                    onChange={handleChange}
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="e.g. Amina Bello"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary mt-3 w-50 "
-                disabled={loading}
-              >
-                {loading ? "Registering..." : "Register"}
-              </button>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Number *</label>
+                <input
+                  type="tel"
+                  name="contact_number"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="e.g. 0803 000 0000"
+                  value={formData.contact_number}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Address *</label>
+                <input
+                  type="text"
+                  name="address"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter full address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
+          </div>
+
+          {/* SECTION 2: VISIT DETAILS */}
+          <div>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
+              <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-full w-8 h-8 shrink-0">
+                <Calendar className="w-4 h-4" />
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm tracking-tight mb-0">Visit Details</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Visit Time *</label>
+                <input
+                  type="datetime-local"
+                  name="visit_time"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  value={formData.visit_time}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Host Name</label>
+                <input
+                  type="text"
+                  name="host_name"
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 cursor-not-allowed"
+                  value={formData.host_name}
+                  readOnly
+                  placeholder="Host automatically assigned"
+                />
+                <input type="hidden" name="host_id" value={formData.host_id} />
+                <input type="hidden" name="host_role" value={formData.host_role} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Building</label>
+                <select
+                  name="building"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  value={formData.building}
+                  onChange={handleChange}
+                >
+                  <option value="">Select building...</option>
+                  {buildings.map((b, i) => (
+                    <option key={i} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Floor</label>
+                <select
+                  name="floor"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  value={formData.floor}
+                  onChange={handleChange}
+                >
+                  <option value="">Select floor...</option>
+                  {floors.map((f, i) => (
+                    <option key={i} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Purpose of Visit</label>
+                <select
+                  name="purpose"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  value={formData.purpose}
+                  onChange={handleChange}
+                >
+                  <option value="">Select purpose...</option>
+                  {visitPurposes.map((purpose) => (
+                    <option key={purpose} value={purpose}>
+                      {purpose}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Details (Optional)</label>
+                <textarea
+                  name="details"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors resize-none"
+                  rows="3"
+                  placeholder="Enter visit details"
+                  value={formData.details}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: ADDITIONAL INFORMATION */}
+          <div>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
+              <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-full w-8 h-8 shrink-0">
+                <ShieldAlert className="w-4 h-4" />
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm tracking-tight mb-0">Additional Information</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Special Requirements</label>
+                <select
+                  name="special_requirements"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  value={formData.special_requirements}
+                  onChange={handleChange}
+                >
+                  <option value="">None</option>
+                  {specialRequirements.map((r, i) => (
+                    <option key={i} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Emergency Contact</label>
+                <input
+                  type="tel"
+                  name="emergency_contact"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter emergency contact"
+                  value={formData.emergency_contact}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Clean Submit Button Container */}
+          <div className="flex justify-end pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center space-x-2"
+              disabled={loading}
+            >
+              <span>{loading ? "Registering..." : "Register Guest"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </form>
       </div>
 
       {/* Success Modal */}
-      <div
-        className={`modal fade ${showSuccessModal ? "show d-block" : ""}`}
-        tabIndex="-1"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content bg-success text-white text-center">
-            <div className="modal-body">
-              <h5 className="modal-title">Visitor Registered Successfully!</h5>
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="bg-emerald-600 text-white text-center rounded-3xl shadow-2xl p-6 max-w-sm w-full animate-fade-in space-y-3">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-7 h-7 text-white" />
             </div>
+            <h5 className="font-bold text-sm mb-0">Visitor Registered Successfully!</h5>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Visit Card Modal */}
       {showVisitCardModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
-            <div className="modal-content rounded-4 shadow">
-              <div className="modal-header">
-                <h5 className="modal-title">Share Visit Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowVisitCardModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div
-                  ref={printRef}
-                  className="card mx-auto"
-                  style={{
-                    maxWidth: "650px",
-                    height: "380px",
-                    border: "2px solid #cfd9e1",
-                    backgroundColor: "#F5FAFE",
-                  }}
-                >
-                  <div
-                    className="card-header d-flex justify-content-between align-items-center"
-                    style={{ background: "#007bff", color: "white" }}
-                  >
-                    <span className="badge bg-light text-dark">
-                      Sydani Group
-                    </span>
-                    <strong className="text-white">VISITORS BADGE</strong>
-                  </div>
-                  <div className="card-body d-flex mx-4 justify-content-between">
-                    <div className="flex-grow-1 ms-2">
-                      <h5 className="fw-bold my-3">{guestDetails.name}</h5>
-                      <p className="my-2 lead">
-                        ID No: <small className="ms-4">{guestDetails.id}</small>
-                      </p>
-                      <p className="my-2 lead">
-                        Host:{" "}
-                        <small className="ms-4">{guestDetails.host}</small>
-                      </p>
-                      <p className="my-2 lead">
-                        Visit Date:{" "}
-                        <small className="ms-4">
-                          {guestDetails.date} by {guestDetails.time}
-                        </small>
-                      </p>
-                      <p className="my-2 lead">
-                        Purpose:{" "}
-                        <small className="ms-4">{guestDetails.purpose}</small>
-                      </p>
-                      <p className="my-2 lead">
-                        Contact Info:{" "}
-                        <small className="ms-2">
-                          {guestDetails.Contact_info}
-                        </small>
-                      </p>
-                    </div>
-                    <div>
-                      {typeof qrValue === "string" && qrValue.length > 0 ? (
-                        <QRCode value={qrValue} size={130} />
-                      ) : (
-                        <div className="text-muted">QR not ready</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="card-footer">
-                    <p className="mb-1">
-                      <i className="bi bi-geo-alt"></i> {guestDetails.address}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-fade-in flex flex-col my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h5 className="font-bold text-slate-800 text-sm mb-0">Share Visit Details</h5>
+              <button
+                type="button"
+                onClick={() => setShowVisitCardModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6 overflow-y-auto">
+              <div
+                ref={printRef}
+                id="badgeCard"
+                className="card mx-auto rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between"
+                style={{
+                  maxWidth: "650px",
+                  minHeight: "360px",
+                  border: "2px solid #e2e8f0",
+                  backgroundColor: "#F5FAFE",
+                }}
+              >
+                <div className="flex justify-between items-center py-3 px-6 bg-blue-600 text-white">
+                  <span className="px-2.5 py-1 bg-white text-blue-600 font-bold rounded-full text-[10px]">
+                    Sydani Group
+                  </span>
+                  <strong className="text-white text-xs tracking-wider">VISITORS BADGE</strong>
+                </div>
+                <div className="p-6 flex justify-between items-center gap-4">
+                  <div className="space-y-2 text-xs flex-1">
+                    <h5 className="font-bold text-slate-900 text-base mb-3">{guestDetails.name}</h5>
+                    <p className="text-slate-500 mb-0 flex justify-between">
+                      <span>ID No:</span>
+                      <strong className="text-slate-900">{guestDetails.id}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0 flex justify-between">
+                      <span>Host:</span>
+                      <strong className="text-slate-900">{guestDetails.host}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0 flex justify-between">
+                      <span>Visit Date:</span>
+                      <strong className="text-slate-900">{guestDetails.date} by {guestDetails.time}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0 flex justify-between">
+                      <span>Purpose:</span>
+                      <strong className="text-slate-900">{guestDetails.purpose}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0 flex justify-between">
+                      <span>Contact Info:</span>
+                      <strong className="text-slate-900">{guestDetails.Contact_info}</strong>
                     </p>
                   </div>
-                </div>
-                {/* Share Buttons */}
-                <div className="mt-4 text-center">
-                  <p className="fw-bold">Share Via</p>
-                  <div className="d-flex justify-content-center gap-4">
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(`🎫 Visitor Badge – Sydani Group\n\nName: ${guestDetails.name}\nGuest Code: ${guestDetails.id}\nHost: ${guestDetails.host}\nVisit Date: ${guestDetails.date} at ${guestDetails.time}\nPurpose: ${guestDetails.purpose}\nContact: ${guestDetails.Contact_info}`)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-whatsapp fs-3 text-success"></i>
-                    </a>
-                    <a
-                      href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-linkedin fs-3 text-primary"></i>
-                    </a>
-                    <a
-                      href="https://twitter.com/intent/tweet?text=Visit%20Confirmation%20Details"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-twitter-x fs-3"></i>
-                    </a>
-                    <a
-                      href="https://facebook.com/sharer/sharer.php?u=https://example.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-facebook fs-3 text-primary"></i>
-                    </a>
-                    <button
-                      className="btn btn-outline-dark"
-                      onClick={handlePrint}
-                    >
-                      🖨️ Print
-                    </button>
-                    <button
-                      className="btn btn-outline-success"
-                      onClick={downloadBadgeAsPDF}
-                    >
-                      📄 Download PDF
-                    </button>
+                  <div className="shrink-0 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                    {typeof qrValue === "string" && qrValue.length > 0 ? (
+                      <QRCode value={qrValue} size={110} />
+                    ) : (
+                      <div className="text-slate-400 text-xs">QR not ready</div>
+                    )}
                   </div>
+                </div>
+                <div className="bg-transparent border-t border-slate-200 px-6 py-3 text-slate-500 text-xs flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{guestDetails.address}</span>
+                </div>
+              </div>
+
+              {/* Share Buttons */}
+              <div className="text-center pt-2">
+                <p className="font-bold text-slate-400 text-[10px] uppercase tracking-wider mb-3">Share Visit Pass Via</p>
+                <div className="flex justify-center flex-wrap gap-2">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`🎫 Visitor Badge – Sydani Group\n\nName: ${guestDetails.name}\nGuest Code: ${guestDetails.id}\nHost: ${guestDetails.host}\nVisit Date: ${guestDetails.date} at ${guestDetails.time}\nPurpose: ${guestDetails.purpose}\nContact: ${guestDetails.Contact_info}`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 border border-slate-200 text-emerald-600 hover:bg-slate-50 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> WhatsApp
+                  </a>
+                  <button
+                    className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                    onClick={handlePrint}
+                  >
+                    <Printer className="w-3.5 h-3.5" /> Print
+                  </button>
+                  <button
+                    className="px-4 py-2 border border-slate-200 text-blue-700 hover:bg-slate-50 font-semibold rounded-xl text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                    onClick={downloadBadgeAsPDF}
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download PDF
+                  </button>
                 </div>
               </div>
             </div>

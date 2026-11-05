@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../context/api";
-import NavBar from "./admin/include/NavBar";
-
 
 import {
   LineChart,
@@ -16,16 +14,20 @@ import {
 } from "recharts";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { Users, CheckCircle2, LogOut, Clock } from "lucide-react";
 import UserAvatar from "../components/UserAvatar";
+import AdminTopHeader from "./admin/include/AdminTopHeader";
 
 function SecurityFrontDeskDashboard() {
   const { user, token } = useAuth();
+
   const [view, setView] = useState("daily"); // Default view: daily
   const [visitsChartData, setVisitsChartData] = useState([]); // Data for the line chart
   const [totalVisitorsToday, setTotalVisitorsToday] = useState(0);
   const [checkedInToday, setCheckedInToday] = useState(0);
   const [checkedOutToday, setCheckedOutToday] = useState(0);
   const [pendingToday, setPendingToday] = useState(0);
+  const [avgVisitDuration, setAvgVisitDuration] = useState("0 min");
   const [loading, setLoading] = useState(false);
 
   const [priorityAlerts, setPriorityAlerts] = useState([]);
@@ -47,8 +49,6 @@ function SecurityFrontDeskDashboard() {
           },
         });
 
-        console.log("API Response:", response.data);
-
         // Map the visits_chart_data to match recharts' expected dataKey 'visitors'
         const formattedChartData =
           (response.data.visits_chart_data || []).map((item) => ({
@@ -61,12 +61,112 @@ function SecurityFrontDeskDashboard() {
         setCheckedInToday(response.data.checked_in_today);
         setCheckedOutToday(response.data.checked_out_today);
         setPendingToday(response.data.pending_today);
+
+        // Compute average visit duration for today (daily)
+        try {
+          let visits = [];
+          try {
+            const res = await api.get(`/admin/visits?status=completed&limit=1000`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            visits = res.data.visits || res.data.data || res.data || [];
+          } catch { }
+          if ((!visits || visits.length === 0)) {
+            try {
+              const res = await api.get(`/front-desk/visits/completed?per_page=1000`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              visits = res.data.visits || res.data.data || [];
+            } catch { }
+          }
+          if (visits && visits.length > 0) {
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            let totalMins = 0;
+            let count = 0;
+            visits.forEach((v) => {
+              const checkOut = v.check_out || v.checkout_time || v.departure_time;
+              const checkIn = v.check_in || v.checkin_time || v.arrival_time || v.visit_time;
+              if (checkIn && checkOut) {
+                const outDate = new Date(checkOut);
+                if (outDate >= startOfDay) {
+                  const diff = outDate - new Date(checkIn);
+                  if (diff > 0) {
+                    totalMins += diff / (1000 * 60);
+                    count++;
+                  }
+                }
+              }
+            });
+            if (count > 0) {
+              const avg = Math.round(totalMins / count);
+              if (avg >= 60) {
+                const hrs = Math.floor(avg / 60);
+                const rem = avg % 60;
+                setAvgVisitDuration(rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`);
+              } else {
+                setAvgVisitDuration(`${avg} min`);
+              }
+            } else {
+              setAvgVisitDuration("0 min");
+            }
+          } else {
+            setAvgVisitDuration("0 min");
+          }
+        } catch (e) {
+          setAvgVisitDuration("0 min");
+        }
+
+        // Compute average visit duration if data available
+        if (response.data.avg_visit_duration_minutes != null) {
+          const mins = Math.round(response.data.avg_visit_duration_minutes);
+          if (mins <= 0) {
+            setAvgVisitDuration("0 min");
+          } else if (mins >= 60) {
+            const hrs = Math.floor(mins / 60);
+            const rem = mins % 60;
+            setAvgVisitDuration(rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`);
+          } else {
+            setAvgVisitDuration(`${mins} min`);
+          }
+        } else if (response.data.avg_visit_duration) {
+          setAvgVisitDuration(response.data.avg_visit_duration);
+        } else if (response.data.average_visit_duration) {
+          setAvgVisitDuration(response.data.average_visit_duration);
+        } else if (response.data.completed_visits && response.data.completed_visits.length > 0) {
+          let totalMins = 0;
+          let count = 0;
+          response.data.completed_visits.forEach((v) => {
+            if (v.check_in && v.check_out) {
+              const diff = new Date(v.check_out) - new Date(v.check_in);
+              if (diff > 0) {
+                totalMins += diff / (1000 * 60);
+                count++;
+              }
+            }
+          });
+          if (count > 0) {
+            const avg = Math.round(totalMins / count);
+            if (avg <= 0) {
+              setAvgVisitDuration("0 min");
+            } else if (avg >= 60) {
+              const hrs = Math.floor(avg / 60);
+              const rem = avg % 60;
+              setAvgVisitDuration(rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`);
+            } else {
+              setAvgVisitDuration(`${avg} min`);
+            }
+          } else {
+            setAvgVisitDuration("0 min");
+          }
+        } else {
+          setAvgVisitDuration("0 min");
+        }
       } catch (error) {
         console.error(
           "Error fetching analytics:",
           error.response?.data || error.message
         );
-        // Reset data on error
         setVisitsChartData([]);
         setTotalVisitorsToday(0);
         setCheckedInToday(0);
@@ -122,264 +222,174 @@ function SecurityFrontDeskDashboard() {
     fetchLatestUpdates();
   }, [token]);
 
-  // Build image helper: return visitor photo or default
-  const visitorImage = (photo) => {
-    if (!photo) return "./images/user1.png";
-    // if photo is a full URL keep it, otherwise try to use the storage base
-    if (photo.startsWith("http") || photo.startsWith("/")) return photo;
-    return photo;
-  };
-
   return (
-    <div>
-      <NavBar />
-      <header
-        id="#"
-        className="text-white text-center position-relative px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "auto",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-          paddingTop: "20px",
-          paddingBottom: "180px",
-        }}
-      >
-        <div className="container mt-3">
-          <div
-            className="text-white p-4 shadow-sm text-center"
-            style={{
-              backgroundColor: "#053561",
-              minHeight: "280px",
-              borderRadius: "10px",
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">
-                Welcome Back, {user?.name || "Admin"}
-              </h3>
-              {/* <i
-                className="bi bi-plus-circle fs-1 text-primary p-2"
-                style={{ cursor: "pointer" }}
-              ></i> */}
-            </div>
+    <div className="min-h-screen bg-slate-50/50 pb-12">
+      <AdminTopHeader />
 
-            <div className="d-flex align-items-center  mt-2">
-              <p
-                className="badge text-white"
-                style={{ backgroundColor: "rgba(57, 118, 175, 0.8)" }}
-              >
-                Sydani Group{" "}
-                <span
-                  className="badge text-light"
-                  style={{ backgroundColor: "rgba(5, 53, 97, 0.8)" }}
-                >
-                  Company
-                </span>
-              </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pt-6">
 
-              <div
-                className="flex-grow-1 ms-3"
-                style={{
-                  height: "2px",
-                  backgroundColor: "rgba(168, 172, 176, 0.8)",
-                }}
-              ></div>
-            </div>
-          </div>
+        {/* WELCOME BACK HEADING */}
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-0">
+            Welcome Back, {user?.name || "David Ayodele"}
+          </h1>
         </div>
 
-        <div
-          className="container position-absolute start-50 translate-middle-x w-100 px-3"
-          style={{ bottom: "-80px" }}
-        >
-          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 justify-content-center">
-            <div className="col">
-              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-2 rounded-3 bg-success-subtle">
-                  <i className="bi bi-people fs-2 text-success"></i>
-                </div>
-                <div className="ms-auto  text-muted text-start">
-                  <h6 className="mb-1">Visitors Today</h6>
-                  <p className="mb-0 fs-4">{totalVisitorsToday}</p>
-                </div>
-              </div>
-            </div>
+        {/* METRIC CARDS SECTION */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-            <div className="col">
-              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-2 rounded-3 bg-info-subtle">
-                  <i className="bi bi-person-check fs-2 text-info"></i>
-                </div>
-                <div className="ms-auto text-start">
-                  <h6 className="mb-1 text-muted">Checked In</h6>
-                  <p className="mb-0 fs-4">{checkedInToday}</p>
-                </div>
-              </div>
+          {/* Card 1 */}
+          <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-100 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0">Visitors Today</p>
+              <h3 className="text-2xl font-extrabold text-slate-900 mb-0">{totalVisitorsToday}</h3>
             </div>
-
-            <div className="col">
-              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-2 rounded-3 bg-warning-subtle">
-                  <i className="bi bi-eye fs-2 text-warning"></i>
-                </div>
-                <div className="ms-auto text-start">
-                  <h6 className="mb-1 text-muted">Checked Out</h6>
-                  <p className="mb-0 fs-4">{checkedOutToday}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="col">
-              <div className="card p-4 d-flex flex-row align-items-center shadow rounded-3">
-                <div className="p-2 rounded-3 bg-primary-subtle">
-                  <i className="bi bi-hourglass fs-2 text-primary"></i>
-                </div>
-                <div className="ms-auto  text-start">
-                  <h6 className="mb-1 text-muted">Pending</h6>
-                  <p className="mb-0 fs-4">{pendingToday}</p>
-                </div>
-              </div>
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" />
             </div>
           </div>
+
+          {/* Card 2 */}
+          <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-100 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0">Checked In</p>
+              <h3 className="text-2xl font-extrabold text-emerald-600 mb-0">{checkedInToday}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-100 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0">Checked Out</p>
+              <h3 className="text-2xl font-extrabold text-cyan-600 mb-0">{checkedOutToday}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+              <LogOut className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* Card 4 */}
+          <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-100 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0">Avg Visit Duration</p>
+              <h3 className="text-2xl font-extrabold text-indigo-600 mb-0">{avgVisitDuration}</h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+
         </div>
-      </header>
 
-      <section
-        id="notifications"
-        className="p-5"
-        style={{ padding: "100px 0 50px 0" }}
-      >
-        <div className="row m-3" style={{ padding: "100px 0 20px 0" }}>
-          <div className="col-md-6 pe-3 mt-5">
-            <div className="card p-4">
-              <div className="text-center">
-                <select
-                  className="form-select rounded-pill border-secondary bg-light my-2"
-                  style={{ maxWidth: "100px" }}
-                  value={view}
-                  onChange={(e) => setView(e.target.value)}
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-              </div>
-
-              {loading ? (
-                <p className="text-center">Loading chart data...</p>
-              ) : (
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={visitsChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="visitors"
-                      stroke="#007bff"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
+        {/* VISITORS ANALYTICS CHART SECTION */}
+        <div className="bg-white p-6 rounded-3xl shadow-xs border border-slate-100">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-0">Visitors Analytics</h3>
+            <select
+              className="appearance-none bg-slate-50 border border-slate-200 rounded-full text-xs font-semibold text-slate-700 py-2 pl-4 pr-9 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-no-repeat bg-[right_0.8rem_center] bg-[length:12px_12px]"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
+              value={view}
+              onChange={(e) => setView(e.target.value)}
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
           </div>
 
-          <div className="col-md-6">
-            <div className="d-flex justify-content-between align-items-center">
-              <h6 className="lead">Priority Alerts</h6>
-              <Link to="/admin-dashboard/alerts" className="text-primary">
-                See all
-              </Link>
+          {loading ? (
+            <div className="text-center text-slate-400 py-16 text-xs">Loading chart data...</div>
+          ) : (
+            <div className="w-full h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={visitsChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} />
+                  <YAxis stroke="#94a3b8" fontSize={11} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }} />
+                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                  <Line
+                    type="monotone"
+                    dataKey="visitors"
+                    stroke="#2563eb"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: "#2563eb" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-
-            <div className="row g-3">
-              {alertsLoading ? (
-                <div className="col-12 text-center">Loading...</div>
-              ) : priorityAlerts.length === 0 ? (
-                <div className="col-12 text-muted">No priority alerts</div>
-              ) : (
-                priorityAlerts.map((guest, index) => (
-                  <div
-                    key={guest.id ?? index}
-                    className="col-9 col-sm-8 col-md-4 d-flex justify-content-between mb-3"
-                  >
-                    <div className="card mt-3 p-2 shadow-sm rounded-3">
-                      <UserAvatar
-                        image={guest.visitor_photo}
-                        firstName={guest.visitor_name || "Unknown"}
-                        size={120}
-                        borderRadius="10px"
-                        className="w-100"
-                        style={{ height: 120, objectFit: "cover" }}
-                      />
-                      <p
-                        className="mt-2 mb-1 fw-bold"
-                        style={{ minHeight: 30 }}
-                      >
-                        {guest.visitor_name || "Unknown"}
-                      </p>
-                      <small className="text-muted">
-                        <span
-                          className={`ms-2 ${guest.status === "online"
-                            ? "text-success me-3"
-                            : "text-danger me-3"
-                            }`}
-                        >
-                          ●
-                        </span>
-                        {guest.check_in
-                          ? new Date(guest.check_in).toLocaleString()
-                          : "No time"}
-                      </small>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="d-flex justify-content-between align-items-center mt-5">
-              <p className="lead">Latest Updates</p>
-              <Link to="/admin-dashboard/updates" className="text-primary">
-                See all
-              </Link>
-            </div>
-
-            {updatesLoading ? (
-              <p>Loading updates...</p>
-            ) : latestUpdates.length === 0 ? (
-              <p className="text-muted">No recent visitors</p>
-            ) : (
-              latestUpdates.map((u, idx) => (
-                <div key={u.id ?? idx} className="col-12">
-                  <div className="card p-3 shadow-sm d-flex flex-row align-items-center mb-3">
-                    <UserAvatar
-                      image={u.photo}
-                      firstName={u.name || "Visitor"}
-                      size={40}
-                      className="me-3"
-                    />
-                    <div>
-                      <p className="mb-1 text-dark">{u.name}</p>
-                      <small className="text-muted">
-                        {new Date(u.created_at).toLocaleString()}
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          )}
         </div>
-      </section>
+
+        {/* LATEST UPDATES TABLE SECTION */}
+        <section id="notifications" className="bg-white p-6 rounded-3xl shadow-xs border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-0">Vistors Update Log</h3>
+            <Link to="/admin-dashboard/updates" className="text-blue-600 hover:text-blue-700 no-underline font-semibold text-xs transition-colors">
+              See all
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 text-black text-[11px] uppercase tracking-wider font-semibold">
+                  <th className="pb-3 px-4">Icon</th>
+                  <th className="pb-3 px-4">Name</th>
+                  <th className="pb-3 px-4">Date</th>
+                  <th className="pb-3 px-4">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {updatesLoading ? (
+                  <tr>
+                    <td colSpan="4" className="text-center text-black py-6">Loading updates...</td>
+                  </tr>
+                ) : latestUpdates.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="text-center text-black py-6">No recent visitors</td>
+                  </tr>
+                ) : (
+                  latestUpdates.map((u, idx) => {
+                    const dateObj = new Date(u.created_at);
+                    const dateStr = dateObj.toLocaleDateString();
+                    const timeStr = dateObj.toLocaleTimeString();
+                    return (
+                      <tr key={u.id ?? idx} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center">
+                            <UserAvatar
+                              image={u.photo}
+                              firstName={u.name || "Visitor"}
+                              size={34}
+                              className="rounded-full object-cover"
+                            />
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-black">
+                          {u.name}
+                        </td>
+                        <td className="py-3 px-4 text-black font-medium">
+                          {dateStr}
+                        </td>
+                        <td className="py-3 px-4 text-black font-medium">
+                          {timeStr}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
     </div>
   );
 }
-
 
 export default SecurityFrontDeskDashboard;

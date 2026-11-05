@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../context/api";
-import NavBar from "./include/NavBar";
 import { toast } from 'react-toastify';
-import { BellRing, UserCheck, CheckSquare } from 'lucide-react';
+import { BellRing, UserCheck, CheckSquare, Bell } from 'lucide-react';
 import { useNotifications } from "../../context/NotificationContext";
 import { useLocation } from "react-router-dom";
+import FrontDeskTopHeader from "./include/FrontDeskTopHeader";
 
 
 // Pagination component to display page numbers and navigation buttons.
@@ -12,42 +12,49 @@ const Pagination = ({ pagination, handlePageChange }) => {
   if (!pagination || pagination.last_page <= 1) return null;
 
   const { current_page, last_page } = pagination;
-  const pages = [];
-  for (let i = 1; i <= last_page; i++) {
-    pages.push(i);
-  }
 
   return (
-    <nav aria-label="Page navigation" className="mt-4">
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${current_page === 1 ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={(e) => { e.preventDefault(); handlePageChange(current_page - 1); }}
+    <nav className="mt-6 flex justify-center">
+      <ul className="flex items-center gap-1">
+        <li>
+          <button
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              current_page === 1
+                ? "text-slate-400 cursor-not-allowed"
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
+            onClick={(e) => { e.preventDefault(); if (current_page > 1) handlePageChange(current_page - 1); }}
+            disabled={current_page === 1}
           >
             Previous
-          </a>
+          </button>
         </li>
-        {pages.map(page => (
-          <li key={page} className={`page-item ${current_page === page ? 'active' : ''}`}>
-            <a
-              className="page-link"
-              href="#"
+        {Array.from({ length: last_page }, (_, i) => i + 1).map(page => (
+          <li key={page}>
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                current_page === page
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
               onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
             >
               {page}
-            </a>
+            </button>
           </li>
         ))}
-        <li className={`page-item ${current_page === last_page ? 'disabled' : ''}`}>
-          <a
-            className="page-link"
-            href="#"
-            onClick={(e) => { e.preventDefault(); handlePageChange(current_page + 1); }}
+        <li>
+          <button
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              current_page === last_page
+                ? "text-slate-400 cursor-not-allowed"
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
+            onClick={(e) => { e.preventDefault(); if (current_page < last_page) handlePageChange(current_page + 1); }}
+            disabled={current_page === last_page}
           >
             Next
-          </a>
+          </button>
         </li>
       </ul>
     </nav>
@@ -78,7 +85,7 @@ function AdminNotifications() {
       // The backend now returns { notifications: [...], pagination: {...}, message: "..." }
       if (response.data && Array.isArray(response.data.notifications)) {
         setNotifications(response.data.notifications);
-        setPagination(response.data.pagination);
+        setPagination(response.data.pagination ?? {});
         setMessage(response.data.message || "Notifications fetched successfully.");
         if (response.data.notifications.length === 0) {
           setMessage("No Notifications Yet");
@@ -119,11 +126,11 @@ function AdminNotifications() {
   const getNotificationIcon = (category) => {
     switch (category) {
       case 'Visitor':
-        return <UserCheck size={28} />;
+        return <UserCheck size={20} className="text-blue-600" />;
       case 'Registration':
-        return <CheckSquare size={28} />;
+        return <CheckSquare size={20} className="text-emerald-600" />;
       default:
-        return <BellRing size={28} />;
+        return <BellRing size={20} className="text-slate-600" />;
     }
   };
 
@@ -131,128 +138,112 @@ function AdminNotifications() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending':
-        return 'text-warning';
+        return 'text-amber-500';
       case 'Success':
-        return 'text-success';
+        return 'text-emerald-500';
       case 'Scheduled':
-        return 'text-info';
+        return 'text-blue-500';
       case 'Rescheduled':
-        return 'text-primary';
+        return 'text-blue-600';
       case 'Missed':
-        return 'text-danger';
+        return 'text-rose-500';
       case 'Cancelled':
-        return 'text-danger';
+        return 'text-rose-500';
       default:
-        return 'text-secondary';
+        return 'text-slate-400';
+    }
+  };
+
+  const getIconBg = (category) => {
+    switch (category) {
+      case 'Visitor':
+        return 'bg-blue-50';
+      case 'Registration':
+        return 'bg-emerald-50';
+      default:
+        return 'bg-slate-50';
     }
   };
 
   return (
-    <div>
-      <NavBar />
-      <header
-        className="text-white text-center d-flex align-items-center px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "300px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm rounded"
-            style={{
-              backgroundColor: "#053561",
-              minHeight: "160px",
-            }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bold mb-0">Notifications</h3>
-              <i
-                className="bi bi-plus-circle fs-1 text-white-50 p-2"
-                style={{ cursor: "pointer", transition: "0.3s" }}
-                onMouseOver={(e) => (e.target.style.color = "#0d6efd")}
-                onMouseOut={(e) => (e.target.style.color = "white")}
-              ></i>
-            </div>
-
-            <div
-              className="w-100 mt-3"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-              }}
-            ></div>
-          </div>
+    <div className="min-h-screen bg-[#f3f7fc] pb-12">
+      <FrontDeskTopHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-0">Notifications</h1>
+          <p className="text-slate-500 text-sm mt-1">Stay updated with latest activities</p>
         </div>
-      </header>
 
-      <section id="notifications" className="container p-4">
         {loading ? (
-          <p className="text-center">{message}</p>
+          <div className="bg-white rounded-3xl shadow-xs border border-slate-100 p-8 text-center">
+            <p className="text-slate-500 text-sm">{message}</p>
+          </div>
         ) : notifications.length > 0 ? (
           <>
-            <div className="row">
+            <div className="space-y-2">
               {notifications.map((notification) => {
-                // Point 4: Visual distinction for unread notifications
                 const isUnread = !notification.is_read;
-                const cardStyle = {
-                    borderRadius: "12px",
-                    // Use a subtle background color or highlight for unread
-                    backgroundColor: isUnread ? '#f0f8ff' : 'white', // Light blue for unread
-                    borderLeft: isUnread ? '4px solid #007bff' : '1px solid #e9ecef',
-                    transition: 'background-color 0.3s',
-                    cursor: 'pointer',
-                };
 
                 return (
-                <div key={notification.id} className="col-12 col-md-10 mx-auto mb-3">
                   <div
-                    className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center"
-                    style={cardStyle} // Apply dynamic style
+                    key={notification.id}
+                    className={`group relative bg-white rounded-2xl shadow-xs border transition-all duration-200 hover:shadow-sm hover:border-slate-200 ${
+                      isUnread 
+                        ? 'border-blue-200 bg-blue-50/30' 
+                        : 'border-slate-100'
+                    }`}
                   >
-                    <div className="d-flex align-items-center w-100">
-                      <div className="p-2 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#e9f5ff' }}>
+                    <div className="p-4 sm:p-5 flex items-start gap-4">
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${getIconBg(notification.category)} flex items-center justify-center`}>
                         {getNotificationIcon(notification.category)}
                       </div>
-                      <div className="flex-grow-1">
-                        <h6 className={`mb-1 ${isUnread ? 'fw-bold text-dark' : 'text-secondary'}`}>
-                            {notification.title || 'No Title'}
-                        </h6>
-                        <p className="mb-0 text-muted" style={{ fontSize: "14px" }}>
-                          {notification.message || "No message"}
-                        </p>
-                        <small className="text-muted">
-                          {notification.created_at
-                            ? new Date(notification.created_at).toLocaleString()
-                            : "Just now"}
-                        </small>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <h6 className={`text-sm mb-1 ${isUnread ? 'font-semibold text-slate-900' : 'font-medium text-slate-700'}`}>
+                              {notification.title || 'No Title'}
+                            </h6>
+                            <p className="text-sm text-slate-600 mb-2 line-clamp-2">
+                              {notification.message || "No message"}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {notification.created_at
+                                ? new Date(notification.created_at).toLocaleString()
+                                : "Just now"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`${getStatusColor(notification.status)} text-lg leading-none`}>
+                              ●
+                            </span>
+                            {isUnread && (
+                              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <span
-                      className={`ms-md-3 mt-3 mt-md-0 ${getStatusColor(notification.status)}`}
-                      style={{ fontSize: "18px" }}
-                    >
-                      ●
-                    </span>
+                    {isUnread && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full"></div>
+                    )}
                   </div>
-                </div>
-              )})}
+                );
+              })}
             </div>
             {pagination.last_page > 1 && (
               <Pagination pagination={pagination} handlePageChange={handlePageChange} />
             )}
           </>
         ) : (
-          <div className="text-center align-items-center p-5 text-muted">
-            <img src="https://placehold.co/400x400/E9F5FF/053561?text=No+Notifications" width="400" height="400" alt="Notification" className="img-fluid" />
-            <h4 className="text-muted">{message}</h4>
+          <div className="bg-white rounded-3xl shadow-xs border border-slate-100 p-12 text-center">
+            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">No notifications</h3>
+            <p className="text-slate-500 text-sm">{message}</p>
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

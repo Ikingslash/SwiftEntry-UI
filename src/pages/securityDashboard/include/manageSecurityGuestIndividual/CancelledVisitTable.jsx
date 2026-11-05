@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../../../../context/api";
 import { toast } from "react-toastify";
+import { ChevronLeft, ChevronRight, CalendarClock, X } from "lucide-react";
 
-// Added visitType prop
 function CancelledVisitTable({ visitType, onVisitUpdate }) {
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -17,16 +17,12 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
   const fetchVisits = async () => {
     setLoading(true);
     try {
-        // FIX: Dynamic endpoint for cancelled visits
       const endpoint = `/security/guest/${visitType}/cancelled-visits`;
-      const response = await api.get(
-        endpoint,
-        {
-          params: { per_page: perPage, page },
-        }
-      );
-      setVisits(response.data.visits);
-      setPagination(response.data.pagination);
+      const response = await api.get(endpoint, {
+        params: { per_page: perPage, page },
+      });
+      setVisits(response.data.visits || []);
+      setPagination(response.data.pagination || {});
     } catch (error) {
       console.error("Error fetching visits:", error);
       toast.error("Failed to load cancelled visits");
@@ -38,7 +34,7 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
 
   useEffect(() => {
     fetchVisits();
-  }, [page, visitType, onVisitUpdate]); // Added visitType and onVisitUpdate as dependencies
+  }, [page, visitType, onVisitUpdate]);
 
   const handlePrevious = () => {
     if (pagination.current_page > 1) setPage((prev) => prev - 1);
@@ -51,150 +47,214 @@ function CancelledVisitTable({ visitType, onVisitUpdate }) {
 
   const handleRescheduleSubmit = async () => {
     if (!selectedVisit || !newDate || !newTime) {
-        toast.error("Please select a new date and time.");
-        return;
+      toast.error("Please select a new date and time.");
+      return;
     }
 
     const newVisitTime = `${newDate} ${newTime}`;
 
     try {
-        // Assume reschedule uses a generic visit ID endpoint
-        await api.post(`security/guest/visit/${selectedVisit.id}/reschedule`, {
-            visit_time: newVisitTime
-        });
-        toast.success("Visit successfully rescheduled!");
-        setShowModal(false);
-        fetchVisits();
-        if(onVisitUpdate) onVisitUpdate();
+      await api.post(`security/guest/visit/${selectedVisit.id}/reschedule`, {
+        visit_time: newVisitTime,
+      });
+      toast.success("Visit successfully rescheduled!");
+      setShowModal(false);
+      fetchVisits();
+      if (onVisitUpdate) onVisitUpdate();
     } catch (error) {
-        console.error("Reschedule failed:", error);
-        toast.error("Failed to reschedule visit.");
+      console.error("Reschedule failed:", error);
+      toast.error("Failed to reschedule visit.");
     }
   };
 
   const openRescheduleModal = (visit) => {
     setSelectedVisit(visit);
-    // You might want to pre-fill date/time with current values or an empty string
     setNewDate("");
     setNewTime("");
     setShowModal(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-xs">
+        <p className="text-slate-500 text-xs font-medium mb-0">
+          Loading cancelled visits...
+        </p>
+      </div>
+    );
   }
 
-  if (loading) return <p>Loading...</p>;
-
   return (
-    <div>
-      <div className="table-responsive my-5">
+    <div className="bg-white rounded-3xl shadow-xs border border-slate-100 overflow-hidden font-sans">
+      <div className="overflow-x-auto">
         {visits.length > 0 ? (
           <>
-            <table className="table table-bordered table-hover">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr>
-                  <th>Unique ID</th>
-                  <th>Guest Name</th>
-                  <th>Host Name</th>
-                  <th>Visit Date/Time</th>
-                  <th>Contact</th>
-                  <th>Email Address</th>
-                  <th>Special Requirement</th>
-                  <th>Action</th>
+                <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-6 whitespace-nowrap">Unique ID</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Guest Name</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Host Name</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Visit Date/Time</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Contact</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Email</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Special Req.</th>
+                  <th className="py-4 px-6 text-right whitespace-nowrap">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                 {visits.map((visit) => (
-                  <tr key={visit.id}>
-                    <td>{visit.id}</td>
-                    <td>{visit.visitor?.name}</td>
-                    <td>{visit.host_name}</td>
-                    <td>
+                  <tr
+                    key={visit.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
+                    <td className="py-4 px-6 text-slate-400 font-semibold">
+                      #{visit.id}
+                    </td>
+                    <td className="py-4 px-6 font-bold text-slate-900">
+                      {visit.visitor?.name || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.host_name || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">
                       {visit.visit_time
                         ? new Date(visit.visit_time).toLocaleString()
                         : "N/A"}
                     </td>
-                    <td>{visit.visitor?.contact_number}</td>
-                    <td>{visit.visitor?.email}</td>
-                    <td>{visit.visitor?.special_requirements || "None"}</td>
-                     <td>
-                        <button
-                            className="btn btn-sm btn-info"
-                            onClick={() => openRescheduleModal(visit)}
-                        >
-                            Reschedule
-                        </button>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.visitor?.contact_number || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-slate-600">
+                      {visit.visitor?.email || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-slate-500">
+                      {visit.visitor?.special_requirements || "None"}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-xl transition-all cursor-pointer border-0 whitespace-nowrap"
+                        onClick={() => openRescheduleModal(visit)}
+                      >
+                        <CalendarClock className="w-3 h-3" /> Reschedule
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {/* Pagination Controls */}
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <button
-                className="btn btn-primary"
-                onClick={handlePrevious}
-                disabled={pagination.current_page === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {pagination.current_page} of {pagination.last_page}
-              </span>
-              <button
-                className="btn btn-primary"
-                onClick={handleNext}
-                disabled={pagination.current_page === pagination.last_page}
-              >
-                Next
-              </button>
-            </div>
+            {/* Pagination */}
+            {pagination.last_page > 1 && (
+              <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  onClick={handlePrevious}
+                  disabled={pagination.current_page === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+                </button>
+                <span className="text-slate-500 font-semibold">
+                  Page {pagination.current_page} of {pagination.last_page}
+                </span>
+                <button
+                  type="button"
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 rounded-xl transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  onClick={handleNext}
+                  disabled={pagination.current_page === pagination.last_page}
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </>
         ) : (
-          <h1>No Cancelled Visit</h1>
+          <div className="p-12 text-center">
+            <p className="text-slate-400 text-xs font-medium mb-0">
+              No cancelled visits.
+            </p>
+          </div>
         )}
       </div>
 
       {/* Reschedule Modal */}
       {showModal && (
-        <div
-          className="modal d-block"
-          tabIndex="-1"
-          role="dialog"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog" role="document">
-            <div className="modal-content p-4">
-              <h5 className="modal-title">Reschedule Visit</h5>
-              <div className="modal-body">
-                <label>New Date</label>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-xs p-0 sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl p-5 sm:p-8 w-full sm:max-w-md shadow-xl border border-slate-100 space-y-4 max-h-[92dvh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h5 className="font-bold text-slate-900 text-base mb-0">
+                Reschedule Visit
+              </h5>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors border-0 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-0">
+              Pick a new date and time for{" "}
+              <strong className="text-slate-900">
+                {selectedVisit?.visitor?.name || "this visitor"}
+              </strong>
+              .
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="newDate"
+                  className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+                >
+                  New Date
+                </label>
                 <input
+                  id="newDate"
                   type="date"
-                  className="form-control mb-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/10"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
                 />
+              </div>
 
-                <label>New Time</label>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="newTime"
+                  className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+                >
+                  New Time
+                </label>
                 <input
+                  id="newTime"
                   type="time"
-                  className="form-control mb-3"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/10"
                   value={newTime}
                   onChange={(e) => setNewTime(e.target.value)}
                 />
               </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-success"
-                  onClick={handleRescheduleSubmit}
-                >
-                  Submit
-                </button>
-              </div>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-1">
+              <button
+                type="button"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer border-0"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2.5 bg-gradient-to-r from-[#1798f5] to-[#0755e8] hover:opacity-95 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-500/25 cursor-pointer border-0 disabled:opacity-50"
+                onClick={handleRescheduleSubmit}
+                disabled={!newDate || !newTime}
+              >
+                Submit
+              </button>
             </div>
           </div>
         </div>

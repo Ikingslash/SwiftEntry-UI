@@ -1,21 +1,23 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
+import ActionMenu from "../../../components/ActionMenu";
 import api from "../../../context/api";
 import UserAvatar from "../../../components/UserAvatar";
 import { toast } from "react-toastify";
 
 function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
-  const [staff, setStaff] = useState([]); // Stores staff data
+  const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
-  const [page, setPage] = useState(1); // State for current page
-  const [selectedUsers, setSelectedUsers] = useState([]); // For bulk delete
+  const [page, setPage] = useState(1);
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [filters, setFilters] = useState({ name: "", department: "", email: "" });
   const [filterTrigger, setFilterTrigger] = useState(0);
 
+  const [openDropdownId, setOpenDropdownId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false); // For "View Detail"
-  const [selectedStaff, setSelectedStaff] = useState(null); // Full staff object for modals
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState(null);
 
   const [editFormData, setEditFormData] = useState({
     name: "",
@@ -27,7 +29,6 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     status: true,
   });
 
-
   useEffect(() => {
     fetchStaff();
   }, [refreshKey, page, filterTrigger]);
@@ -38,15 +39,16 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     try {
       const queryParams = new URLSearchParams({
         page: page,
+        per_page: 8,
         ...(filters.name && { name: filters.name }),
         ...(filters.department && { department: filters.department }),
         ...(filters.email && { email: filters.email }),
       }).toString();
 
       const response = await api.get(`admin/staff?${queryParams}`);
-
-      setStaff(Array.isArray(response.data.staff) ? response.data.staff : []);
-      setPagination(response.data.pagination);
+      const staffList = Array.isArray(response.data.staff) ? response.data.staff : [];
+      setStaff(staffList.slice(0, 8));
+      setPagination(response.data.pagination || {});
     } catch (err) {
       console.error("Error fetching staff:", err.response?.data || err.message);
       setError("Failed to load staff. Please try again.");
@@ -63,13 +65,13 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
       const staffData = response.data;
       setSelectedStaff(staffData);
       setEditFormData({
-        name: staffData.name,
-        email: staffData.email,
-        role: staffData.role,
-        department: staffData.department,
+        name: staffData.name || "",
+        email: staffData.email || "",
+        role: staffData.role || "",
+        department: staffData.department || "",
         password: "",
-        photo: staffData.photo,
-        status: staffData.status,
+        photo: staffData.photo || null,
+        status: staffData.status ?? true,
       });
       setShowEditModal(true);
     } catch (err) {
@@ -90,19 +92,17 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     e.preventDefault();
     try {
       const payload = { ...editFormData };
-
       if (payload.password === "") {
         delete payload.password;
       }
 
-      const response = await api.put(`admin/staff/${selectedStaff.id}`, payload);
-      console.log("Staff updated:", response.data);
+      await api.put(`admin/staff/${selectedStaff.id}`, payload);
       setShowEditModal(false);
-      triggerRefresh(); // Refresh the table
+      triggerRefresh();
       toast.success("Staff updated successfully!");
     } catch (err) {
-      console.error("Error updating staff:", err.response?.data || err.message || JSON.stringify(err.response?.data?.errors));
-      toast.error("Failed to update staff: ");
+      console.error("Error updating staff:", err.response?.data || err.message);
+      toast.error("Failed to update staff.");
     }
   };
 
@@ -115,7 +115,6 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     if (window.confirm(confirmMessage)) {
       try {
         const response = await api.post(`admin/staff/${staffId}/${action}`);
-        console.log(`Staff ${action}d:`, response.data);
         triggerRefresh();
         toast.success(response.data.message);
       } catch (err) {
@@ -129,7 +128,6 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     if (window.confirm("Are you sure you want to delete this staff? This action cannot be undone.")) {
       try {
         const response = await api.delete(`admin/staff/${staffId}`);
-        console.log("Staff deleted:", response.data);
         triggerRefresh();
         toast.success(response.data.message);
       } catch (err) {
@@ -154,33 +152,17 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     setShowEditModal(false);
     setShowViewModal(false);
     setSelectedStaff(null);
-    // Reset image preview if it was for a modal
-    // setSelectedImage(null); // This is managed by AdminStaff.jsx for add modal
   };
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // For edit modal, if you support direct photo upload and update
-      // For now, this is a placeholder. Real implementation needs file upload.
-      setSelectedStaff(prev => ({ ...prev, photo: URL.createObjectURL(file) }));
-      setEditFormData(prev => ({ ...prev, photo: URL.createObjectURL(file) })); // Or a base64 string
+      const previewUrl = URL.createObjectURL(file);
+      setSelectedStaff(prev => ({ ...prev, photo: previewUrl }));
+      setEditFormData(prev => ({ ...prev, photo: previewUrl }));
     }
   };
 
-  const handlePrevious = () => {
-    if (pagination.current_page > 1) {
-      setPage((prev) => prev - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (pagination.current_page < pagination.last_page) {
-      setPage((prev) => prev + 1);
-    }
-  };
-
-  // Bulk delete selection handlers
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       setSelectedUsers(staff);
@@ -206,54 +188,66 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
     return selectedUsers.some((u) => u.id === userId);
   };
 
+  const handlePrevious = () => {
+    if (pagination.current_page > 1) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (pagination.current_page < pagination.last_page) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
   if (loading) {
-    return <p className="text-center mt-5">Loading staff data...</p>;
+    return <div className="text-center py-6 text-slate-500 font-medium">Loading staff data...</div>;
   }
 
   if (error) {
-    return <p className="text-center mt-5 text-danger">{error}</p>;
+    return <div className="text-center py-6 text-rose-600 font-medium">{error}</div>;
   }
 
   return (
-    <div className="container">
-      {/* FrontDesk/Staff Filters */}
-      <div className="row mb-3 mt-4">
-        <div className="col-md-3">
+    <div className="max-w-7xl mx-auto px-0">
+      {/* Filters Bar without Background Card Wrapper */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4 px-1">
+        <div>
           <input
             type="text"
-            className="form-control"
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
             placeholder="Filter by Name"
             value={filters.name}
             onChange={(e) => setFilters({ ...filters, name: e.target.value })}
           />
         </div>
-        <div className="col-md-3">
+        <div>
           <input
             type="text"
-            className="form-control"
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
             placeholder="Filter by Department"
             value={filters.department}
             onChange={(e) => setFilters({ ...filters, department: e.target.value })}
           />
         </div>
-        <div className="col-md-3">
+        <div>
           <input
             type="text"
-            className="form-control"
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
             placeholder="Filter by Email"
             value={filters.email}
             onChange={(e) => setFilters({ ...filters, email: e.target.value })}
           />
         </div>
-        <div className="col-md-3 d-flex gap-2">
+        <div className="flex items-center gap-2">
           <button
-            className="btn btn-primary"
+            className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-2xs"
             onClick={() => { setPage(1); setFilterTrigger(prev => prev + 1); }}
           >
             Apply
           </button>
           <button
-            className="btn btn-secondary"
+            className="flex-1 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors cursor-pointer shadow-2xs"
             onClick={() => {
               setFilters({ name: "", department: "", email: "" });
               setPage(1);
@@ -265,448 +259,279 @@ function ManageStaffTable({ refreshKey, triggerRefresh, onSelectionChange }) {
         </div>
       </div>
 
-      <div className="table-responsive my-5">
-        <table className="table table-bordered table-hover">
-          <thead className="bg-white">
-            <tr>
-              <th style={{ width: "50px" }}>
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  onChange={handleSelectAll}
-                  checked={staff.length > 0 && selectedUsers.length === staff.length}
-                />
-              </th>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Department</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Invite Status</th>
-              <th>Password Set Up</th>
-              <th>Last Login</th>
-              <th className="text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {staff.length === 0 ? (
-              <tr>
-                <td colSpan="10" className="text-center text-muted py-4">
-                  No staff found.
-                </td>
+      {/* Staff Table Card with Horizontal Scroll Support */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 mb-6 overflow-x-auto">
+        <div className="min-w-[1000px]">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-900 text-[11px] uppercase tracking-wider font-bold">
+                <th className="py-4 px-6 rounded-tl-3xl w-12 text-center">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    onChange={handleSelectAll}
+                    checked={staff.length > 0 && selectedUsers.length === staff.length}
+                  />
+                </th>
+                <th className="py-4 px-6">Name</th>
+                <th className="py-4 px-6">Role</th>
+                <th className="py-4 px-6">Department</th>
+                <th className="py-4 px-6">Email</th>
+                <th className="py-4 px-6">Status</th>
+                <th className="py-4 px-6">Invite Status</th>
+                <th className="py-4 px-6">Password Set Up</th>
+                <th className="py-4 px-6">Last Login</th>
+                <th className="py-4 px-6 text-center rounded-tr-3xl">Action</th>
               </tr>
-            ) : (
-              staff.map((s, idx) => (
-                <tr key={s.id || idx}>
-                  {" "}
-                  {/* Use s.id for unique key */}
-                  <td>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={isUserSelected(s.id)}
-                      onChange={(e) => handleSelectUser(s, e.target.checked)}
-                    />
-                  </td>
-                  <td>{s.name}</td>
-                  <td>{s.role}</td>
-                  <td>{s.department}</td>
-                  <td>{s.email}</td>
-                  <td>{s.status ? "Active" : "Inactive"}</td>
-                  <td>
-                    <span
-                      className={`badge rounded-pill ${s.invitation_status === 'sent'
-                          ? 'bg-success'
-                          : s.invitation_status === 'failed'
-                            ? 'bg-danger'
-                            : 'bg-secondary'
-                        }`}
-                      style={{ fontSize: '11px' }}
-                    >
-                      {s.invitation_status || 'pending'}
-                    </span>
-                  </td>
-                  <td>
-                    <small className="text-muted">
-                      {s.password_setup_at
-                        ? new Date(s.password_setup_at).toLocaleDateString()
-                        : <span className="text-warning">Not set</span>}
-                    </small>
-                  </td>
-                  <td>
-                    <small className="text-muted">
-                      {s.last_login
-                        ? new Date(s.last_login).toLocaleDateString()
-                        : <span className="text-danger">Never</span>}
-                    </small>
-                  </td>
-                  <td className="text-center">
-                    <div className="dropdown">
-                      <button
-                        className="btn btn-white border-primary"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                      >
-                        <i className="bi bi-three-dots-vertical"></i>
-                      </button>
-                      <ul
-                        className="dropdown-menu bg-light rounded-4"
-                        style={{ fontSize: "13px", width: "250px" }}
-                      >
-                        <li>
-                          <button
-                            className="dropdown-item"
-                            onClick={() => handleEdit(s.id)}
-                          >
-                            Edit Info
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item"
-                            onClick={() => handleViewDetails(s.id)}
-                          >
-                            View Detail
-                          </button>
-                        </li>
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                        <li>
-                          <button
-                            className={`dropdown-item ${s.status ? "text-warning" : "text-success"
-                              }`}
-                            onClick={() =>
-                              handleDeactivateActivate(s.id, s.status)
-                            }
-                          >
-                            {s.status ? "Deactivate" : "Activate"}
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item text-info"
-                            onClick={async () => {
-                              try {
-                                await api.post(`admin/staff/${s.id}/resend-setup-email`);
-                                toast.success('Setup email resent successfully!');
-                                triggerRefresh();
-                              } catch (err) {
-                                toast.error('Failed to resend setup email.');
-                              }
-                            }}
-                          >
-                            Resend Setup Email
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item text-danger"
-                            onClick={() => handleDeleteStaff(s.id)}
-                          >
-                            Delete
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {staff.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="text-center text-slate-400 py-12 text-xs">
+                    No staff found.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                staff.slice(0, 8).map((s, idx) => (
+                  <tr key={s.id || idx} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 text-center">
+                      <input
+                        type="checkbox"
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        checked={isUserSelected(s.id)}
+                        onChange={(e) => handleSelectUser(s, e.target.checked)}
+                      />
+                    </td>
+                    <td className="py-4 px-6 font-semibold text-slate-900">{s.name}</td>
+                    <td className="py-4 px-6 text-slate-600">{s.role}</td>
+                    <td className="py-4 px-6 text-slate-600">{s.department}</td>
+                    <td className="py-4 px-6 text-slate-600">{s.email}</td>
+                    <td className="py-4 px-6">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${s.status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {s.status ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-semibold capitalize ${s.invitation_status === 'sent'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : s.invitation_status === 'failed'
+                            ? 'bg-rose-100 text-rose-700'
+                            : 'bg-orange-100 text-orange-700'
+                          }`}
+                      >
+                        {s.invitation_status || 'Pending'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-xs">
+                      {s.password_setup_at ? (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">
+                          Complete
+                        </span>
+                      ) : s.invitation_status === 'sent' || s.invitation_status === 'pending' || !s.invitation_status ? (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700">
+                          Pending
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-600">
+                          Not Set
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-xs">
+                      {s.last_login ? (
+                        <span className="text-slate-600 font-medium">
+                          {new Date(s.last_login).toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-600">
+                          Never
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <ActionMenu
+ open={openDropdownId === s.id}
+ onClose={() => setOpenDropdownId(null)}
+ className="w-48"
+ trigger={<button
+                          onClick={() => setOpenDropdownId(openDropdownId === s.id ? null : s.id)}
+                          type="button"
+                          className="inline-flex items-center justify-center w-9 h-9 bg-white border border-slate-200 rounded-xl shadow-2xs hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          <i className="bi bi-three-dots-vertical text-slate-600"></i>
+                        </button>}
+ >
+                              <button
+                                type="button"
+                                onClick={() => { handleEdit(s.id); setOpenDropdownId(null); }}
+                                className="w-full px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                              >
+                                Edit Info
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { handleViewDetails(s.id); setOpenDropdownId(null); }}
+                                className="w-full px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                              >
+                                View Detail
+                              </button>
+                              <div className="border-t border-slate-100 my-1"></div>
+                              <button
+                                type="button"
+                                onClick={() => { handleDeactivateActivate(s.id, s.status); setOpenDropdownId(null); }}
+                                className={`w-full px-3 py-2 rounded-xl font-medium transition-colors text-left ${s.status ? "text-amber-600 hover:bg-amber-50" : "text-emerald-600 hover:bg-emerald-50"}`}
+                              >
+                                {s.status ? "Deactivate" : "Activate"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setOpenDropdownId(null);
+                                  try {
+                                    await api.post(`admin/staff/${s.id}/resend-setup-email`);
+                                    toast.success('Setup email resent successfully!');
+                                    triggerRefresh();
+                                  } catch (err) {
+                                    toast.error('Failed to resend setup email.');
+                                  }
+                                }}
+                                className="w-full px-3 py-2 rounded-xl text-blue-600 hover:bg-blue-50 font-medium transition-colors text-left"
+                              >
+                                Resend Setup Email
+                              </button>
+                              <div className="border-t border-slate-100 my-1"></div>
+                              <button
+                                type="button"
+                                onClick={() => { handleDeleteStaff(s.id); setOpenDropdownId(null); }}
+                                className="w-full px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-medium transition-colors text-left"
+                              >
+                                Delete
+                              </button>
+                            </ActionMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination Controls */}
-      <div className="d-flex justify-content-between align-items-center mt-3">
-        <button
-          className="btn btn-primary"
-          onClick={handlePrevious}
-          disabled={pagination.current_page === 1}
-        >
-          Previous
-        </button>
-        <span>
-          Page {pagination.current_page} of {pagination.last_page}
-        </span>
-        <button
-          className="btn btn-primary"
-          onClick={handleNext}
-          disabled={pagination.current_page === pagination.last_page}
-        >
-          Next
-        </button>
-      </div>
+      {pagination.last_page > 1 && (
+        <div className="flex items-center justify-between px-2 mb-8">
+          <span className="text-slate-500 text-xs font-medium">Page {pagination.current_page} of {pagination.last_page}</span>
+          <div className="inline-flex p-1 bg-white border border-slate-200 rounded-2xl shadow-2xs gap-1">
+            <button onClick={handlePrevious} disabled={pagination.current_page === 1} className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-35 rounded-xl transition-colors cursor-pointer">
+              <i className="bi bi-chevron-left text-xs"></i>
+            </button>
+            <button onClick={handleNext} disabled={pagination.current_page === pagination.last_page} className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-35 rounded-xl transition-colors cursor-pointer">
+              <i className="bi bi-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Edit Staff Modal */}
+      {/* Edit Staff Slide-over Modal */}
       {showEditModal && selectedStaff && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          role="dialog"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-          onClick={closeModal}
-        >
-          <div
-            className="modal-dialog modal-lg py-4"
-            style={{
-              position: "fixed",
-              top: 0,
-              right: 0,
-              width: "50%",
-              maxWidth: "40%",
-              height: "100vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-content py-5">
-              <div className="modal-header">
-                <h5 className="modal-title">Edit Staff Information</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={closeModal}
-                ></button>
-              </div>
-
-              <div className="modal-body p-4">
-                <form onSubmit={handleEditSubmit}>
-                  <div className="row">
-                    <div className="d-flex flex-column gap-3">
-                      <div className="">
-                        <div className=" my-4">
-                          <label className="form-label d-block">
-                            <small>Staff Photo (Optional)</small>
-                          </label>
-                          <input
-                            type="file"
-                            className="d-none"
-                            id="editFileUpload" // Unique ID
-                            accept="image/*"
-                            onChange={handleImageChange}
-                          />
-                          <label
-                            htmlFor="editFileUpload"
-                            className="d-inline-block"
-                          >
-                            <div
-                              className="rounded-circle border d-flex justify-content-center align-items-center"
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                backgroundColor: "#f8f9fa",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {selectedStaff.photo ? (
-                                <UserAvatar
-                                  image={selectedStaff.photo}
-                                  firstName={selectedStaff.name || "Staff"}
-                                  size={100}
-                                  className="rounded-circle"
-                                />
-                              ) : (
-                                <i
-                                  className="bi bi-camera"
-                                  style={{ fontSize: "24px" }}
-                                ></i>
-                              )}
-                            </div>
-                          </label>
-                        </div>
-                        <div className="my-3">
-                          <label className="form-label">Full Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="name"
-                            value={editFormData.name}
-                            onChange={handleEditFormChange}
-                            required
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <label className="form-label">Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={editFormData.email}
-                            onChange={handleEditFormChange}
-                            required
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <label className="form-label">Job Role</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="role"
-                            value={editFormData.role}
-                            onChange={handleEditFormChange}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Department</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="department"
-                          value={editFormData.department}
-                          onChange={handleEditFormChange}
-                          required
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">
-                          New Password (leave blank to keep current)
-                        </label>
-                        <input
-                          type="password"
-                          className="form-control"
-                          name="password"
-                          value={editFormData.password}
-                          onChange={handleEditFormChange}
-                          placeholder="Enter new password"
-                        />
-                      </div>
-                      <div className="mb-3 form-check">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          id="staffStatus"
-                          name="status"
-                          checked={editFormData.status}
-                          onChange={handleEditFormChange}
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="staffStatus"
-                        >
-                          Active
-                        </label>
-                      </div>
+        <div onClick={closeModal} className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-left">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm">Edit Staff Information</h3>
+              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="p-6 flex-1 overflow-y-auto">
+              <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
+                <div className="text-center my-2">
+                  <input type="file" className="hidden" id="editFileUpload" accept="image/*" onChange={handleImageChange} />
+                  <label htmlFor="editFileUpload" className="inline-block cursor-pointer group">
+                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-200 group-hover:border-blue-500 bg-slate-50 flex items-center justify-center mx-auto overflow-hidden transition-colors">
+                      {selectedStaff.photo ? (
+                        <UserAvatar image={selectedStaff.photo} firstName={selectedStaff.name || "Staff"} size={80} className="rounded-full w-full h-full object-cover" />
+                      ) : (
+                        <i className="bi bi-camera text-slate-400 text-xl group-hover:text-blue-500 transition-colors"></i>
+                      )}
                     </div>
-                    <div className="mt-4 text-center">
-                      <button type="submit" className="btn btn-primary w-50">
-                        Update
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
+                    <span className="block mt-2 font-semibold text-slate-600 text-[11px]">Change Photo</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
+                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="name" value={editFormData.name} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
+                  <input type="email" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="email" value={editFormData.email} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Job Role</label>
+                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="role" value={editFormData.role} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Department</label>
+                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="department" value={editFormData.department} onChange={handleEditFormChange} required />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">New Password (leave blank to keep current)</label>
+                  <input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="password" value={editFormData.password} onChange={handleEditFormChange} placeholder="Enter new password" />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <input type="checkbox" className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" id="staffStatus" name="status" checked={editFormData.status} onChange={handleEditFormChange} />
+                  <label className="font-semibold text-slate-700 cursor-pointer" htmlFor="staffStatus">Active Status</label>
+                </div>
+                <div className="pt-4">
+                  <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer">Update Staff</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       )}
 
-      {/* View Staff Details Modal */}
+      {/* View Staff Details Slide-over Modal */}
       {showViewModal && selectedStaff && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          role="dialog"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-          onClick={closeModal}
-        >
-          <div
-            className="modal-dialog modal-lg py-4"
-            style={{
-              position: "fixed",
-              top: 0,
-              right: 0,
-              width: "50%",
-              maxWidth: "40%",
-              height: "100vh",
-              overflowY: "auto",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-content p-3">
-              <div className="modal-header">
-                <h5 className="modal-title">Staff Information</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={closeModal}
-                ></button>
+        <div onClick={closeModal} className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-left">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm">Staff Information</h3>
+              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="p-6 flex-1 overflow-y-auto space-y-6">
+              <div className="text-center">
+                <UserAvatar image={selectedStaff.profile_picture} firstName={selectedStaff.name || "Staff"} size={80} className="mx-auto mb-3" />
+                <h4 className="font-bold text-slate-900 text-base">{selectedStaff.name}</h4>
+                <p className="text-slate-500 text-xs mt-0.5">{selectedStaff.role || "Staff Member"}</p>
               </div>
-              <div className="modal-body">
-                <div className="row g-3 container">
-                  <div className="col-12 text-center mb-3">
-                    <UserAvatar
-                      image={selectedStaff.profile_picture}
-                      firstName={selectedStaff.name || "Staff"}
-                      size={100}
-                      className="rounded-circle mx-auto"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Full Name:</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedStaff.name}</small>
-                  </div>
-                  <hr className="w-100" />
 
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Email:</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedStaff.email}</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Job Role:</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedStaff.role}</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Department:</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>{selectedStaff.department}</small>
-                  </div>
-                  <hr className="w-100" />
-
-                  <div className="col-md-6">
-                    <p className="fw-bold">
-                      <small>Status:</small>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <small>
-                      {selectedStaff.status ? "Active" : "Inactive"}
-                    </small>
-                  </div>
-                  <hr className="w-100" />
-                  {/* You might add last login, created_at, etc. if available */}
+              <div className="divide-y divide-slate-100 text-xs">
+                <div className="py-3">
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold tracking-wider">Email Address</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">{selectedStaff.email}</span>
+                </div>
+                <div className="py-3">
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold tracking-wider">Department</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">{selectedStaff.department}</span>
+                </div>
+                <div className="py-3">
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold tracking-wider">Job Role</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">{selectedStaff.role}</span>
+                </div>
+                <div className="py-3">
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold tracking-wider">Status</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">{selectedStaff.status ? "Active" : "Inactive"}</span>
                 </div>
               </div>
             </div>
+            <div className="p-4 border-t border-slate-100">
+              <button onClick={closeModal} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors cursor-pointer">Close</button>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* Modal Backdrops */}
-      {(showEditModal || showViewModal) && (
-        <div className="modal-backdrop fade show"></div>
       )}
     </div>
   );

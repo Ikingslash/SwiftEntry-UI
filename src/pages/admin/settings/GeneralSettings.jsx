@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PurposeModal from "../include/PurposeModal";
-import CardOption from "../include/CardOption";
 import api from "../../../context/api";
 
 function GeneralSettings() {
@@ -20,7 +19,7 @@ function GeneralSettings() {
 
   // Purpose of Visit modal state
   const [selectedPurpose, setSelectedPurpose] = useState("");
-  const [modalType, setModalType] = useState(""); // "add" or "edit"
+  const [modalType, setModalType] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   // Buildings modal state
@@ -40,7 +39,6 @@ function GeneralSettings() {
 
   const [selectedTheme, setSelectedTheme] = useState("blue");
 
-  // Fetch settings on component mount
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -56,7 +54,6 @@ function GeneralSettings() {
     };
 
     const savedLang = localStorage.getItem("selectedLanguage") || "en";
-
     const interval = setInterval(() => {
       const select = document.querySelector(".goog-te-combo");
       if (select) {
@@ -67,7 +64,6 @@ function GeneralSettings() {
 
     return () => clearInterval(interval);
   }, []);
-
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -97,187 +93,154 @@ function GeneralSettings() {
   const handleUpdateSetting = async (key, value) => {
     try {
       const payload = { key, value };
-      const response = await api.post("/admin/settings/update", payload);
-      console.log(`Setting '${key}' updated:`, response.data);
-      alert(`${key.replace(/_/g, ' ')} updated successfully!`);
-      fetchSettings(); // Re-fetch to ensure UI is in sync
+      await api.post("/admin/settings/update", payload);
+      fetchSettings();
     } catch (err) {
       console.error(`Error updating setting '${key}':`, err.response?.data || err.message);
-      alert(`Failed to update ${key.replace(/_/g, ' ')}: ` + (err.response?.data?.message || err.message));
     }
   };
 
   const handleThemeSelect = (theme) => {
     setSelectedTheme(theme);
-    // If themes correspond to primary colors in backend, update that setting
     let colorCode = '';
     switch (theme) {
-      case 'blue': colorCode = '#007bff'; break; // Example default blue
-      case 'orange': colorCode = '#fd7e14'; break; // Example default orange
-      case 'purple': colorCode = '#6f42c1'; break; // Example default purple
+      case 'blue': colorCode = '#007bff'; break;
+      case 'orange': colorCode = '#fd7e14'; break;
+      case 'purple': colorCode = '#6f42c1'; break;
       default: colorCode = '';
     }
     setSettings(prev => ({ ...prev, primary_color: colorCode }));
     handleUpdateSetting('primary_color', colorCode);
   };
 
+  // Purpose handlers
   const handleAddPurpose = async (newPurpose) => {
     try {
-      const response = await api.post("/admin/settings/add-purpose", { purpose: newPurpose });
-      console.log("Purpose added:", response.data);
-      alert(response.data.message);
+      await api.post("/admin/settings/add-purpose", { purpose: newPurpose });
       setShowModal(false);
-      fetchSettings(); // Re-fetch to update the list
+      fetchSettings();
     } catch (err) {
-      console.error("Error adding purpose:", err.response?.data || err.message);
-      alert("Failed to add purpose: " + (err.response?.data?.message || err.message));
+      console.error("Error adding purpose:", err);
     }
   };
 
   const handleUpdatePurpose = async (updatedPurpose) => {
     try {
-      const response = await api.post("/admin/settings/update-purpose", {
-        old_purpose: selectedPurpose,
-        new_purpose: updatedPurpose,
-      });
-      console.log("Purpose updated:", response.data);
-      alert(response.data.message);
+      await api.post("/admin/settings/update-purpose", { old_purpose: selectedPurpose, new_purpose: updatedPurpose });
       setShowModal(false);
-      fetchSettings(); // Re-fetch to update the list
+      fetchSettings();
     } catch (err) {
-      console.error("Error updating purpose:", err.response?.data || err.message);
-      alert("Failed to update purpose: " + (err.response?.data?.message || err.message));
+      console.error("Error updating purpose:", err);
     }
   };
 
   const handleDeletePurpose = async () => {
     if (window.confirm(`Are you sure you want to delete "${selectedPurpose}"?`)) {
       try {
-        const response = await api.post("/admin/settings/delete-purpose", { purpose: selectedPurpose });
-        console.log("Purpose deleted:", response.data);
-        alert(response.data.message);
+        await api.post("/admin/settings/delete-purpose", { purpose: selectedPurpose });
         setShowModal(false);
-        fetchSettings(); // Re-fetch to update the list
+        fetchSettings();
       } catch (err) {
-        console.error("Error deleting purpose:", err.response?.data || err.message);
-        alert("Failed to delete purpose: " + (err.response?.data?.message || err.message));
+        console.error("Error deleting purpose:", err);
       }
     }
   };
 
-  // ---- Buildings handlers ----
+  // Building handlers
   const handleAddBuilding = async (newBuilding) => {
     try {
-      const response = await api.post("/admin/settings/add-building", { building: newBuilding });
-      alert(response.data.message);
+      await api.post("/admin/settings/add-building", { building: newBuilding });
       setShowBuildingModal(false);
       fetchSettings();
     } catch (err) {
-      alert("Failed to add building: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   };
 
   const handleUpdateBuilding = async (updatedBuilding) => {
     try {
-      const response = await api.post("/admin/settings/update-building", {
-        old_building: selectedBuilding,
-        new_building: updatedBuilding,
-      });
-      alert(response.data.message);
+      await api.post("/admin/settings/update-building", { old_building: selectedBuilding, new_building: updatedBuilding });
       setShowBuildingModal(false);
       fetchSettings();
     } catch (err) {
-      alert("Failed to update building: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   };
 
   const handleDeleteBuilding = async () => {
     if (window.confirm(`Are you sure you want to delete "${selectedBuilding}"?`)) {
       try {
-        const response = await api.post("/admin/settings/delete-building", { building: selectedBuilding });
-        alert(response.data.message);
+        await api.post("/admin/settings/delete-building", { building: selectedBuilding });
         setShowBuildingModal(false);
         fetchSettings();
       } catch (err) {
-        alert("Failed to delete building: " + (err.response?.data?.message || err.message));
+        console.error(err);
       }
     }
   };
 
-  // ---- Floors handlers ----
+  // Floor handlers
   const handleAddFloor = async (newFloor) => {
     try {
-      const response = await api.post("/admin/settings/add-floor", { floor: newFloor });
-      alert(response.data.message);
+      await api.post("/admin/settings/add-floor", { floor: newFloor });
       setShowFloorModal(false);
       fetchSettings();
     } catch (err) {
-      alert("Failed to add floor: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   };
 
   const handleUpdateFloor = async (updatedFloor) => {
     try {
-      const response = await api.post("/admin/settings/update-floor", {
-        old_floor: selectedFloor,
-        new_floor: updatedFloor,
-      });
-      alert(response.data.message);
+      await api.post("/admin/settings/update-floor", { old_floor: selectedFloor, new_floor: updatedFloor });
       setShowFloorModal(false);
       fetchSettings();
     } catch (err) {
-      alert("Failed to update floor: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   };
 
   const handleDeleteFloor = async () => {
     if (window.confirm(`Are you sure you want to delete "${selectedFloor}"?`)) {
       try {
-        const response = await api.post("/admin/settings/delete-floor", { floor: selectedFloor });
-        alert(response.data.message);
+        await api.post("/admin/settings/delete-floor", { floor: selectedFloor });
         setShowFloorModal(false);
         fetchSettings();
       } catch (err) {
-        alert("Failed to delete floor: " + (err.response?.data?.message || err.message));
+        console.error(err);
       }
     }
   };
 
-  // ---- Special Requirements handlers ----
+  // Special Requirements handlers
   const handleAddRequirement = async (newReq) => {
     try {
-      const response = await api.post("/admin/settings/add-special-requirement", { requirement: newReq });
-      alert(response.data.message);
+      await api.post("/admin/settings/add-special-requirement", { requirement: newReq });
       setShowRequirementModal(false);
       fetchSettings();
     } catch (err) {
-      alert("Failed to add requirement: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   };
 
   const handleUpdateRequirement = async (updatedReq) => {
     try {
-      const response = await api.post("/admin/settings/update-special-requirement", {
-        old_requirement: selectedRequirement,
-        new_requirement: updatedReq,
-      });
-      alert(response.data.message);
+      await api.post("/admin/settings/update-special-requirement", { old_requirement: selectedRequirement, new_requirement: updatedReq });
       setShowRequirementModal(false);
       fetchSettings();
     } catch (err) {
-      alert("Failed to update requirement: " + (err.response?.data?.message || err.message));
+      console.error(err);
     }
   };
 
   const handleDeleteRequirement = async () => {
     if (window.confirm(`Are you sure you want to delete "${selectedRequirement}"?`)) {
       try {
-        const response = await api.post("/admin/settings/delete-special-requirement", { requirement: selectedRequirement });
-        alert(response.data.message);
+        await api.post("/admin/settings/delete-special-requirement", { requirement: selectedRequirement });
         setShowRequirementModal(false);
         fetchSettings();
       } catch (err) {
-        alert("Failed to delete requirement: " + (err.response?.data?.message || err.message));
+        console.error(err);
       }
     }
   };
@@ -288,20 +251,8 @@ function GeneralSettings() {
       select.value = lang;
       select.dispatchEvent(new Event("change"));
       localStorage.setItem("selectedLanguage", lang);
-    } else {
-      // If the widget isn’t ready yet, retry
-      const interval = setInterval(() => {
-        const s = document.querySelector(".goog-te-combo");
-        if (s) {
-          s.value = lang;
-          s.dispatchEvent(new Event("change"));
-          localStorage.setItem("selectedLanguage", lang);
-          clearInterval(interval);
-        }
-      }, 1000);
     }
   };
-
 
   const languages = [
     { code: "en", name: "English", flag: "🇬🇧" },
@@ -315,436 +266,335 @@ function GeneralSettings() {
   ];
 
   if (loading) {
-    return <p className="text-center mt-5">Loading settings...</p>;
+    return <div className="text-center py-12 text-slate-500 font-medium">Loading settings...</div>;
   }
 
   if (error) {
-    return <p className="text-center mt-5 text-danger">{error}</p>;
+    return <div className="text-center py-12 text-rose-600 font-medium">{error}</div>;
   }
 
   return (
-    <div>
-      <div className="row mb-5">
-        {/* Appearance */}
-        <div className="col-md-4">
-          <div className="p-3">
-            <h5 className="mb-3">Appearance</h5>
-            <p>
-              {" "}
-              <small>
-                Customize the Interface Colour themes to reflect your
-                organization’s identity. Maintain consistency across all
-                dashboards and Platforms.
-              </small>
-            </p>
-          </div>
+    <div className="space-y-8 text-xs text-slate-700">
+      {/* 1. Appearance */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Appearance</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Customize the Interface Colour themes to reflect your organization’s identity. Maintain consistency across all dashboards and Platforms.
+          </p>
         </div>
-        <div className="col-md-8">
-          <div className="row d-flex my-3 g-3">
-            {" "}
-            {/* Added g-3 for gap */}
-            <CardOption
-              title="Default"
-              themeColor="#007bff" // Example blue
-              selected={selectedTheme === "blue"}
+        <div className="md:col-span-2">
+          <div className="flex flex-wrap gap-4">
+            <div
               onClick={() => handleThemeSelect("blue")}
-            />
-            {/* <CardOption
-              title="Classic"
-              themeColor="#fd7e14" // Example orange
-              selected={selectedTheme === "orange"}
-              onClick={() => handleThemeSelect("orange")}
-            />
-            <CardOption
-              title="Royal"
-              themeColor="#6f42c1" // Example purple
-              selected={selectedTheme === "purple"}
-              onClick={() => handleThemeSelect("purple")}
-            /> */}
-          </div>
-        </div>
-      </div>
-
-      <hr className="text-secondary" />
-
-      {/* Timezone */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="p-3">
-            <h5 className="mb-3">Time Zone Management</h5>
-            <p>
-              {" "}
-              <small>
-                Set and manage time zones to ensure accurate timestamps for
-                visitor check-ins, reports, and notifications.
-              </small>
-            </p>
-          </div>
-        </div>
-        <div className="col-md-8">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="card shadow-sm p-4 rounded-4 border-0">
-            {" "}
-            {/* Added rounded-4 border-0 */}
-            <h6 className="mb-3 fw-semibold">Time Zone</h6>
-            <div className="row align-items-center">
-              <div className="col-md-12 mb-2">
-                <select
-                  className="form-select w-100"
-                  value={settings.timezone}
-                  onChange={(e) =>
-                    handleUpdateSetting("timezone", e.target.value)
-                  }
-                >
-                  <option value="GMT">
-                    Greenwich Mean Time (GMT) | UTC +0
-                  </option>
-                  <option value="CAT">
-                    Central Africa Time (CAT) | UTC +2
-                  </option>
-                  <option value="SAST">
-                    South Africa Standard Time (SAST) | UTC +2
-                  </option>
-                  <option value="EET">
-                    Egypt Standard Time (EET) | UTC +2
-                  </option>
-                  <option value="EAT">East Africa Time (EAT) | UTC +3</option>
-                  <option value="WAT">West Africa Time (WAT) | UTC +1</option>
-                </select>
+              className={`w-48 p-4 rounded-2xl border-2 cursor-pointer transition-all bg-white shadow-xs ${selectedTheme === "blue" ? "border-blue-600 ring-4 ring-blue-50" : "border-slate-200 hover:border-slate-300"
+                }`}
+            >
+              {/* Mini mock UI header box */}
+              <div className="w-full h-16 rounded-xl bg-blue-600 mb-3 flex items-start justify-end p-2">
+                {selectedTheme === "blue" && (
+                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white">
+                    <i className="bi bi-check text-xs"></i>
+                  </div>
+                )}
               </div>
+              <p className="text-center font-semibold text-slate-800 text-xs">Default</p>
             </div>
           </div>
         </div>
       </div>
 
-      <hr className="text-secondary" />
-
-      {/* Purpose of Visit */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="p-3">
-            <h5 className="mb-3">Purpose of Visit</h5>
-            <p>
-              {" "}
-              <small>Edit Visit Purpose Details</small>
-            </p>
-          </div>
+      {/* 2. Time Zone Management */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Time Zone Management</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Set and manage time zones to ensure accurate timestamps for visitor check-ins, reports, and notifications.
+          </p>
         </div>
-        <div className="col-md-8">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="card shadow-sm rounded-4 border-0">
-            {" "}
-            {/* Added rounded-4 border-0 */}
-            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
-              {" "}
-              {/* Added rounded-top-4 */}
-              <strong>Edit Visit Purpose Details</strong>
+        <div className="md:col-span-2 max-w-md">
+          <label className="block font-semibold text-slate-700 mb-2">Time Zone</label>
+          <select
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            value={settings.timezone}
+            onChange={(e) => handleUpdateSetting("timezone", e.target.value)}
+          >
+            <option value="GMT">Greenwich Mean Time (GMT) | UTC +0</option>
+            <option value="CAT">Central Africa Time (CAT) | UTC +2</option>
+            <option value="SAST">South Africa Standard Time (SAST) | UTC +2</option>
+            <option value="EET">Egypt Standard Time (EET) | UTC +2</option>
+            <option value="EAT">East Africa Time (EAT) | UTC +3</option>
+            <option value="WAT">West Africa Time (WAT) | UTC +1</option>
+          </select>
+        </div>
+      </div>
+
+      {/* 3. Purpose of Visit */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Purpose of Visit</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Edit Visit Purpose Details
+          </p>
+        </div>
+        <div className="md:col-span-2">
+          <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200/80 bg-white">
+              <span className="font-semibold text-slate-800 text-xs">Edit Visit Purpose Details</span>
               <button
-                type="button" // Explicitly set type to button
-                className="btn btn-primary"
-                onClick={() => {
-                  setSelectedPurpose(""); // Clear for add
-                  setModalType("add");
-                  setShowModal(true);
-                }}
+                type="button"
+                className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors cursor-pointer text-[11px] shrink-0 whitespace-nowrap"
+                onClick={() => { setSelectedPurpose(""); setModalType("add"); setShowModal(true); }}
               >
                 Add New
               </button>
             </div>
-            <ul className="list-group list-group-flush">
-              {" "}
-              {/* Used list-group for better styling */}
+            <div className="divide-y divide-slate-100 bg-white">
               {settings.visit_purposes.length === 0 ? (
-                <li className="list-group-item text-center text-muted py-3">
-                  No purposes defined.
-                </li>
+                <div className="p-4 text-center text-slate-400 text-xs">No purposes defined.</div>
               ) : (
                 settings.visit_purposes.map((p, i) => (
-                  <li
-                    key={i}
-                    className="list-group-item d-flex justify-content-between align-items-center"
-                  >
-                    {p}
+                  <div key={i} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                    <span className="font-medium text-slate-800 min-w-0 break-words">{p}</span>
                     <button
-                      type="button" // Explicitly set type to button
-                      className="btn btn-link text-primary" // Styled as primary link
-                      onClick={() => {
-                        setSelectedPurpose(p);
-                        setModalType("edit");
-                        setShowModal(true);
-                      }}
+                      type="button"
+                      className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer shrink-0"
+                      onClick={() => { setSelectedPurpose(p); setModalType("edit"); setShowModal(true); }}
                     >
                       Edit
                     </button>
-                  </li>
+                  </div>
                 ))
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
 
-      <hr className="text-secondary" />
-
-      {/* Buildings */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          <div className="p-3">
-            <h5 className="mb-3">Buildings</h5>
-            <p><small>Manage the list of buildings visitors can be directed to.</small></p>
-          </div>
+      {/* 4. Buildings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Buildings</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Manage the list of buildings visitors can be directed to.
+          </p>
         </div>
-        <div className="col-md-8">
-          <div className="card shadow-sm rounded-4 border-0">
-            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
-              <strong>Edit Buildings</strong>
-              <button type="button" className="btn btn-primary" onClick={() => { setSelectedBuilding(""); setBuildingModalType("add"); setShowBuildingModal(true); }}>Add New</button>
+        <div className="md:col-span-2">
+          <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200/80 bg-white">
+              <span className="font-semibold text-slate-800 text-xs">Edit Buildings</span>
+              <button
+                type="button"
+                className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors cursor-pointer text-[11px] shrink-0 whitespace-nowrap"
+                onClick={() => { setSelectedBuilding(""); setBuildingModalType("add"); setShowBuildingModal(true); }}
+              >
+                Add New
+              </button>
             </div>
-            <ul className="list-group list-group-flush">
+            <div className="divide-y divide-slate-100 bg-white">
               {settings.buildings.length === 0 ? (
-                <li className="list-group-item text-center text-muted py-3">No buildings defined.</li>
+                <div className="p-4 text-center text-slate-400 text-xs">No buildings defined.</div>
               ) : (
                 settings.buildings.map((b, i) => (
-                  <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
-                    {b}
-                    <button type="button" className="btn btn-link text-primary" onClick={() => { setSelectedBuilding(b); setBuildingModalType("edit"); setShowBuildingModal(true); }}>Edit</button>
-                  </li>
+                  <div key={i} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                    <span className="font-medium text-slate-800 min-w-0 break-words">{b}</span>
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer shrink-0"
+                      onClick={() => { setSelectedBuilding(b); setBuildingModalType("edit"); setShowBuildingModal(true); }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 ))
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
 
-      <hr className="text-secondary" />
-
-      {/* Floors */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          <div className="p-3">
-            <h5 className="mb-3">Floors</h5>
-            <p><small>Manage the list of floors visitors can be directed to.</small></p>
-          </div>
+      {/* 5. Floors */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Floors</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Manage the list of floors visitors can be directed to.
+          </p>
         </div>
-        <div className="col-md-8">
-          <div className="card shadow-sm rounded-4 border-0">
-            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
-              <strong>Edit Floors</strong>
-              <button type="button" className="btn btn-primary" onClick={() => { setSelectedFloor(""); setFloorModalType("add"); setShowFloorModal(true); }}>Add New</button>
+        <div className="md:col-span-2">
+          <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200/80 bg-white">
+              <span className="font-semibold text-slate-800 text-xs">Edit Floors</span>
+              <button
+                type="button"
+                className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors cursor-pointer text-[11px] shrink-0 whitespace-nowrap"
+                onClick={() => { setSelectedFloor(""); setFloorModalType("add"); setShowFloorModal(true); }}
+              >
+                Add New
+              </button>
             </div>
-            <ul className="list-group list-group-flush">
+            <div className="divide-y divide-slate-100 bg-white">
               {settings.floors.length === 0 ? (
-                <li className="list-group-item text-center text-muted py-3">No floors defined.</li>
+                <div className="p-4 text-center text-slate-400 text-xs">No floors defined.</div>
               ) : (
                 settings.floors.map((f, i) => (
-                  <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
-                    {f}
-                    <button type="button" className="btn btn-link text-primary" onClick={() => { setSelectedFloor(f); setFloorModalType("edit"); setShowFloorModal(true); }}>Edit</button>
-                  </li>
+                  <div key={i} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                    <span className="font-medium text-slate-800 min-w-0 break-words">{f}</span>
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer shrink-0"
+                      onClick={() => { setSelectedFloor(f); setFloorModalType("edit"); setShowFloorModal(true); }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 ))
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
 
-      <hr className="text-secondary" />
-
-      {/* Special Requirements */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          <div className="p-3">
-            <h5 className="mb-3">Special Requirements</h5>
-            <p><small>Manage the list of special requirements visitors can select.</small></p>
-          </div>
+      {/* 6. Special Requirements */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Special Requirements</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Manage the list of special requirements visitors can select.
+          </p>
         </div>
-        <div className="col-md-8">
-          <div className="card shadow-sm rounded-4 border-0">
-            <div className="d-flex justify-content-between card-header bg-white align-items-center rounded-top-4">
-              <strong>Edit Special Requirements</strong>
-              <button type="button" className="btn btn-primary" onClick={() => { setSelectedRequirement(""); setRequirementModalType("add"); setShowRequirementModal(true); }}>Add New</button>
+        <div className="md:col-span-2">
+          <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200/80 bg-white">
+              <span className="font-semibold text-slate-800 text-xs">Edit Special Requirements</span>
+              <button
+                type="button"
+                className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors cursor-pointer text-[11px] shrink-0 whitespace-nowrap"
+                onClick={() => { setSelectedRequirement(""); setRequirementModalType("add"); setShowRequirementModal(true); }}
+              >
+                Add New
+              </button>
             </div>
-            <ul className="list-group list-group-flush">
+            <div className="divide-y divide-slate-100 bg-white">
               {settings.special_requirements.length === 0 ? (
-                <li className="list-group-item text-center text-muted py-3">No special requirements defined.</li>
+                <div className="p-4 text-center text-slate-400 text-xs">No special requirements defined.</div>
               ) : (
                 settings.special_requirements.map((r, i) => (
-                  <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
-                    {r}
-                    <button type="button" className="btn btn-link text-primary" onClick={() => { setSelectedRequirement(r); setRequirementModalType("edit"); setShowRequirementModal(true); }}>Edit</button>
-                  </li>
+                  <div key={i} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                    <span className="font-medium text-slate-800 min-w-0 break-words">{r}</span>
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer shrink-0"
+                      onClick={() => { setSelectedRequirement(r); setRequirementModalType("edit"); setShowRequirementModal(true); }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 ))
               )}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <hr className="text-secondary" />
-
-      {/* Date & Time Format */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="p-3">
-            <h5 className="mb-3">Date & Time Format</h5>
-            <p>
-              {" "}
-              <small>
-                Choose preferred formats for dates and times to align with
-                organizational requirements.
-              </small>
-            </p>
-          </div>
-        </div>
-        <div className="col-md-8">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="card shadow-sm p-4 rounded-4 border-0">
-            {" "}
-            {/* Added rounded-4 border-0 */}
-            <h6 className="mb-3 fw-semibold">Date Format</h6>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="dateFormat"
-                    id="mdy"
-                    value="MM/DD/YYYY"
-                    checked={settings.date_format === "MM/DD/YYYY"}
-                    onChange={(e) =>
-                      handleUpdateSetting("date_format", e.target.value)
-                    }
-                  />
-                  <label className="form-check-label" htmlFor="mdy">
-                    MM/DD/YYYY
-                  </label>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="dateFormat"
-                    id="dmy"
-                    value="DD/MM/YYYY"
-                    checked={settings.date_format === "DD/MM/YYYY"}
-                    onChange={(e) =>
-                      handleUpdateSetting("date_format", e.target.value)
-                    }
-                  />
-                  <label className="form-check-label" htmlFor="dmy">
-                    DD/MM/YYYY
-                  </label>
-                </div>
-              </div>
-            </div>
-            <h6 className="mb-3 fw-semibold">Time Format</h6>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="timeFormat"
-                    id="12hour"
-                    value="12-hour"
-                    checked={settings.time_format === "12-hour"}
-                    onChange={(e) =>
-                      handleUpdateSetting("time_format", e.target.value)
-                    }
-                  />
-                  <label className="form-check-label" htmlFor="12hour">
-                    12-Hour (AM/PM)
-                  </label>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="timeFormat"
-                    id="24hour"
-                    value="24-hour"
-                    checked={settings.time_format === "24-hour"}
-                    onChange={(e) =>
-                      handleUpdateSetting("time_format", e.target.value)
-                    }
-                  />
-                  <label className="form-check-label" htmlFor="24hour">
-                    24-Hour
-                  </label>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <hr className="text-secondary" />
-
-      {/* Language Preference */}
-      <div className="row my-3">
-        <div className="col-md-4">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="p-3">
-            <h5 className="mb-3">Language Preference</h5>
-            <p>
-              {" "}
-              <small>Choose preferred language for the interface.</small>
-            </p>
-          </div>
+      {/* 7. Date & Time Format */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8 border-b border-slate-100">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Date & Time Format</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Choose preferred formats for dates and times to align with organizational requirements.
+          </p>
         </div>
-        <div className="col-md-8 my-5">
-          {" "}
-          {/* Adjusted column width */}
-          <div className="card shadow-sm p-4 rounded-4 border-0">
-            {" "}
-            {/* Added rounded-4 border-0 */}
-            <h6 className="mb-3 fw-semibold">Choose Language</h6>
-            <div className="row align-items-center">
-              <div className="col-md-12 mb-2">
-                <select
-                  className="form-select w-100"
-                  value={settings.language_preference}
-                  onChange={(e) => {
-                    const selectedLang = languages.find(
-                      (lang) => lang.name === e.target.value
-                    );
-                    if (selectedLang) {
-                      changeLanguage(selectedLang.code);
-                      handleUpdateSetting(
-                        "language_preference",
-                        selectedLang.name
-                      );
-                    }
-                  }}
-                >
-                  {languages.map((lang) => (
-                    <option key={lang.code} value={lang.name}>
-                      {lang.flag} {lang.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <div className="md:col-span-2 space-y-6">
+          <div>
+            <span className="block font-semibold text-slate-800 mb-2">Date Format</span>
+            <div className="grid grid-cols-2 gap-3 max-w-sm">
+              <label className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${settings.date_format === 'MM/DD/YYYY' ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 bg-slate-50'}`}>
+                <input
+                  type="radio"
+                  name="dateFormat"
+                  value="MM/DD/YYYY"
+                  checked={settings.date_format === "MM/DD/YYYY"}
+                  onChange={(e) => handleUpdateSetting("date_format", e.target.value)}
+                  className="text-blue-600 focus:ring-blue-500 mr-2.5"
+                />
+                <span className="font-medium text-slate-800">MM/DD/YYYY</span>
+              </label>
+              <label className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${settings.date_format === 'DD/MM/YYYY' ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 bg-slate-50'}`}>
+                <input
+                  type="radio"
+                  name="dateFormat"
+                  value="DD/MM/YYYY"
+                  checked={settings.date_format === "DD/MM/YYYY"}
+                  onChange={(e) => handleUpdateSetting("date_format", e.target.value)}
+                  className="text-blue-600 focus:ring-blue-500 mr-2.5"
+                />
+                <span className="font-medium text-slate-800">DD/MM/YYYY</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <span className="block font-semibold text-slate-800 mb-2">Time Format</span>
+            <div className="grid grid-cols-2 gap-3 max-w-sm">
+              <label className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${settings.time_format === '12-hour' ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 bg-slate-50'}`}>
+                <input
+                  type="radio"
+                  name="timeFormat"
+                  value="12-hour"
+                  checked={settings.time_format === "12-hour"}
+                  onChange={(e) => handleUpdateSetting("time_format", e.target.value)}
+                  className="text-blue-600 focus:ring-blue-500 mr-2.5"
+                />
+                <span className="font-medium text-slate-800">12-Hour (AM/PM)</span>
+              </label>
+              <label className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${settings.time_format === '24-hour' ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 bg-slate-50'}`}>
+                <input
+                  type="radio"
+                  name="timeFormat"
+                  value="24-hour"
+                  checked={settings.time_format === "24-hour"}
+                  onChange={(e) => handleUpdateSetting("time_format", e.target.value)}
+                  className="text-blue-600 focus:ring-blue-500 mr-2.5"
+                />
+                <span className="font-medium text-slate-800">24-Hour</span>
+              </label>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Purpose of Visit Modal */}
+      {/* 8. Language Preference */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Language Preference</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Choose preferred language for the interface.
+          </p>
+        </div>
+        <div className="md:col-span-2 max-w-md">
+          <label className="block font-semibold text-slate-700 mb-2">Choose Language</label>
+          <select
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            value={settings.language_preference}
+            onChange={(e) => {
+              const selectedLang = languages.find((lang) => lang.name === e.target.value);
+              if (selectedLang) {
+                changeLanguage(selectedLang.code);
+                handleUpdateSetting("language_preference", selectedLang.name);
+              }
+            }}
+          >
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.name}>
+                {lang.flag} {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Modals */}
       <PurposeModal
         type={modalType}
         show={showModal}
@@ -754,8 +604,6 @@ function GeneralSettings() {
         onUpdate={handleUpdatePurpose}
         onDelete={handleDeletePurpose}
       />
-
-      {/* Buildings Modal */}
       <PurposeModal
         type={buildingModalType}
         show={showBuildingModal}
@@ -765,8 +613,6 @@ function GeneralSettings() {
         onUpdate={handleUpdateBuilding}
         onDelete={handleDeleteBuilding}
       />
-
-      {/* Floors Modal */}
       <PurposeModal
         type={floorModalType}
         show={showFloorModal}
@@ -776,8 +622,6 @@ function GeneralSettings() {
         onUpdate={handleUpdateFloor}
         onDelete={handleDeleteFloor}
       />
-
-      {/* Special Requirements Modal */}
       <PurposeModal
         type={requirementModalType}
         show={showRequirementModal}

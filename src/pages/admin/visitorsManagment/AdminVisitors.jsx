@@ -1,20 +1,27 @@
-import { useState } from "react";
-import NavBar from "../include/NavBar";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 import AdminVisitorsTab from "./AdminVisitorsTab";
 import AdminVisit from "./AdminVisit";
+import AdminTopHeader from "../include/AdminTopHeader";
 import api from "../../../context/api";
 
-function AdminVisitors() {
-    const [activeTab, setActiveTab] = useState("visitors");
+function AdminVisitors({ initialTab = "visitors" }) {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
   const [showModal, setShowModal] = useState(false);
   const [newVisitorData, setNewVisitorData] = useState({
     name: "",
     contact_number: "",
     email: "",
     address: "",
-    visitor_type: "Individual", // Default type
+    visitor_type: "Individual",
   });
-  const [refreshVisitorsKey, setRefreshVisitorsKey] = useState(0); // Key to force re-render/re-fetch in child tabs
+  const [refreshVisitorsKey, setRefreshVisitorsKey] = useState(0);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -30,221 +37,171 @@ function AdminVisitors() {
       const response = await api.post("/admin/visitors", newVisitorData);
       console.log("Visitor created:", response.data);
       setShowModal(false);
-      setNewVisitorData({ // Reset form
+      setNewVisitorData({
         name: "",
         contact_number: "",
         email: "",
         address: "",
         visitor_type: "Individual",
       });
-      setRefreshVisitorsKey((prevKey) => prevKey + 1); // Trigger refresh in child components
-      alert("Visitor added successfully!"); // Use a custom modal for alerts in production
+      setRefreshVisitorsKey((prevKey) => prevKey + 1);
+      alert("Visitor added successfully!");
     } catch (error) {
       console.error("Error adding visitor:", error.response?.data || error.message);
-      alert("Failed to add visitor: " + (error.response?.data?.message || error.message)); // Use custom modal
+      alert("Failed to add visitor: " + (error.response?.data?.message || error.message));
     }
   };
 
-
   return (
-    <div>
-      <NavBar />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "270px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        {/* Left Content */}
-        <div className="container">
-          <div
-            className="text-white p-4 shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            {/* Row for Welcome Text & Plus Icon */}
-            <div className="d-flex align-items-center ">
-              <h3 className="mb-4">Manage Visitors</h3>
-            </div>
-            <div
-              className="flex-grow-1 px-4"
-              style={{
-                height: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
-              }}
-            ></div>
-          </div>
+    <div className="min-h-screen bg-[#F0F7FF] pb-12">
+      <AdminTopHeader />
+
+      {/* Header Container aligned to max-w-[1140px] matching Pre-Register Guest */}
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+            Manage Visitors
+          </p>
+          <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+            View and manage all registered visitors and active visits.
+          </p>
         </div>
 
-        {/* Core Values Section */}
-        <div
-          className="container position-absolute start-50 translate-middle-x w-100 px-3"
-          style={{ bottom: "-90px" }}
-        >
-          <div className="row g-3 justify-content-md-center">
-            <div className="col-lg-4 col-md-6"></div>
-            <div className="col-lg-4 col-md-6"></div>
-          </div>
-        </div>
-      </header>
-
-      {/* Tabs Navigation */}
-      <div className="position-relative">
-        <div
-          className="d-flex justify-content-between align-items-center container"
-          style={{
-            position: "absolute",
-            top: "-47px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "100%",
-          }}
-        >
-          {/* Navigation Tabs */}
-          <ul
-            className="nav nav-tabs"
-            style={{
-              borderRadius: "8px",
-              overflow: "hidden",
+        {/* Modern Fully Rounded Pill Switcher */}
+        <div className="inline-flex self-start sm:self-auto p-1 bg-white border border-slate-200/85 rounded-full shadow-sm">
+          <button
+            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all duration-200 border-0 cursor-pointer ${activeTab === "visitors"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            onClick={() => {
+              setActiveTab("visitors");
+              navigate("/admin-dashboard/visitors");
             }}
           >
-            <li className="nav-item me-3">
-              <button
-                className={`nav-link fs-5 ${
-                  activeTab === "visitors" ? "active" : "text-light"
-                }`}
-                onClick={() => setActiveTab("visitors")}
-              >
-                Visitors
-              </button>
-            </li>
-            <li className="nav-item ms-3">
-              <button
-                className={`nav-link fs-5 ${
-                  activeTab === "visit" ? "active" : "text-light"
-                }`}
-                onClick={() => setActiveTab("visit")}
-              >
-                Visit
-              </button>
-            </li>
-          </ul>
-
-          {/* Add New Visitor Button */}
-          {/* <button
-            className="btn btn-primary rounded-3 ms-auto"
-            onClick={() => setShowModal(true)}
+            Visitors Log
+          </button>
+          <button
+            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all duration-200 border-0 cursor-pointer ${activeTab === "visit"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            onClick={() => {
+              setActiveTab("visit");
+              navigate("/admin-dashboard/visits");
+            }}
           >
-            + Add New Visitor
-          </button> */}
+            Visitor Schedule
+          </button>
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="container mt-5">
-          {activeTab === "visitors" && <AdminVisitorsTab refreshKey={refreshVisitorsKey} />}
+      {/* Tab Content Container matching exact width & alignment */}
+      <div className="max-w-[1140px] mx-auto px-4 mt-3">
+        {activeTab === "visitors" && <AdminVisitorsTab refreshKey={refreshVisitorsKey} />}
         {activeTab === "visit" && <AdminVisit />}
       </div>
 
       {/* Modal for Adding a Visitor */}
       {showModal && (
         <div
-          className="modal fade show d-block"
-          tabIndex="-1"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-0 sm:p-4"
+          onClick={() => setShowModal(false)}
           role="dialog"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          aria-modal="true"
         >
-          <div className="modal-dialog modal-dialog-centered">
-            <div
-              className="modal-content p-3"
-              style={{
-                backgroundColor: "#F5FAFE",
-              }}
-            >
-              <div className="modal-header">
-                <h5 className="modal-title">Create Visitors Information</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <form onSubmit={handleAddVisitorSubmit}>
-                  <div className="mb-3">
-                    <label className="form-label">Visitors Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="name"
-                      value={newVisitorData.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="my-3">
-                    <label className="form-label">Type</label>
-                    <select
-                      className="form-select"
-                      name="visitor_type"
-                      value={newVisitorData.visitor_type}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Select Guest Type</option>
-                      <option value="individual">Individual</option>
-                      <option value="group">Group</option>
-                    </select>
-                  </div>
-                  <div className="my-3">
-                    <label className="form-label">Email Address</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      name="email"
-                      value={newVisitorData.email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="my-3">
-                    <label className="form-label">Contact Number</label> {/* Added contact_number field */}
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="contact_number"
-                      value={newVisitorData.contact_number}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="my-3">
-                    <label className="form-label">Address</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="address"
-                      value={newVisitorData.address}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="mt-5 text-center">
-                    <button
-                      type="submit"
-                      className="btn btn-primary w-50"
-                    >
-                      Create Visitor
-                    </button>
-                  </div>
-                </form>
-              </div>
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 max-h-[92dvh] overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sm:hidden flex justify-center pt-3">
+              <span className="w-10 h-1.5 rounded-full bg-slate-200" />
             </div>
+
+            <div className="flex items-center justify-between px-5 sm:px-6 pt-4 sm:pt-5 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 mb-0">
+                  Create Visitor Information
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5 mb-0">
+                  Add a new visitor record to the directory.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer border-0 bg-transparent"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleAddVisitorSubmit}
+              className="px-5 sm:px-6 py-5 space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  Visitor&apos;s Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  name="name"
+                  value={newVisitorData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  name="email"
+                  value={newVisitorData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  name="contact_number"
+                  value={newVisitorData.contact_number}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  name="address"
+                  value={newVisitorData.address}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl px-4 py-3 border-0 cursor-pointer transition-colors"
+              >
+                Create Visitor
+              </button>
+            </form>
           </div>
         </div>
       )}

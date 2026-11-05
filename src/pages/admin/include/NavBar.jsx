@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useNotifications } from "../../../context/NotificationContext";
 import UserAvatar from "../../../components/UserAvatar";
+import SwiftEntryLogo from "/pwa-512x512.png";
 
 function Navbar() {
   const location = useLocation();
@@ -33,7 +34,12 @@ function Navbar() {
       <div className="container">
         {/* Logo on the left */}
         <a className="navbar-brand fw-bold text-white pt-2" href="#">
-          <img src="../image.png" width={140} alt="Logo" />
+          <img
+            src={SwiftEntryLogo}
+            width={140}
+            alt="SwiftEntry"
+            style={{ filter: "brightness(0) invert(1)" }}
+          />
         </a>
 
         {/* Navbar Toggler */}

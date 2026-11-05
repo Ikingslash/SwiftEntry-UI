@@ -3,7 +3,22 @@ import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import {
+    Eye,
+    EyeOff,
+    ShieldCheck,
+    Users,
+    TrendingUp,
+    Mail,
+    Lock,
+    User,
+    Building,
+    Loader2
+} from "lucide-react";
+
 import api from "../context/api";
+import FrontdeskImage from "../assets/frontdesk.png";
+import SwiftEntryLogo from "/pwa-512x512.png";
 
 function AdminRegister() {
     const navigate = useNavigate();
@@ -81,162 +96,286 @@ function AdminRegister() {
     return (
         <>
             <ToastContainer position="top-right" autoClose={5000} />
-            <div
-                className="container-fluid d-flex align-items-center justify-content-center vh-100 p-0"
-                style={{ backgroundColor: "#F5FAFE", overflow: "hidden" }}
-            >
-                <div className="row w-100 h-100 d-flex align-items-center justify-content-center g-0">
-                    {/* Left Section (Video Background) */}
-                    <div
-                        className="col-lg-5 offset-md-1 d-none d-lg-block position-relative p-0"
-                        style={{
-                            height: "100vh",
-                            overflow: "hidden",
-                        }}
-                    >
-                        <video
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-100 h-100 object-fit-cover p-4 rounded-5"
-                            style={{ objectFit: "cover" }}
-                        >
-                            <source src="./video3.mp4" type="video/mp4" />
-                            Your browser does not support the video tag.
-                        </video>
-                        <div
-                            className="position-absolute bottom-0 start-50 translate-middle-x text-white ms-4 p-4 w-100"
-                            style={{
-                                fontSize: "22px",
-                                textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5)",
-                            }}
-                        >
-                            <div className="d-flex">
-                                <img src="./image2.png" width={70} alt="" />
+            <div className="w-full h-dvh bg-[#edf5ff] flex items-center justify-center p-0 m-0 overflow-hidden font-sans">
+
+                {/* Main Full-Screen 50/50 Split View */}
+                <div className="w-full h-full grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-white">
+
+                    {/* LEFT SIDE: Brand Image Panel with Gradient & Features */}
+                    <aside className="hidden lg:flex lg:col-span-6 xl:col-span-6 relative flex-col justify-between p-8 xl:p-10 bg-[#02213d] text-white overflow-hidden h-full">
+
+                        {/* Zoomed-Out Image Pushed to the Right */}
+                        <div className="absolute inset-y-0 right-0 w-[70%] h-full pointer-events-none select-none flex items-center justify-end">
+                            <img
+                                src={FrontdeskImage}
+                                alt="Frontdesk Portal"
+                                className="w-full h-full object-cover object-right opacity-80"
+                            />
+                        </div>
+
+                        {/* Darker Gradient Overlay for High Text Contrast */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#02213d] via-[#02213d]/95 to-transparent w-[85%] z-10 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#02213d]/95 via-transparent to-transparent z-10 pointer-events-none" />
+
+                        {/* Top Branding Header Aligned Left */}
+                        <div className="relative z-20 flex flex-col items-start gap-1">
+                            <div className="flex items-center -ml-2">
+                                <img
+                                    src={SwiftEntryLogo}
+                                    alt="SwiftEntry"
+                                    className="h-20 w-auto object-contain brightness-0 invert"
+                                />
                             </div>
-                            <p className="fw-bold fs-5 text-shadow">
-                                Ready to Manage Guests with Ease? <br /> Let's Get You Started
+                            <p className="text-xs font-medium text-white/80 tracking-wide">
+                                Smarter Access. Safer Spaces.
                             </p>
                         </div>
-                    </div>
 
-                    {/* Right Section (Registration Form) */}
-                    <div
-                        className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-3"
-                        style={{
-                            height: "100vh",
-                            overflowY: "auto",
-                        }}
-                    >
-                        <div className="w-100 p-4" style={{ maxWidth: "576px" }}>
-                            <div className="d-flex p-2 justify-content-center">
-                                <img src="./image.png" width={150} className="py-2" alt="" />
+                        {/* Middle Headline & Feature List */}
+                        <div className="relative z-20 my-auto py-2 space-y-4 max-w-md">
+                            <div className="space-y-1.5">
+                                <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight leading-tight text-white">
+                                    Welcome to<br />
+                                    <span className="text-blue-400">SwiftEntry</span>
+                                </h1>
+                                <p className="text-xs sm:text-sm text-white/85 font-normal leading-relaxed">
+                                    Secure, simple and efficient visitor management for your organization.
+                                </p>
                             </div>
 
-                            <h2 className="text-center mb-3 fw-bold">Admin Registration</h2>
-                            <p className="text-center text-muted mb-4">
-                                Create your administrator account
-                            </p>
+                            {/* Perfectly Aligned Feature Badges */}
+                            <div className="space-y-3 pt-1">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-white/12 backdrop-blur-md border border-white/20 flex items-center justify-center text-blue-300 shrink-0 shadow-sm">
+                                        <ShieldCheck className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col justify-center space-y-0">
+                                        <h5 className="text-lg font-bold text-white leading-snug">Secure Access</h5>
+                                        <p className="text-xs text-white/75 leading-snug">Keep your premises safe</p>
+                                    </div>
+                                </div>
 
-                            <form onSubmit={handleSubmit}>
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold">Full Name *</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        name="name"
-                                        placeholder="Enter your full name"
-                                        required
-                                        value={formData.name}
-                                        onChange={handleChange}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-white/12 backdrop-blur-md border border-white/20 flex items-center justify-center text-blue-300 shrink-0 shadow-sm">
+                                        <Users className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col justify-center space-y-0">
+                                        <h5 className="text-lg font-bold text-white leading-snug">Easy Check-ins</h5>
+                                        <p className="text-xs text-white/75 leading-snug">For visitors, staff and contractors</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-white/12 backdrop-blur-md border border-white/20 flex items-center justify-center text-blue-300 shrink-0 shadow-sm">
+                                        <TrendingUp className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col justify-center space-y-0">
+                                        <h5 className="text-lg font-bold text-white leading-snug">Real-time Insights</h5>
+                                        <p className="text-xs text-white/75 leading-snug">Track and manage with ease</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bottom Security Badge Tag */}
+                        <div className="relative z-20 pt-3 border-t border-white/10 flex items-center gap-2.5 text-xs text-white/80">
+                            <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
+                            <span>Trusted by organizations across different industries.</span>
+                        </div>
+
+                    </aside>
+
+                    {/* RIGHT SIDE: Form Section */}
+                    <div className="lg:col-span-6 xl:col-span-6 p-6 sm:p-8 xl:p-10 flex flex-col justify-between relative bg-[rgb(252,253,255)] h-full overflow-y-auto">
+
+                        {/* Mobile Brand Header */}
+                        <div className="flex lg:hidden items-center justify-center w-full mb-3">
+                            <img
+                                src={SwiftEntryLogo}
+                                alt="SwiftEntry"
+                                className="h-14 sm:h-16 w-auto object-contain"
+                            />
+                        </div>
+
+                        {/* Form Inputs Container */}
+                        <div className="max-w-md w-full mx-auto space-y-3 pt-6">
+
+                            {/* Header Logo & Title Aligned */}
+                            <div className="space-y-2 mb-4">
+                                <div className="hidden lg:flex items-center justify-center mt-4">
+                                    <img
+                                        src={SwiftEntryLogo}
+                                        alt="SwiftEntry"
+                                        className="h-20 w-auto object-contain"
                                     />
                                 </div>
 
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold">Email *</label>
-                                    <input
-                                        type="email"
-                                        className="form-control"
-                                        name="email"
-                                        placeholder="Enter your email"
-                                        required
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                    />
+                                <div className="space-y-0.5">
+                                    <p className="text-2xl font-bold text-slate-900 tracking-tight">
+                                        Create Admin Account
+                                    </p>
+                                    <p className="text-xs text-[#7a8aa3] font-medium">
+                                        Access your SwiftEntry account to continue.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-2">
+
+                                {/* Full Name Field */}
+                                <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                                        Full Name *
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <User className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            placeholder="Enter your full name"
+                                            required
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold">Department</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        name="department"
-                                        placeholder="Enter your department (optional)"
-                                        value={formData.department}
-                                        onChange={handleChange}
-                                    />
+                                {/* Email Field */}
+                                <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                                        Email *
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            placeholder="john.doe@gmail.com"
+                                            required
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="mb-3 position-relative">
-                                    <label className="form-label fw-semibold">Password *</label>
-                                    <input
-                                        type={passwordVisible ? "text" : "password"}
-                                        className="form-control"
-                                        name="password"
-                                        placeholder="Enter password (min 8 characters)"
-                                        required
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                    />
-                                    <span
-                                        onClick={() => setPasswordVisible(!passwordVisible)}
-                                        className="position-absolute top-50 end-0 translate-middle-y m-3"
-                                        style={{ cursor: "pointer", color: "#007bff", marginTop: "15px" }}
-                                    >
-                                        {passwordVisible ? "👁️" : "👁️‍🗨️"}
-                                    </span>
+                                {/* Department Field */}
+                                <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                                        Department
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <Building className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <input
+                                            type="text"
+                                            name="department"
+                                            placeholder="Operations, IT, HR (optional)"
+                                            value={formData.department}
+                                            onChange={handleChange}
+                                            className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="mb-3 position-relative">
-                                    <label className="form-label fw-semibold">Confirm Password *</label>
-                                    <input
-                                        type={confirmPasswordVisible ? "text" : "password"}
-                                        className="form-control"
-                                        name="password_confirmation"
-                                        placeholder="Confirm your password"
-                                        required
-                                        value={formData.password_confirmation}
-                                        onChange={handleChange}
-                                    />
-                                    <span
-                                        onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-                                        className="position-absolute top-50 end-0 translate-middle-y m-3"
-                                        style={{ cursor: "pointer", color: "#007bff", marginTop: "15px" }}
-                                    >
-                                        {confirmPasswordVisible ? "👁️" : "👁️‍🗨️"}
-                                    </span>
+                                {/* Password Field */}
+                                <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                                        Password *
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <input
+                                            type={passwordVisible ? "text" : "password"}
+                                            name="password"
+                                            placeholder="••••••••••••"
+                                            required
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setPasswordVisible(!passwordVisible)}
+                                            className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 border-0 bg-transparent p-0 cursor-pointer"
+                                            aria-label={passwordVisible ? "Hide password" : "Show password"}
+                                        >
+                                            {passwordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="text-center mt-4">
-                                    <button
+                                {/* Confirm Password Field */}
+                                <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 px-3 transition-all duration-200 focus-within:border-[#1287ef] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#1287ef]/10">
+                                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">
+                                        Confirm Password *
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <input
+                                            type={confirmPasswordVisible ? "text" : "password"}
+                                            name="password_confirmation"
+                                            placeholder="••••••••••••"
+                                            required
+                                            value={formData.password_confirmation}
+                                            onChange={handleChange}
+                                            className="w-full bg-transparent text-slate-900 text-xs font-medium focus:outline-none placeholder:text-slate-400"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                                            className="text-slate-400 hover:text-blue-600 transition-colors shrink-0 border-0 bg-transparent p-0 cursor-pointer"
+                                            aria-label={confirmPasswordVisible ? "Hide password" : "Show password"}
+                                        >
+                                            {confirmPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Submit Button */}
+                                <div className="pt-1">
+                                    <div
                                         type="submit"
-                                        className="btn btn-primary w-100 py-2"
                                         disabled={isSubmitting}
+                                        className="w-full h-11 bg-gradient-to-r from-[#1798f5] to-[#0755e8] hover:opacity-95 text-white font-bold !rounded-full text-xs transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer border-0"
                                     >
-                                        {isSubmitting ? "Creating Account..." : "Create Admin Account"}
-                                    </button>
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <span>Creating Account...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-base font-light leading-none">→</span>
+                                                <span className="text-base">Create Admin Account</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="text-center mt-3">
-                                    <span className="text-muted">Already have an account? </span>
-                                    <Link to="/" className="text-primary text-decoration-none fw-semibold">
+                                {/* Navigation Link */}
+                                <p className="text-center text-xs text-slate-500 font-medium pt-1">
+                                    Already have an account?{" "}
+                                    <Link to="/" className="text-blue-600 hover:underline font-bold">
                                         Sign In
                                     </Link>
-                                </div>
+                                </p>
+
                             </form>
                         </div>
+
+                        {/* Security Footer Line */}
+                        <footer className="security-note flex items-center gap-4 w-full max-w-md mx-auto pt-2 text-[#8291aa] text-[11px]">
+                            <span className="h-[1px] flex-1 bg-[#dce4ee]" />
+                            <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                <ShieldCheck className="w-4 h-4 text-[#6684ab]" />
+                                <p className="m-0">Your security is our priority.</p>
+                            </div>
+                            <span className="h-[1px] flex-1 bg-[#dce4ee]" />
+                        </footer>
+
                     </div>
+
                 </div>
             </div>
         </>

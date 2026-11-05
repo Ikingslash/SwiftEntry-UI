@@ -1,18 +1,16 @@
 import { useState, useRef } from "react";
-import NavBar from "./include/NavBar";
 import api from "../../context/api";
-import { NavLink } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
 import UserAvatar from "../../components/UserAvatar";
 import QRCode from "react-qr-code";
+import FrontDeskTopHeader from "./include/FrontDeskTopHeader";
 
 function ConfirmVisitor() {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [userProfile, setUserProfile] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
-    const modalRef = useRef(null);
+    const [showModal, setShowModal] = useState(false);
     const badgeRef = useRef(null);
 
     const handleChange = (index, value) => {
@@ -35,19 +33,12 @@ function ConfirmVisitor() {
             const response = await api.get(`/front-desk/guests/visit/scan/${enteredOtp}`);
             setUserProfile(response.data);
             setIsConfirmed(response.data.security_confirmation === 1);
-
-            // Reset OTP after successful scan
             setOtp(["", "", "", "", "", ""]);
-
-            // Show modal using ref
-            if (modalRef.current) {
-                const modal = new window.bootstrap.Modal(modalRef.current);
-                modal.show();
-            }
+            setShowModal(true);
         } catch (error) {
             console.error("Error fetching profile:", error);
             toast.error("No visitor record found for this code.");
-            setOtp(["", "", "", "", "", ""]); // Reset on error
+            setOtp(["", "", "", "", "", ""]);
         }
     };
 
@@ -59,18 +50,12 @@ function ConfirmVisitor() {
 
         setIsUpdating(true);
         try {
-            // Call API to update security confirmation
             const response = await api.post(`/front-desk/guests/visit/security-confirm/${userProfile.visit_id}`);
 
             if (response.data.success) {
                 toast.success("Visit confirmed successfully!");
                 setIsConfirmed(true);
-
-                // Update the userProfile to reflect confirmation
-                setUserProfile(prev => ({
-                    ...prev,
-                    security_confirmation: 1
-                }));
+                setUserProfile(prev => ({ ...prev, security_confirmation: 1 }));
             } else {
                 toast.error(response.data.message || "Failed to confirm visit");
             }
@@ -88,76 +73,22 @@ function ConfirmVisitor() {
             return;
         }
 
-        // Automatic Check-in Logic
         try {
             if (userProfile && userProfile.visit_id) {
-                console.log("Attempting auto check-in for visit:", userProfile.visit_id);
-
-                // Determine the correct API endpoint based on user role (assuming front-desk here as per file location)
-                // Using the specific endpoint for front-desk check-in
                 await api.post(`/front-desk/guests/visits/${userProfile.visit_id}/check-in`, {
                     actual_check_in_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     notes: "Auto check-in via Print Badge"
                 });
                 toast.success("Visitor automatically checked in!");
-
-                // Update local state to reflect check-in if needed
-                setUserProfile(prev => ({
-                    ...prev,
-                    status: 'Checked In',
-                    visit_status: 'checked_in'
-                }));
-            } else {
-                console.warn("Auto check-in skipped: visit_id missing", userProfile);
+                setUserProfile(prev => ({ ...prev, status: 'Checked In', visit_status: 'checked_in' }));
             }
         } catch (error) {
             console.error("Auto check-in failed:", error);
-            const errorMsg = error.response?.data?.message || error.message || "Unknown error";
-            // We choose NOT to return here, allowing print to proceed even if check-in fails, 
-            // but we alert the user.
-            toast.warning(`Auto check-in failed: ${errorMsg}. Printing badge...`);
         }
 
-        // Clone the badge content to properly serialize it
         const badgeClone = badgeRef.current.cloneNode(true);
-
-        // Get the QR code SVG and convert to proper string
         const qrCodeSvg = badgeClone.querySelector('svg');
-        let qrCodeHtml = '';
-        if (qrCodeSvg) {
-            qrCodeHtml = new XMLSerializer().serializeToString(qrCodeSvg);
-        }
-
-        const printContent = `
-            <div class="badge-card">
-                <div class="badge-header">
-                    <h3>VISITOR BADGE</h3>
-                </div>
-                <div class="badge-detail">
-                    <span class="badge-label">Name:</span>
-                    <span class="badge-value">${userProfile?.name || 'N/A'}</span>
-                </div>
-                <div class="badge-detail">
-                    <span class="badge-label">Visit Date:</span>
-                    <span class="badge-value">${userProfile?.visit_date || 'N/A'}</span>
-                </div>
-                <div class="badge-detail">
-                    <span class="badge-label">Host:</span>
-                    <span class="badge-value">${userProfile?.host_name || 'N/A'}</span>
-                </div>
-                <div class="badge-detail">
-                    <span class="badge-label">Purpose:</span>
-                    <span class="badge-value">${userProfile?.purpose || 'N/A'}</span>
-                </div>
-                <div class="badge-detail">
-                    <span class="badge-label">Badge Code:</span>
-                    <span class="badge-value">${userProfile?.ID_No || 'N/A'}</span>
-                </div>
-                <div class="qr-container">
-                    ${qrCodeHtml}
-                </div>
-            </div>
-        `;
+        const qrCodeHtml = qrCodeSvg ? new XMLSerializer().serializeToString(qrCodeSvg) : '';
 
         const printWindow = window.open('', '_blank', 'width=400,height=600');
         if (!printWindow) {
@@ -178,21 +109,19 @@ function ConfirmVisitor() {
                         .badge-label { color: #666; font-size: 12px; }
                         .badge-value { font-weight: bold; font-size: 14px; }
                         .qr-container { text-align: center; margin-top: 20px; }
-                        .qr-container svg { max-width: 120px; height: auto; }
-                        @media print {
-                            body { padding: 0; }
-                        }
                     </style>
                 </head>
                 <body>
-                    ${printContent}
-                    <script>
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 250);
-                        };
-                    </script>
+                    <div class="badge-card">
+                        <div class="badge-header"><h3>VISITOR BADGE</h3></div>
+                        <div class="badge-detail"><span class="badge-label">Name:</span><span class="badge-value">${userProfile?.name || 'N/A'}</span></div>
+                        <div class="badge-detail"><span class="badge-label">Visit Date:</span><span class="badge-value">${userProfile?.visit_date || 'N/A'}</span></div>
+                        <div class="badge-detail"><span class="badge-label">Host:</span><span class="badge-value">${userProfile?.host_name || 'N/A'}</span></div>
+                        <div class="badge-detail"><span class="badge-label">Purpose:</span><span class="badge-value">${userProfile?.purpose || 'N/A'}</span></div>
+                        <div class="badge-detail"><span class="badge-label">Badge Code:</span><span class="badge-value">${userProfile?.ID_No || 'N/A'}</span></div>
+                        <div class="qr-container">${qrCodeHtml}</div>
+                    </div>
+                    <script>window.onload = function() { setTimeout(function() { window.print(); }, 250); };</script>
                 </body>
             </html>
         `);
@@ -200,240 +129,162 @@ function ConfirmVisitor() {
     };
 
     const handleKeyDown = (e, index) => {
-        // Handle backspace
         if (e.key === "Backspace" && !otp[index] && index > 0) {
             document.getElementById(`otp-${index - 1}`).focus();
         }
     };
 
     const closeModal = () => {
-        if (modalRef.current) {
-            const modal = window.bootstrap.Modal.getInstance(modalRef.current);
-            if (modal) modal.hide();
-        }
+        setShowModal(false);
         setUserProfile(null);
         setIsConfirmed(false);
     };
 
     return (
-        <div>
-            <NavBar />
-            <ToastContainer position="top-right" autoClose={5000} />
-            {/* Hero */}
-            <header
-                className="text-white text-center position-relative px-4"
-                style={{
-                    backgroundColor: "#053561",
-                    marginTop: "56px",
-                    textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-                    borderBottomLeftRadius: "3%",
-                    borderBottomRightRadius: "3%",
-                    paddingTop: "20px",
-                    paddingBottom: "50px",
-                }}
-            >
-                <div className="container">
-                    <div className="text-white shadow-sm" style={{ minHeight: "180px" }}>
-                        <div className="d-flex align-items-center justify-content-between">
-                            <h2 className="fw-bold mb-0">Guest Confirmation</h2>
-                        </div>
-                        <div className="d-flex align-items-center mt-2">
-                            <p
-                                className="badge text-white"
-                                style={{ backgroundColor: "rgba(25, 88, 148, 0.8)" }}
-                            >
-                                Front Desk Confirmation
-                            </p>
-                            <div
-                                className="flex-grow-1 ms-2 mb-3"
-                                style={{
-                                    height: "2px",
-                                    backgroundColor: "rgba(168, 172, 176, 0.8)",
-                                }}
-                            ></div>
-                        </div>
+        <div className="min-h-screen bg-[#F0F7FF] pb-12">
+            <FrontDeskTopHeader />
+
+            {/* Header Container */}
+            <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4">
+                <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+                    Confirm Visit
+                </p>
+                <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+                    Verify a guest using their 6-digit unique code.
+                </p>
+            </div>
+
+            <div className="max-w-[1140px] mx-auto px-4">
+                <div className="w-full max-w-lg mx-auto bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-10 text-center space-y-6">
+                    <div>
+                        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 mb-1">
+                            Code Verification
+                        </h1>
+                        <p className="text-slate-500 text-xs">
+                            Enter guest unique code to confirm visit
+                        </p>
+                    </div>
+
+                    <div className="flex justify-center gap-1.5 sm:gap-2.5 py-2">
+                        {otp.map((digit, index) => (
+                            <input
+                                key={index}
+                                id={`otp-${index}`}
+                                type="text"
+                                inputMode="numeric"
+                                className="w-10 h-12 sm:w-12 sm:h-14 text-center text-base sm:text-lg font-bold border border-slate-200 rounded-xl sm:rounded-2xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-slate-800 bg-slate-50/50 shadow-2xs"
+                                value={digit}
+                                maxLength="1"
+                                onChange={(e) => handleChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
+                                autoFocus={index === 0}
+                            />
+                        ))}
                     </div>
                 </div>
-            </header>
-
-            {/* OTP Entry Section */}
-            <section className="container p-5 text-center">
-                <div className="row text-center justify-content-center">
-                    <div className="col-md-6 col-lg-5 col-12">
-                        <div className="text-center pt-3">
-                            <p className="text-muted">Enter Guest Unique Code</p>
-                        </div>
-                        <div className="my-5">
-                            <div className="d-flex justify-content-center gap-2">
-                                {otp.map((digit, index) => (
-                                    <input
-                                        key={index}
-                                        id={`otp-${index}`}
-                                        type="text"
-                                        className="form-control text-center fs-4"
-                                        style={{
-                                            width: "50px",
-                                            height: "50px",
-                                            borderRadius: "5px",
-                                        }}
-                                        value={digit}
-                                        maxLength="1"
-                                        onChange={(e) => handleChange(index, e.target.value)}
-                                        onKeyDown={(e) => handleKeyDown(e, index)}
-                                        autoFocus={index === 0}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <NavLink className="mt-4 d-block" to="/frontdesk-dashboard">
-                            <small>Back to Dashboard</small>
-                        </NavLink>
-                    </div>
-                </div>
-            </section>
+            </div>
 
             {/* MODAL: Guest Profile */}
-            <div
-                className="modal fade"
-                id="printTagModal"
-                ref={modalRef}
-                tabIndex="-1"
-                aria-hidden="true"
-            >
+            {showModal && userProfile && (
                 <div
-                    className="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-sm-down"
-                    style={{ maxWidth: "450px", marginLeft: "auto", marginRight: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
+                    onClick={closeModal}
                 >
                     <div
-                        className="modal-content rounded-4 shadow-lg"
-                        style={{ border: "none" }}
+                        className="w-full max-w-[450px] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="modal-header border-0">
-                            <h5 className="modal-title">
+                        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                            <h5 className="font-bold text-slate-900 text-sm mb-0">
                                 {isConfirmed ? "Print Visitor Badge" : "Confirm Guest Visit"}
                             </h5>
                             <button
                                 type="button"
-                                className="btn-close"
                                 onClick={closeModal}
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer border-0 bg-transparent"
                                 aria-label="Close"
-                            ></button>
+                            >
+                                <i className="bi bi-x-lg text-xs"></i>
+                            </button>
                         </div>
 
-                        {userProfile && (
-                            <div className="modal-body px-4">
-                                <div className="text-center mb-4">
-                                    <UserAvatar
-                                        image={userProfile.photo}
-                                        firstName={userProfile.name || "Guest"}
-                                        size={80}
-                                        className="rounded-circle shadow mb-3 mx-auto"
-                                    />
-                                </div>
+                        <div className="px-5 pb-5 text-xs space-y-4">
+                            <div className="text-center pt-2">
+                                <UserAvatar
+                                    image={userProfile.photo}
+                                    firstName={userProfile.name || "Guest"}
+                                    size={80}
+                                    className="mx-auto mb-3"
+                                />
+                                <h4 className="font-bold text-slate-900 text-base">{userProfile.name}</h4>
+                            </div>
 
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">Guest Name</span>
-                                    <span>{userProfile.name}</span>
+                            <div className="divide-y divide-slate-100">
+                                <div className="flex justify-between py-2.5">
+                                    <span className="text-slate-400">Visit Date</span>
+                                    <span className="font-semibold text-slate-800">{userProfile.visit_date}</span>
                                 </div>
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">Visit Date</span>
-                                    <span>{userProfile.visit_date}</span>
+                                <div className="flex justify-between py-2.5">
+                                    <span className="text-slate-400">Visit Time</span>
+                                    <span className="font-semibold text-slate-800">{userProfile.visit_time}</span>
                                 </div>
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">Visit Time</span>
-                                    <span>{userProfile.visit_time}</span>
+                                <div className="flex justify-between py-2.5">
+                                    <span className="text-slate-400">ID No.</span>
+                                    <span className="font-semibold text-slate-800">{userProfile.ID_No || "N/A"}</span>
                                 </div>
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">ID No.</span>
-                                    <span>{userProfile.ID_No || "N/A"}</span>
+                                <div className="flex justify-between py-2.5">
+                                    <span className="text-slate-400">Host Name</span>
+                                    <span className="font-semibold text-slate-800">{userProfile.host_name}</span>
                                 </div>
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">Host Name</span>
-                                    <span>{userProfile.host_name}</span>
+                                <div className="flex justify-between py-2.5">
+                                    <span className="text-slate-400">Purpose</span>
+                                    <span className="font-semibold text-slate-800">{userProfile.purpose}</span>
                                 </div>
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">Purpose</span>
-                                    <span>{userProfile.purpose}</span>
-                                </div>
-                                <div className="d-flex justify-content-between border-bottom py-4 small">
-                                    <span className="text-muted">Visit Status</span>
-                                    <span
-                                        className={`badge bg-${isConfirmed ? "success" : "warning"}`}
-                                    >
+                                <div className="flex justify-between py-2.5 items-center">
+                                    <span className="text-slate-400">Visit Status</span>
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${isConfirmed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                                         {isConfirmed ? "Confirmed" : userProfile.status}
                                     </span>
                                 </div>
-
-                                <div className="text-center mt-4">
-                                    {!isConfirmed ? (
-                                        <button
-                                            type="button"
-                                            className="btn btn-primary w-100 rounded-3 py-2"
-                                            onClick={handleConfirm}
-                                            disabled={isUpdating}
-                                        >
-                                            {isUpdating ? (
-                                                <>
-                                                    <span
-                                                        className="spinner-border spinner-border-sm me-2"
-                                                        role="status"
-                                                        aria-hidden="true"
-                                                    ></span>
-                                                    Confirming...
-                                                </>
-                                            ) : (
-                                                "Confirm Visit"
-                                            )}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            className="btn btn-success w-100 rounded-3 py-2"
-                                            onClick={handlePrintBadge}
-                                        >
-                                            <i className="bi bi-printer me-2"></i>
-                                            Print Badge
-                                        </button>
-                                    )}
-                                </div>
                             </div>
-                        )}
+
+                            <div className="pt-2 pb-1">
+                                {!isConfirmed ? (
+                                    <button
+                                        type="button"
+                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer border-0"
+                                        onClick={handleConfirm}
+                                        disabled={isUpdating}
+                                    >
+                                        {isUpdating ? "Confirming..." : "Confirm Visit"}
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm transition-colors cursor-pointer border-0 flex items-center justify-center gap-2"
+                                        onClick={handlePrintBadge}
+                                    >
+                                        <i className="bi bi-printer"></i> Print Badge
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Hidden Badge Template for Printing */}
             {userProfile && (
                 <div style={{ display: 'none' }}>
                     <div ref={badgeRef}>
                         <div className="badge-card">
-                            <div className="badge-header">
-                                <h3>VISITOR BADGE</h3>
-                            </div>
-                            <div className="badge-detail">
-                                <span className="badge-label">Name:</span>
-                                <span className="badge-value">{userProfile.name}</span>
-                            </div>
-                            <div className="badge-detail">
-                                <span className="badge-label">Visit Date:</span>
-                                <span className="badge-value">{userProfile.visit_date}</span>
-                            </div>
-                            <div className="badge-detail">
-                                <span className="badge-label">Host:</span>
-                                <span className="badge-value">{userProfile.host_name}</span>
-                            </div>
-                            <div className="badge-detail">
-                                <span className="badge-label">Purpose:</span>
-                                <span className="badge-value">{userProfile.purpose}</span>
-                            </div>
-                            <div className="badge-detail">
-                                <span className="badge-label">Badge Code:</span>
-                                <span className="badge-value">{userProfile.ID_No}</span>
-                            </div>
-                            <div className="qr-container">
-                                <QRCode value={userProfile.ID_No || ""} size={100} />
-                            </div>
+                            <div className="badge-header"><h3>VISITOR BADGE</h3></div>
+                            <div className="badge-detail"><span className="badge-label">Name:</span><span className="badge-value">{userProfile.name}</span></div>
+                            <div className="badge-detail"><span className="badge-label">Visit Date:</span><span className="badge-value">{userProfile.visit_date}</span></div>
+                            <div className="badge-detail"><span className="badge-label">Host:</span><span className="badge-value">{userProfile.host_name}</span></div>
+                            <div className="badge-detail"><span className="badge-label">Purpose:</span><span className="badge-value">{userProfile.purpose}</span></div>
+                            <div className="badge-detail"><span className="badge-label">Badge Code:</span><span className="badge-value">{userProfile.ID_No}</span></div>
+                            <div className="qr-container"><QRCode value={userProfile.ID_No || ""} size={100} /></div>
                         </div>
                     </div>
                 </div>

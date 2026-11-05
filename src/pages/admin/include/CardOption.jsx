@@ -4,9 +4,8 @@ function CardOption({ title, themeColor, selected, onClick }) {
   return (
     <div className="col-md-4 col-sm-6 mb-3">
       <div
-        className={`card p-3 text-center cursor-pointer h-100 d-flex flex-column justify-content-between align-items-center ${
-          selected ? 'border-primary border-3' : 'border'
-        } rounded-4 shadow-sm`}
+        className={`card p-3 text-center cursor-pointer h-100 d-flex flex-column justify-content-between align-items-center ${selected ? 'border-primary border-3' : 'border'
+          } rounded-4 shadow-sm`}
         onClick={onClick}
         style={{ cursor: 'pointer' }}
       >

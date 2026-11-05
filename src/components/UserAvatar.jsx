@@ -7,8 +7,8 @@ const UserAvatar = ({ image, firstName, lastName, size = 40, className = "" }) =
             <img
                 src={image}
                 alt={`${firstName} ${lastName}`}
-                className={`rounded-circle object-fit-cover ${className}`}
-                style={{ width: size, height: size }}
+                className={`rounded-full object-cover ${className}`}
+                style={{ width: size, height: size, minWidth: size, minHeight: size }}
             />
         );
     }
@@ -18,12 +18,15 @@ const UserAvatar = ({ image, firstName, lastName, size = 40, className = "" }) =
 
     return (
         <div
-            className={`d-flex align-items-center justify-content-center rounded-circle text-white fw-bold ${className}`}
+            className={`flex items-center justify-center rounded-full text-white font-bold select-none shrink-0 ${className}`}
             style={{
                 width: size,
                 height: size,
+                minWidth: size,
+                minHeight: size,
                 backgroundColor: backgroundColor,
                 fontSize: size * 0.4,
+                lineHeight: 1,
             }}
         >
             {initials}

@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
-import NavBar from "./include/NavBar";
+import FrontDeskTopHeader from "./include/FrontDeskTopHeader";
 import TabPreRegisteredVisitors from "./include/TabPreRegisteredVisitors";
-import { IoCheckmark } from "react-icons/io5";
 import api from "../../context/api";
 import { toast } from "react-toastify";
 
-// Helper function to group visits by date
 const groupVisitsByDate = (visits) => {
   if (!Array.isArray(visits)) {
     return {};
   }
   return visits.reduce((acc, visit) => {
-    const date = visit.visit_date; // Assuming your backend returns 'visit_date'
+    const date = visit.visit_date;
     if (!acc[date]) {
       acc[date] = [];
     }
@@ -20,14 +18,14 @@ const groupVisitsByDate = (visits) => {
   }, {});
 };
 
-function VisitSecurityHistory() {
+function VisitHistory() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [groupedVisits, setGroupedVisits] = useState({});
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState("");
   const [purpose, setPurpose] = useState("all");
-  const perPage = 10;
+  const perPage = 8;
   const [currentPage, setCurrentPage] = useState(1);
   const [visitPurposes, setVisitPurposes] = useState([]);
 
@@ -38,22 +36,10 @@ function VisitSecurityHistory() {
       .then((response) => {
         if (response.data && Array.isArray(response.data)) {
           setVisitPurposes(response.data);
-        } else {
-          console.error(
-            "API response for purposes is not an array:",
-            response.data
-          );
-          toast.error(
-            "API response for purposes is not an array: Please check the backend response."
-          );
         }
       })
       .catch((error) => {
         console.error("Failed to fetch visit purposes:", error);
-        toast.error(
-          "Failed to fetch visit purposes: " +
-          (error.response?.data?.message || "Server error.")
-        );
       });
   }, [activeFilter, month, purpose, currentPage]);
 
@@ -81,7 +67,6 @@ function VisitSecurityHistory() {
       const groupedData = groupVisitsByDate(response.data.visits);
       setGroupedVisits(groupedData);
       setPagination(response.data.pagination || {});
-      // toast.success("Visit history fetched successfully.");
     } catch (err) {
       console.error("Error fetching history:", err);
       if (err.response && err.response.status === 422) {
@@ -96,147 +81,74 @@ function VisitSecurityHistory() {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    // useEffect will handle the new fetch
   };
 
   return (
-    <div>
-      <NavBar />
-      <header
-        id="home"
-        className="text-white text-center position-relative d-flex align-items-center justify-content-between px-4"
-        style={{
-          backgroundColor: "#053561",
-          minHeight: "270px",
-          marginTop: "56px",
-          textShadow: "1px 1px 5px rgba(0,0,0,0.6)",
-          borderBottomLeftRadius: "3%",
-          borderBottomRightRadius: "3%",
-        }}
-      >
-        <div className="container">
-          <div
-            className="text-white shadow-sm"
-            style={{ backgroundColor: "#053561", minHeight: "180px" }}
-          >
-            <div className="d-flex align-items-center justify-content-between">
-              <h3 className="fw-bod mb-0">Visits</h3>
+    <div className="min-h-screen bg-[#F0F7FF] pb-12 font-sans">
+      <FrontDeskTopHeader />
 
-            </div>
-
-            <div className="d-flex align-items-center mt-2">
-              <p
-                className="badge text-white"
-                style={{
-                  backgroundColor: "rgba(25, 88, 148, 0.8)",
-                }}
-              >
-                Sydani Group{" "}
-                <span
-                  className="badge text-light p-1"
-                  style={{
-                    backgroundColor: "rgba(13, 46, 78, 0.8)",
-                  }}
-                >
-                  Company
-                </span>
-              </p>
-              <div
-                className="flex-grow-1 ms-3 mb-3"
-                style={{
-                  height: "2px",
-                  backgroundColor: "rgba(168, 172, 176, 0.8)",
-                }}
-              ></div>
-            </div>
-          </div>
+      {/* Header Container */}
+      <div className="max-w-[1140px] mx-auto px-4 pt-8 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-0">
+            Visits
+          </p>
+          <p className="text-slate-500 text-xs font-medium mb-0 mt-1">
+            View and filter visit history records.
+          </p>
         </div>
-      </header>
+      </div>
 
-      <div className="container mt-5">
-        <div className="d-flex align-items-center justify-content-between">
-          <div className="d-flex flex-column w-100 position-relative">
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                width: "100%",
-                height: "1px",
-                backgroundColor: "rgb(200, 200, 200)",
-              }}
-            ></div>
-          </div>
-
-          <div className="d-flex gap-2">
-            <select
-              className="form-select me-3"
-              style={{ minWidth: "150px", flex: "1" }}
-              onChange={(e) => setMonth(e.target.value)}
-            >
-              <option value="">Select Month</option>
-              {[
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December",
-              ].map((month) => (
-                <option key={month} value={month}>
-                  {month}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="form-select me-3"
-              style={{ minWidth: "150px", flex: "1" }}
-              onChange={(e) => setPurpose(e.target.value)}
-              value={purpose}
-            >
-              <option value="all">All Categories</option>
-              {visitPurposes.map((purpose, index) => (
-                <option key={index} value={purpose}>
-                  {purpose}
-                </option>
-              ))}
-            </select>
-
-            {[
-              { label: "All", value: "all", width: "60px" },
-              { label: "Individual", value: "individual", width: "180px" },
-              { label: "Group", value: "group", width: "160px" },
-            ].map((item) => (
-              <a
-                key={item.value}
-                onClick={() => setActiveFilter(item.value)}
-                className={`bg-white d-flex align-items-center justify-content-center text-dark text-decoration-none border ${activeFilter === item.value ? "border-primary" : "border"
-                  }`}
-                style={{
-                  minWidth: item.width,
-                  borderRadius: "7px",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease-in-out",
-                }}
-              >
-                <small>{item.label}</small>
-                {activeFilter === item.value && (
-                  <IoCheckmark className="fs-5 text-primary" />
-                )}
-              </a>
+      {/* Filters Bar */}
+      <div className="max-w-[1140px] mx-auto px-4 mb-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 hover:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+            onChange={(e) => setMonth(e.target.value)}
+          >
+            <option value="">Select Month</option>
+            {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m) => (
+              <option key={m} value={m}>{m}</option>
             ))}
+          </select>
+
+          <select
+            className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 hover:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+            onChange={(e) => setPurpose(e.target.value)}
+            value={purpose}
+          >
+            <option value="all">All Categories</option>
+            {visitPurposes.map((p, index) => (
+              <option key={index} value={p}>{p}</option>
+            ))}
+          </select>
+
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="inline-flex w-max p-1.5 bg-white border border-slate-200/80 rounded-full shadow-sm">
+              {[
+                { label: "All", value: "all" },
+                { label: "Individual", value: "individual" },
+                { label: "Group", value: "group" },
+              ].map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setActiveFilter(item.value)}
+                  className={`px-4 sm:px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border-0 cursor-pointer ${activeFilter === item.value
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-transparent text-slate-600 hover:text-slate-900"
+                    }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container mt-5">
+      {/* Content Table Container (No white backdrop here so component renders table card & outside pagination independently) */}
+      <div className="max-w-[1140px] mx-auto px-4">
         <TabPreRegisteredVisitors
           groupedVisits={groupedVisits}
           pagination={pagination}
@@ -248,4 +160,4 @@ function VisitSecurityHistory() {
   );
 }
 
-export default VisitSecurityHistory;
+export default VisitHistory;

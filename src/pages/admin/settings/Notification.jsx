@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import api from "../../../context/api";
 import { toast } from 'react-toastify';
 import { Switch } from '@headlessui/react';
@@ -22,118 +22,97 @@ function Notification() {
     setError(null);
     try {
       const response = await api.get("/admin/settings");
-      // Access the notification_preferences object from the response
       setPreferences(response.data.notification_preferences);
-      // toast.success("Notification preferences loaded successfully!");
     } catch (err) {
       console.error("Error fetching notification preferences:", err.response?.data || err.message);
-      //  toast.error("Failed to load notification preferences. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleChange = async (key) => {
-    const newValue = !preferences[key]; // Toggle the boolean value
-    setPreferences(prev => ({ ...prev, [key]: newValue })); // Optimistic update
+    const newValue = !preferences[key];
+    setPreferences(prev => ({ ...prev, [key]: newValue }));
 
     try {
       await api.post("/admin/settings/update", {
-        key: `notification_${key}`, // Match the backend key format
-        value: newValue, // Send boolean, backend will convert to 'true'/'false' string
+        key: `notification_${key}`,
+        value: newValue,
       });
-      console.log(`Notification preference '${key}' updated to ${newValue}`);
-       toast.success(`Notification for '${key}' updated successfully!`);
-      // No need to re-fetch if optimistic update is reliable
+      toast.success(`Notification for '${key}' updated successfully!`);
     } catch (err) {
       console.error(`Error updating notification preference '${key}':`, err.response?.data || err.message);
-      //  toast.error(`Failed to update preference: ` + (err.response?.data?.message || err.message));
-
-      // Revert on error
       setPreferences(prev => ({ ...prev, [key]: !newValue }));
     }
   };
 
-    const ToggleSwitch = ({ enabled, setEnabled, label }) => (
+  const ToggleSwitch = ({ enabled, setEnabled, label }) => (
     <Switch
-        checked={enabled}
-        onChange={setEnabled}
-        className={`${
-            enabled ? 'bg-primary' : 'bg-secondary'
-        } position-relative d-inline-flex align-items-center rounded-pill transition-colors`}
-        style={{ width: '44px', height: '24px' }}
+      checked={enabled}
+      onChange={setEnabled}
+      className={`${enabled ? 'bg-blue-600' : 'bg-slate-300'
+        } relative inline-flex items-center rounded-full transition-colors w-11 h-6 cursor-pointer`}
     >
-        <span className="visually-hidden">Enable {label}</span>
-        <span
-            className={`${
-                enabled ? 'translate-x-6' : 'translate-x-1'
-            } d-inline-block h-4 w-4 rounded-circle bg-white shadow-sm transition-transform`}
-            style={{ transform: `translateX(${enabled ? '20px' : '4px'})`, width: '16px', height: '16px' }}
-        />
+      <span className="sr-only">Enable {label}</span>
+      <span
+        className={`${enabled ? 'translate-x-6' : 'translate-x-1'
+          } inline-block w-4 h-4 transform bg-white rounded-full transition-transform shadow-sm`}
+      />
     </Switch>
   );
 
-
   if (loading) {
-    return <p className="text-center mt-5">Loading notification preferences...</p>;
+    return <div className="text-center py-12 text-slate-500 font-medium">Loading notification preferences...</div>;
   }
 
   if (error) {
-    return <p className="text-center mt-5 text-danger">{error}</p>;
+    return <div className="text-center py-12 text-rose-600 font-medium">{error}</div>;
   }
 
   return (
-    <div className="row mb-5">
-      {/* Left Section - Description */}
-      <div className="col-md-4">
-        <div className="p-3">
-          <h5 className="mb-3">Alert Preferences</h5>
-          <p>
-            <small>
-              Set up automated alerts and notifications to keep all users
-              informed in real time.
-            </small>
+    <div className="space-y-8 text-xs text-slate-700">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 mb-1">Alert Preferences</h4>
+          <p className="text-slate-500 leading-relaxed text-[11px]">
+            Set up automated alerts and notifications to keep all users informed in real time.
           </p>
         </div>
-      </div>
-
-      {/* Right Section - Notification Toggles */}
-      <div className="col-md-8">
-        <div className="card shadow-sm p-4 rounded-4 border-0">
-          <ul className="list-group list-group-flush">
-            <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-              <span>New guest check-ins or check-outs</span>
+        <div className="md:col-span-2">
+          <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl overflow-hidden divide-y divide-slate-100 bg-white">
+            <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+              <span className="font-semibold text-slate-800">New guest check-ins or check-outs</span>
               <ToggleSwitch
                 enabled={preferences.new_guest_checkins}
                 setEnabled={() => handleToggleChange('new_guest_checkins')}
                 label="New guest check-ins or check-outs"
               />
-            </li>
-            <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-              <span>VIP guest arrivals</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+              <span className="font-semibold text-slate-800">VIP guest arrivals</span>
               <ToggleSwitch
                 enabled={preferences.vip_guest_arrivals}
                 setEnabled={() => handleToggleChange('vip_guest_arrivals')}
                 label="VIP guest arrivals"
               />
-            </li>
-            <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-              <span>Blacklisted guest attempts</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+              <span className="font-semibold text-slate-800">Blacklisted guest attempts</span>
               <ToggleSwitch
                 enabled={preferences.blacklisted_guest_attempts}
                 setEnabled={() => handleToggleChange('blacklisted_guest_attempts')}
                 label="Blacklisted guest attempts"
               />
-            </li>
-            <li className="list-group-item d-flex justify-content-between align-items-center py-3">
-              <span>Missed or canceled visits</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+              <span className="font-semibold text-slate-800">Missed or canceled visits</span>
               <ToggleSwitch
                 enabled={preferences.missed_or_canceled_visits}
                 setEnabled={() => handleToggleChange('missed_or_canceled_visits')}
                 label="Missed or canceled visits"
               />
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

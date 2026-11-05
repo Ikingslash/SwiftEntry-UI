@@ -169,11 +169,8 @@ function NewGuestGroup() {
 
     // Format visit_time - datetime-local already provides local time
     if (formData.visit_time) {
-      // datetime-local gives us "YYYY-MM-DDTHH:MM" format
-      // Just replace T with space and add seconds for the API format
       const formattedVisitTime = formData.visit_time.replace("T", " ") + ":00";
       formDataToSend.append("visit_time", formattedVisitTime);
-      console.log("Formatted visit time:", formattedVisitTime);
     }
 
     // host fields
@@ -204,7 +201,6 @@ function NewGuestGroup() {
               purpose: formData.purpose,
             });
           } catch (notificationError) {
-            // Notification failure should not block the main flow
             console.error("Failed to notify host:", notificationError);
           }
         }
@@ -243,7 +239,7 @@ function NewGuestGroup() {
         if (visit.code) {
           const qrData = JSON.stringify({
             code: visit.code,
-            id: visit.code, // Fallback
+            id: visit.code,
             visit_id: visit.id,
             name: visitor.name,
             host: visit.host_name,
@@ -333,390 +329,375 @@ function NewGuestGroup() {
 
   return (
     <>
-      <div
-        className={`container mt-4 ${showSuccessModal || showVisitCardModal ? "blur-bg" : ""
-          }`}
-      >
-        <form onSubmit={handleSubmit} encType="multipart/form-data">
-          <div className="row">
-            {/* Left Column */}
-            <div className="col-md-6">
-              <div className="d-flex flex-column gap-3">
-                {/* Guest Information */}
-                <div className=" p-4">
-                  <h5 className="fw-bold">Group Leader Information</h5>
-                  <div className="mb-3">
-                    <label className="form-label">Name</label>
-                    <input
-                      type="text"
-                      name="group_leader_name"
-                      className="form-control"
-                      placeholder="Enter Name"
-                      value={formData.group_leader_name}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Contact Number</label>
-                        <input
-                          type="text"
-                          name="group_leader_contact"
-                          className="form-control"
-                          placeholder="Enter contact number"
-                          value={formData.group_leader_contact}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input
-                          type="email"
-                          name="group_leader_email"
-                          className="form-control"
-                          placeholder="Enter email"
-                          value={formData.group_leader_email}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Address</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Group Size</label>
-                    <select
-                      className="form-select"
-                      name="group_size"
-                      value={formData.group_size}
-                      onChange={handleChange}
-                    >
-                      <option>Select Group Size</option>
-                      <option value="5">2 - 10</option>
-                      <option value="10">10 - 20</option>
-                      <option value="20">20 - 30</option>
-                      <option value="30">30 Above</option>
-                    </select>
-                  </div>
-                </div>
+      <div className={`w-full mt-4 ${showSuccessModal || showVisitCardModal ? "blur-sm" : ""}`}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data" className="bg-white p-6 sm:p-8 rounded-3xl shadow-xs border border-slate-100 space-y-8">
 
-                <div className="p-4 mb-5">
-                  <h5 className="fw-bold">Visit Information</h5>
-                  <div className="mb-3">
-                    <label className="form-label">Visit Time</label>
-                    <input
-                      type="datetime-local"
-                      name="visit_time"
-                      className="form-control"
-                      value={formData.visit_time}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  {/* Hidden inputs for host data */}
-                  <input type="hidden" name="host_id" value={formData.host_id} />
-                  <input type="hidden" name="host_role" value={formData.host_role} />
-
-                  {/* Display only - show the host name to user */}
-                  <div className="mb-3">
-                    <label className="form-label">Host Name</label>
-                    <input
-                      type="text"
-                      className="form-control rounded-pill"
-                      name="host_name"
-                      value={formData.host_name}
-                      readOnly
-                      placeholder="Host will be automatically assigned"
-                    />
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="my-3">
-                        <label className="form-label">Building</label>
-                        <select
-                          className="form-select"
-                          name="building"
-                          value={formData.building}
-                          onChange={handleChange}
-                        >
-                          <option value="">None</option>
-                          {buildings.map((b, i) => (
-                            <option key={i} value={b}>{b}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="col-md-6">
-                      <div className="my-3">
-                        <label className="form-label">Floor</label>
-                        <select
-                          className="form-select"
-                          name="floor"
-                          value={formData.floor}
-                          onChange={handleChange}
-                        >
-                          <option value="">None</option>
-                          {floors.map((f, i) => (
-                            <option key={i} value={f}>{f}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Purpose of Visit</label>
-                    <select
-                      className="form-select"
-                      name="purpose"
-                      value={formData.purpose}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select Purpose</option>
-                      {visitPurposes.map((purpose, index) => (
-                        <option key={purpose} value={purpose}>
-                          {purpose}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="my-3">
-                    <label className="form-label">Details (Optional)</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      placeholder="Enter visit details"
-                      name="details"
-                      value={formData.details}
-                      onChange={handleChange}
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
+          {/* SECTION 1: GROUP LEADER INFORMATION */}
+          <div>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
+              <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-full w-8 h-8 shrink-0">
+                <i className="bi bi-people text-sm"></i>
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm tracking-tight mb-0">Group Leader Information</h3>
             </div>
 
-            {/* Right Column */}
-            <div className="col-md-6">
-              <div className="d-flex flex-column gap-3">
-                {/* Additional Information */}
-                <div className="p-4">
-                  <h5 className="fw-bold">Additional Information</h5>
-                </div>
-                <div className="my-3">
-                  <label className="form-label">Name of Organization</label>
-                  <input
-                    type="text"
-                    name="organization_name"
-                    className="form-control"
-                    value={formData.organization_name}
-                    placeholder="Enter organization name"
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="form-label">Special Requirements</label>
-                  <select
-                    className="form-select"
-                    name="special_requirements"
-                    value={formData.special_requirements}
-                    onChange={handleChange}
-                  >
-                    <option value="">None</option>
-                    {specialRequirements.map((r, i) => (
-                      <option key={i} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="my-3">
-                  <label className="form-label">Emergency Contact</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    placeholder="Enter emergency contact"
-                    name="emergency_contact"
-                    value={formData.emergency_contact}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="my-3">
-                  <label className="form-label">Previsit Instruction</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter any previsit instruction"
-                    name="previsit_instruction"
-                    value={formData.previsit_instruction}
-                    onChange={handleChange}
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Group Leader Name *</label>
+                <input
+                  type="text"
+                  name="group_leader_name"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter Name"
+                  value={formData.group_leader_name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
-              <button
-                type="submit"
-                className="btn btn-primary mt-3 w-50 "
-                disabled={loading}
-              >
-                {loading ? "Registering..." : "Register"}
-              </button>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Number *</label>
+                <input
+                  type="tel"
+                  name="group_leader_contact"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter contact number"
+                  value={formData.group_leader_contact}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  name="group_leader_email"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter email"
+                  value={formData.group_leader_email}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Address *</label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Group Size *</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  name="group_size"
+                  value={formData.group_size}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Group Size</option>
+                  <option value="5">2 - 10</option>
+                  <option value="10">10 - 20</option>
+                  <option value="20">20 - 30</option>
+                  <option value="30">30 Above</option>
+                </select>
+              </div>
             </div>
+          </div>
+
+          {/* SECTION 2: VISIT INFORMATION */}
+          <div>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
+              <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-full w-8 h-8 shrink-0">
+                <i className="bi bi-calendar-event text-sm"></i>
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm tracking-tight mb-0">Visit Information</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Visit Time *</label>
+                <input
+                  type="datetime-local"
+                  name="visit_time"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  value={formData.visit_time}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Host Name</label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 cursor-not-allowed"
+                  name="host_name"
+                  value={formData.host_name}
+                  readOnly
+                  placeholder="Host will be automatically assigned"
+                />
+                <input type="hidden" name="host_id" value={formData.host_id} />
+                <input type="hidden" name="host_role" value={formData.host_role} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Building</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  name="building"
+                  value={formData.building}
+                  onChange={handleChange}
+                >
+                  <option value="">None</option>
+                  {buildings.map((b, i) => (
+                    <option key={i} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Floor</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  name="floor"
+                  value={formData.floor}
+                  onChange={handleChange}
+                >
+                  <option value="">None</option>
+                  {floors.map((f, i) => (
+                    <option key={i} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Purpose of Visit</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  name="purpose"
+                  value={formData.purpose}
+                  onChange={handleChange}
+                >
+                  <option value="">Select Purpose</option>
+                  {visitPurposes.map((purpose) => (
+                    <option key={purpose} value={purpose}>
+                      {purpose}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Details (Optional)</label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  rows="3"
+                  placeholder="Enter visit details"
+                  name="details"
+                  value={formData.details}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: ADDITIONAL INFORMATION */}
+          <div>
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
+              <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-full w-8 h-8 shrink-0">
+                <i className="bi bi-building text-sm"></i>
+              </span>
+              <h3 className="font-bold text-slate-800 text-sm tracking-tight mb-0">Additional Information</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Name of Organization</label>
+                <input
+                  type="text"
+                  name="organization_name"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  value={formData.organization_name}
+                  placeholder="Enter organization name"
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Special Requirements</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                  name="special_requirements"
+                  value={formData.special_requirements}
+                  onChange={handleChange}
+                >
+                  <option value="">None</option>
+                  {specialRequirements.map((r, i) => (
+                    <option key={i} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Emergency Contact</label>
+                <input
+                  type="tel"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter emergency contact"
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Previsit Instruction</label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  placeholder="Enter any previsit instruction"
+                  name="previsit_instruction"
+                  value={formData.previsit_instruction}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Clean Submit Button Container */}
+          <div className="flex justify-end pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? "Registering..." : "Register Group"}
+            </button>
           </div>
         </form>
       </div>
 
       {/* Success Modal */}
-      <div
-        className={`modal fade ${showSuccessModal ? "show d-block" : ""}`}
-        tabIndex="-1"
-        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content bg-success text-white text-center">
-            <div className="modal-body">
-              <h5 className="modal-title">Visitor Registered Successfully!</h5>
-            </div>
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="bg-emerald-600 text-white text-center rounded-3xl shadow-2xl p-6 max-w-sm w-full animate-fade-in">
+            <h5 className="font-bold text-sm mb-0">Visitor Registered Successfully!</h5>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Visit Card Modal */}
       {showVisitCardModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
-            <div className="modal-content rounded-4 shadow">
-              <div className="modal-header">
-                <h5 className="modal-title">Share Visit Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowVisitCardModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div
-                  ref={printRef}
-                  className="card mx-auto"
-                  style={{
-                    maxWidth: "650px",
-                    height: "380px",
-                    border: "2px solid #cfd9e1",
-                    backgroundColor: "#F5FAFE",
-                  }}
-                >
-                  <div
-                    className="card-header d-flex justify-content-between align-items-center"
-                    style={{ background: "#007bff", color: "white" }}
-                  >
-                    <span className="badge bg-light text-dark">
-                      Sydani Group
-                    </span>
-                    <strong className="text-white">VISITORS BADGE</strong>
-                  </div>
-                  <div className="card-body d-flex mx-4 justify-content-between">
-
-                    <div className="flex-grow-1 ms-2">
-                      <h5 className="fw-bold my-3">{guestDetails.name}</h5>
-                      <p className="my-2 lead">
-                        ID No: <small className="ms-4">{guestDetails.id}</small>
-                      </p>
-                      <p className="my-2 lead">
-                        Host:{" "}
-                        <small className="ms-4">{guestDetails.host}</small>
-                      </p>
-                      <p className="my-2 lead">
-                        Visit Date:{" "}
-                        <small className="ms-4">
-                          {guestDetails.date} by {guestDetails.time}
-                        </small>
-                      </p>
-                      <p className="my-2 lead">
-                        Purpose:{" "}
-                        <small className="ms-4">{guestDetails.purpose}</small>
-                      </p>
-                      <p className="my-2 lead">
-                        Contact Info:{" "}
-                        <small className="ms-2">
-                          {guestDetails.Contact_info}
-                        </small>
-                      </p>
-                    </div>
-                    <div>
-                      {typeof qrValue === "string" && qrValue.length > 0 ? (
-                        <QRCode value={qrValue} size={130} />
-                      ) : (
-                        <div className="text-muted">QR not ready</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="card-footer">
-                    <p className="mb-1">
-                      <i className="bi bi-geo-alt"></i> {guestDetails.address}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-fade-in flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h5 className="font-bold text-slate-800 text-sm mb-0">Share Visit Details</h5>
+              <button
+                type="button"
+                onClick={() => setShowVisitCardModal(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="p-6 space-y-6 overflow-y-auto">
+              <div
+                ref={printRef}
+                className="card mx-auto rounded-2xl overflow-hidden shadow-xs"
+                style={{
+                  maxWidth: "650px",
+                  border: "2px solid #e2e8f0",
+                  backgroundColor: "#F5FAFE",
+                }}
+              >
+                <div className="flex justify-between items-center py-3 px-6 bg-blue-600 text-white">
+                  <span className="px-2.5 py-1 bg-white text-slate-900 font-bold rounded-full text-[10px]">
+                    Sydani Group
+                  </span>
+                  <strong className="text-white text-xs tracking-wider">VISITORS BADGE</strong>
+                </div>
+                <div className="p-6 flex justify-between items-center gap-4">
+                  <div className="space-y-2 text-xs">
+                    <h5 className="font-bold text-slate-900 text-base mb-2">{guestDetails.name}</h5>
+                    <p className="text-slate-500 mb-0">
+                      ID No: <strong className="text-slate-900 ml-3">{guestDetails.id}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0">
+                      Host: <strong className="text-slate-900 ml-3">{guestDetails.host}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0">
+                      Visit Date: <strong className="text-slate-900 ml-3">{guestDetails.date} by {guestDetails.time}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0">
+                      Purpose: <strong className="text-slate-900 ml-3">{guestDetails.purpose}</strong>
+                    </p>
+                    <p className="text-slate-500 mb-0">
+                      Contact Info: <strong className="text-slate-900 ml-3">{guestDetails.Contact_info}</strong>
                     </p>
                   </div>
-                </div>
-                {/* Share Buttons */}
-                <div className="mt-4 text-center">
-                  <p className="fw-bold">Share Via</p>
-                  <div className="d-flex justify-content-center gap-4">
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(`🎫 Visitor Badge – Sydani Group\n\nName: ${guestDetails.name}\nGuest Code: ${guestDetails.id}\nHost: ${guestDetails.host}\nVisit Date: ${guestDetails.date} at ${guestDetails.time}\nPurpose: ${guestDetails.purpose}\nContact: ${guestDetails.Contact_info}`)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-whatsapp fs-3 text-success"></i>
-                    </a>
-                    <a
-                      href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-linkedin fs-3 text-primary"></i>
-                    </a>
-                    <a
-                      href="https://twitter.com/intent/tweet?text=Visit%20Confirmation%20Details"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-twitter-x fs-3"></i>
-                    </a>
-                    <a
-                      href="https://facebook.com/sharer/sharer.php?u=https://example.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <i className="bi bi-facebook fs-3 text-primary"></i>
-                    </a>
-                    <button
-                      className="btn btn-outline-dark"
-                      onClick={handlePrint}
-                    >
-                      🖨️ Print
-                    </button>
-                    <button
-                      className="btn btn-outline-success"
-                      onClick={downloadBadgeAsPDF}
-                    >
-                      📄 Download PDF
-                    </button>
+                  <div className="shrink-0">
+                    {typeof qrValue === "string" && qrValue.length > 0 ? (
+                      <QRCode value={qrValue} size={120} />
+                    ) : (
+                      <div className="text-slate-400 text-xs">QR not ready</div>
+                    )}
                   </div>
+                </div>
+                <div className="bg-transparent border-t border-slate-200 px-6 py-3 text-slate-500 text-xs">
+                  <p className="mb-0">
+                    <i className="bi bi-geo-alt mr-1"></i> {guestDetails.address}
+                  </p>
+                </div>
+              </div>
+
+              {/* Share Buttons */}
+              <div className="text-center pt-2">
+                <p className="font-bold text-slate-400 text-[10px] uppercase tracking-wider mb-3">Share Visit Pass Via</p>
+                <div className="flex justify-center flex-wrap gap-2">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`🎫 Visitor Badge – Sydani Group\n\nName: ${guestDetails.name}\nGuest Code: ${guestDetails.id}\nHost: ${guestDetails.host}\nVisit Date: ${guestDetails.date} at ${guestDetails.time}\nPurpose: ${guestDetails.purpose}\nContact: ${guestDetails.Contact_info}`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 border border-slate-200 text-emerald-600 hover:bg-slate-50 rounded-xl text-xs transition-colors"
+                  >
+                    <i className="bi bi-whatsapp text-base"></i>
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/sharing/share-offsite/?url=https://example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 border border-slate-200 text-blue-600 hover:bg-slate-50 rounded-xl text-xs transition-colors"
+                  >
+                    <i className="bi bi-linkedin text-base"></i>
+                  </a>
+                  <a
+                    href="https://twitter.com/intent/tweet?text=Visit%20Confirmation%20Details"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 border border-slate-200 text-slate-800 hover:bg-slate-50 rounded-xl text-xs transition-colors"
+                  >
+                    <i className="bi bi-twitter-x text-base"></i>
+                  </a>
+                  <button
+                    className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
+                    onClick={handlePrint}
+                  >
+                    🖨️ Print
+                  </button>
+                  <button
+                    className="px-4 py-2 border border-slate-200 text-emerald-700 hover:bg-slate-50 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
+                    onClick={downloadBadgeAsPDF}
+                  >
+                    📄 Download PDF
+                  </button>
                 </div>
               </div>
             </div>
@@ -725,12 +706,12 @@ function NewGuestGroup() {
       )}
 
       <style>{`
-            @media print {
-              body * { visibility: hidden; }
-              #badgeCard, #badgeCard * { visibility: visible; }
-              #badgeCard { position: absolute; top: 0; left: 0; width: 100%; }
-            }
-          `}</style>
+        @media print {
+          body * { visibility: hidden; }
+          #badgeCard, #badgeCard * { visibility: visible; }
+          #badgeCard { position: absolute; top: 0; left: 0; width: 100%; }
+        }
+      `}</style>
     </>
   );
 }
