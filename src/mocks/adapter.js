@@ -6,7 +6,7 @@
  * permissive.
  */
 
-import { getDb, nextId } from "./db.js";
+import { getDb, nextId, saveDb } from "./db.js";
 import {
   GATE,
   SCOPES,
@@ -933,6 +933,21 @@ const routes = [
     tenant.status = match[2] === "suspend" ? TENANT_STATUS.SUSPENDED : TENANT_STATUS.ACTIVE;
     return { data: { tenant: tenantSummary(tenant) } };
   }),
+  route("delete", /^\/tenants\/(\d+)$/, ({ user, match }) => {
+    if (user.scope !== SCOPES.BUILDING) throw fail(403, "Only the building admin can delete tenants.", "TENANT_FORBIDDEN");
+    const db = getDb();
+    const id = Number(match[1]);
+    const tenant = tenantById(id);
+    if (!tenant) throw fail(404, "Tenant not found.", "TENANT_NOT_FOUND");
+    const summary = tenantSummary(tenant);
+    // Hard delete: the tenant and every row it owns.
+    db.tenants = db.tenants.filter((t) => t.id !== id);
+    for (const key of ["users", "visitors", "visits", "audit", "notifications"]) {
+      if (Array.isArray(db[key])) db[key] = db[key].filter((row) => Number(row.tenant_id) !== id);
+    }
+    if (db.settings?.tenantOverrides) delete db.settings.tenantOverrides[id];
+    return { data: { tenant: summary, deleted: true } };
+  }),
 
   // ---- users ----
   route("get", /^\/users$/, ({ user, params }) => {
@@ -1677,6 +1692,7 @@ export async function mockAdapter(config) {
   await delay(TRANSPORT_DELAY_MS);
   try {
     const result = await dispatch(config);
+    if ((config.method ?? "get").toLowerCase() !== "get") saveDb();
     return {
       data: result.data,
       status: result.status ?? 200,
