@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import ActionMenu from "../../../../components/ActionMenu";
 import UserAvatar from "../../../../components/UserAvatar";
 import api from "../../../../context/api";
+import { useTenant } from "../../../../context/TenantContext";
 import { flattenVisits, paginationOf } from "../../../../utils/visitPayload";
 import { format, parseISO } from 'date-fns';
 
 function CompletedVisitTable({ refreshKey, triggerRefresh }) {
+  const { isTenantScope } = useTenant();
   const [visits, setVisits] = useState([]); // Flat array storage
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -178,7 +180,8 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
                     <td className="py-4 px-6 text-slate-600">{visit.check_in_time_formatted || "N/A"}</td>
                     <td className="py-4 px-6 text-slate-600">{visit.check_out_time_formatted || "N/A"}</td>
                     <td className="py-4 px-6 text-center">
-                      <ActionMenu
+                      {isTenantScope ? (
+                        <ActionMenu
  open={openDropdownId === visit.id}
  onClose={() => setOpenDropdownId(null)}
  className="w-48"
@@ -206,6 +209,9 @@ function CompletedVisitTable({ refreshKey, triggerRefresh }) {
                                 Delete Visit
                               </button>
                             </ActionMenu>
+                      ) : (
+                        <span className="text-slate-400 text-xs font-medium">—</span>
+                      )}
                     </td>
                   </tr>
                 ))

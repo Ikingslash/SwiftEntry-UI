@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import ActionMenu from "../../../../components/ActionMenu";
 import UserAvatar from "../../../../components/UserAvatar";
 import api from "../../../../context/api";
+import { useTenant } from "../../../../context/TenantContext";
 import { groupVisitsByDate, paginationOf } from "../../../../utils/visitPayload";
 import { format, parseISO } from 'date-fns';
 
 function UpcomingVisit({ refreshKey, triggerRefresh }) {
+  const { isTenantScope } = useTenant();
   const [visits, setVisits] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -154,7 +156,8 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
                         <td className="py-4 px-6 text-slate-600">{visit.check_in_time_formatted}</td>
                         <td className="py-4 px-6 text-slate-600">{visit.check_out_time_formatted}</td>
                         <td className="py-4 px-6 text-center">
-                          <ActionMenu
+                          {isTenantScope ? (
+                            <ActionMenu
  open={openDropdownId === visit.id}
  onClose={() => setOpenDropdownId(null)}
  className="w-48"
@@ -188,6 +191,9 @@ function UpcomingVisit({ refreshKey, triggerRefresh }) {
                                     Mark as Missed
                                   </button>
                                 </ActionMenu>
+                          ) : (
+                            <span className="text-slate-400 text-xs font-medium">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}

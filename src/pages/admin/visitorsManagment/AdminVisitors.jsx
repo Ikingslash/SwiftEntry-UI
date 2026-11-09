@@ -5,9 +5,12 @@ import AdminVisitorsTab from "./AdminVisitorsTab";
 import AdminVisit from "./AdminVisit";
 import AdminTopHeader from "../include/AdminTopHeader";
 import api from "../../../context/api";
+import { useTenant } from "../../../context/TenantContext";
 
 function AdminVisitors({ initialTab = "visitors" }) {
   const navigate = useNavigate();
+  const { isTenantScope } = useTenant();
+  const base = isTenantScope ? "/tenant-dashboard" : "/admin-dashboard";
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -76,7 +79,7 @@ function AdminVisitors({ initialTab = "visitors" }) {
               }`}
             onClick={() => {
               setActiveTab("visitors");
-              navigate("/admin-dashboard/visitors");
+              navigate(`${base}/visitors`);
             }}
           >
             Visitors Log
@@ -88,7 +91,7 @@ function AdminVisitors({ initialTab = "visitors" }) {
               }`}
             onClick={() => {
               setActiveTab("visit");
-              navigate("/admin-dashboard/visits");
+              navigate(`${base}/visits`);
             }}
           >
             Visitor Schedule

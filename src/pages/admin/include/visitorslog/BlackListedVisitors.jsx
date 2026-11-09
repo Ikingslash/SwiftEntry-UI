@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ActionMenu from "../../../../components/ActionMenu";
 import api from "../../../../context/api";
+import { useTenant } from "../../../../context/TenantContext";
 
 function BlackListedVisitors({ refreshKey }) {
+  const { isTenantScope } = useTenant();
   const [visitors, setVisitors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -163,7 +165,8 @@ function BlackListedVisitors({ refreshKey }) {
                     <td className="py-4 px-6 text-slate-600">{visitor.email || "N/A"}</td>
                     <td className="py-4 px-6 text-slate-600">{visitor.address || "N/A"}</td>
                     <td className="py-4 px-6 text-center">
-                      <ActionMenu
+                      {isTenantScope ? (
+                        <ActionMenu
  open={openDropdownId === visitor.id}
  onClose={() => setOpenDropdownId(null)}
  className="w-48"
@@ -212,6 +215,9 @@ function BlackListedVisitors({ refreshKey }) {
                                 Delete
                               </button>
                             </ActionMenu>
+                      ) : (
+                        <span className="text-slate-400 text-xs font-medium">—</span>
+                      )}
                     </td>
                   </tr>
                 ))
